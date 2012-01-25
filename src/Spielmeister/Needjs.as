@@ -12,26 +12,23 @@ package Spielmeister {
 		}
 
 
-		private function resolveDependencies ( moduleName : String ) : Function {
-			if( moduleName === undefined ||
-				moduleName === "" ) {
-
+		private function resolveDependencies ( moduleName : String ) : Object {
+			if( moduleName === "" ) {
 				throw "No module name was provided."
 			}
 
 
 			var module : Object = need.modules[ moduleName ]
 
-			if( module === undefined ||
+			if( module === null ||
 				module.definition === undefined ) {
 
 				throw "Unable to find module definition for module '" + moduleName + "'."
 			}
 
 
-			var definition   = module.definition
-			var dependencies = definition[ 0 ]
-			var callback     = definition[ 1 ]
+			var dependencies = module.definition[ 0 ]
+			var callback     = module.definition[ 1 ]
 
 			var args = []
 
