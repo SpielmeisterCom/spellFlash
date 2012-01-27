@@ -1,7 +1,5 @@
 package Spielmeister {
 	import flash.display.*
-	import flash.geom.ColorTransform
-	import flash.geom.Matrix
 
 	import Spielmeister.Spell.Platform.*
 
@@ -48,7 +46,7 @@ package Spielmeister {
 					var bufferWidth = 320
 					var bufferHeight = 240
 					var renderingContexts = []
-					var objectCount = 10
+					var objectCount = 7
 
 					var imagePath = "images"
 					var imageFiles = [ "4.2.04_256.png" ]
@@ -70,6 +68,7 @@ package Spielmeister {
 							var context = renderingContexts[ i ]
 							var texture = context.createTexture( image )
 
+							context.setClearColor( [ 0.0, 0.0, 0.0 ] )
 							context.clear()
 
 							context.scale( [ 0.66, 0.66, 0 ] )
@@ -79,6 +78,9 @@ package Spielmeister {
 								context.translate( [ texture.width, texture.height / 2, 0 ] )
 								context.scale( [ 0.5, 0.5, 0 ] )
 								context.rotate( 0.15 )
+
+								var opacity = 1.0 - ( j / objectCount )
+								context.setGlobalAlpha( opacity )
 							}
 						}
 
