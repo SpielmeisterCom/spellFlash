@@ -1,27 +1,43 @@
 package Spielmeister.Spell.Platform.Private.Socket {
 
+	import net.gimite.websocket.IWebSocketLogger
+	import net.gimite.websocket.WebSocket
+
 	public class FlashSocketAdapter implements IWebSocketLogger {
 		static protected var index: int = -1
 		protected var newSocket : WebSocket
 
 		public function FlashSocketAdapter( path : String ) {
 			var query = ""
-			newSocket = new WebSocket(++index, "ws://127.0.0.1:8080" + path + "/1/websocket/183198701832975559" + query, [], "http://127.0.0.1:8080", null, 0, "", null, this);
 
-			newSocket.addEventListener("error", function(e) {
-				trace(e)
-			});
+			newSocket = new WebSocket(
+				++index,
+				"ws://127.0.0.1:8080" + path + "/1/websocket/183198701832975559" + query,
+				[],
+				"http://127.0.0.1:8080",
+				null,
+				0,
+				"",
+				null,
+				this
+			)
 
-
+			newSocket.addEventListener(
+				"error",
+				function( event ) {
+					trace( event )
+				}
+			)
 		}
-		public function log(message:String):void {
-	  trace(message)
-	}
 
-	 public function error(message:String):void {
-	  trace(">>>>>>>>>>>>ERROR")
-	  trace(message)
-	 }
+		public function log(message:String):void {
+			trace(message)
+		}
+
+		public function error(message:String):void {
+			trace(">>>>>>>>>>>>ERROR")
+			trace(message)
+		}
 
 		public function on( messageName : String, callback : Function ) : void {
 
