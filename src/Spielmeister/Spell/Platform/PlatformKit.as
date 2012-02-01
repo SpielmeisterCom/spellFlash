@@ -1,9 +1,8 @@
 package Spielmeister.Spell.Platform {
 
 	import flash.display.*
-	import flash.geom.ColorTransform
-	import flash.geom.Matrix
 
+	import Spielmeister.Spell.Platform.Private.Socket.FlashSocketAdapter
 	import Spielmeister.Spell.Platform.Private.Graphics.*
 
 
@@ -33,14 +32,44 @@ package Spielmeister.Spell.Platform {
 			trace( "createInputEvents" )
 		}
 
-		public function createSocket( x ) : Object {
+		public function createSocket( path, ...arguments ) : Object {
 			trace( "createSocket" )
 
-			return {
-				on: function( x1, x2 ) {
-					trace( "register on callback")
-				}
+			var config = null
+			if( arguments[ 0 ] !== undefined ) {
+				config = arguments[ 0 ]
 			}
+
+
+//			FlashSocket.prototype.on = function( messageName, callback ) {
+//				this.addEventListener( messageName, callback )
+//			}
+//
+//			FlashSocket.prototype.__defineGetter__(
+//				'json',
+//				function() : FlashSocket {
+////					this.flags.json = true
+//					return this
+//				}
+//			)
+
+			var socket : FlashSocketAdapter = new FlashSocketAdapter( "/pathService" )
+
+//			socket.addEventListener(
+//				FlashSocketEvent.CONNECT,
+//				function( event : FlashSocketEvent ) : void {
+//					trace( event )
+//				}
+//			)
+
+
+//			return {
+//				on: function( x1, x2 ) {
+//					trace( "register on callback")
+//				}
+//			}
+
+			return socket
 		}
 
 		public function get RenderingFactory() : RenderingFactoryImpl {

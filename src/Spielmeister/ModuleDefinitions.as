@@ -7047,11 +7047,17 @@ define(
 
 
 		return function( basePath, pathServiceSocket, callback ) {
-			pathServiceSocket.on( "message", function( message ) {
-				if ( message.path === basePath ) {
-					callback( message.files )
+			pathServiceSocket.on(
+				"message",
+				function( message ) {
+					trace( message )
+
+
+					if( message.path === basePath ) {
+						callback( message.files )
+					}
 				}
-			} )
+			)
 
 			pathServiceSocket.json.send( { path: basePath } )
 		}
@@ -7270,26 +7276,32 @@ define(
 
 		// return spell entry point
 		return function( gameModule, clientMain ) {
-			initPathServiceConnection( function( pathServiceSocket ) {
-				loadPaths( imagePath, pathServiceSocket, function( imageFiles ) {
-					loadEntityModules(
-						codeDirectory,
-						spellModule,
-						gameModule,
+			initPathServiceConnection(
+				function( pathServiceSocket ) {
+					loadPaths(
+						imagePath,
 						pathServiceSocket,
-						function( entityFunctions ) {
-							// This is a temporary solution. This will be refactored when the resource loader gets implemented.
-							PlatformKit.loadImages(
-								imagePath,
-								imageFiles,
-								function( images ) {
-									clientMain( entityFunctions, images )
+						function( imageFiles ) {
+							loadEntityModules(
+								codeDirectory,
+								spellModule,
+								gameModule,
+								pathServiceSocket,
+								function( entityFunctions ) {
+									// This is a temporary solution. This will be refactored when the resource loader gets implemented.
+									PlatformKit.loadImages(
+										imagePath,
+										imageFiles,
+										function( images ) {
+											clientMain( entityFunctions, images )
+										}
+									)
 								}
 							)
 						}
 					)
-				} )
-			} )
+				}
+			)
 		}
 	}
 )
