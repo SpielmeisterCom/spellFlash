@@ -35,6 +35,10 @@ package Spielmeister {
 			for( var i = 0; i < dependencies.length; i++ ) {
 				var name = dependencies[ i ]
 
+				if( need.modules[ name ] === undefined ) {
+					throw 'Could not find module definition for "' + name + '". Is it included and registered via define?'
+				}
+
 				if( need.modules[ name ].instance === undefined ) {
 					need.modules[ name ].instance = resolveDependencies( dependencies[ i ] )
 				}
