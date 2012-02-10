@@ -12,7 +12,7 @@ package Spielmeister {
 
 
 		public function ModuleDefinitions( root : DisplayObject, define : Function, require : Function ) {
-			this.platformKit = new PlatformKit( root )
+			this.platformKit = new PlatformKit( root, root.loaderInfo.loaderURL )
 
 			this.define = define
 			this.require = require
@@ -94,6 +94,14 @@ package Spielmeister {
 							draw( images )
 						}
 					)
+				}
+			)
+
+
+			define(
+				"underscore",
+				function() : Underscore {
+					return new Underscore()
 				}
 			)
 
@@ -2091,850 +2099,182 @@ package Spielmeister {
 				}
 			)
 
-
 			define(
-				"underscore",
-				function() {
-					//     Underscore.js 1.1.7
-					//     (c) 2011 Jeremy Ashkenas, DocumentCloud Inc.
-					//     Underscore is freely distributable under the MIT license.
-					//     Portions of Underscore are inspired or borrowed from Prototype,
-					//     Oliver Steele's Functional, and John Resig's Micro-Templating.
-					//     For all details and documentation:
-					//     http://documentcloud.github.com/underscore
+				"spell/shared/util/math",
+				function(
+				) {
+					"use strict"
 
-					// Baseline setup
-					// --------------
 
-					// Establish the root object, `window` in the browser, or `global` on the server.
-					var root = this;
+					var clamp = function( value, lowerBound, upperBound ) {
+						if ( value < lowerBound) return lowerBound;
+						if ( value > upperBound) return upperBound;
 
-					// Save the previous value of the `_` variable.
-					var previousUnderscore = root._;
+						return value;
+					}
 
-					// Establish the object that gets returned to break out of a loop iteration.
-					var breaker = {};
-
-					// Save bytes in the minified (but not gzipped) version:
-					var ArrayProto = Array.prototype, ObjProto = Object.prototype, FuncProto = Function.prototype;
-
-					// Create quick reference variables for speed access to core prototypes.
-					var slice            = ArrayProto.slice,
-						unshift          = ArrayProto.unshift,
-						toString         = ObjProto.toString,
-						hasOwnProperty   = ObjProto.hasOwnProperty;
-
-					// All **ECMAScript 5** native function implementations that we hope to use
-					// are declared here.
-					var
-						nativeForEach      = ArrayProto.forEach,
-						nativeMap          = ArrayProto.map,
-						nativeReduce       = ArrayProto.reduce,
-						nativeReduceRight  = ArrayProto.reduceRight,
-						nativeFilter       = ArrayProto.filter,
-						nativeEvery        = ArrayProto.every,
-						nativeSome         = ArrayProto.some,
-						nativeIndexOf      = ArrayProto.indexOf,
-						nativeLastIndexOf  = ArrayProto.lastIndexOf,
-						nativeIsArray      = ArrayProto.isArray,
-						nativeKeys         = ObjProto.keys,
-						nativeBind         = FuncProto.bind;
-
-					// Create a safe reference to the Underscore object for use below.
-					var _ = function(obj) { return new wrapper(obj); };
-
-					// Export the Underscore object for **CommonJS**, with backwards-compatibility
-					// for the old `require()` API. If we're not in CommonJS, add `_` to the
-					// global object.
-			//		if (typeof module !== 'undefined' && module.exports) {
-			//			module.exports = _;
-			//			_._ = _;
-			//		} else {
-						// Exported as a string, for Closure Compiler "advanced" mode.
-						root['_'] = _;
-			//		}
-
-					// Current version.
-					_.VERSION = '1.1.7';
-
-					// Collection Functions
-					// --------------------
-
-					// The cornerstone, an `each` implementation, aka `forEach`.
-					// Handles objects with the built-in `forEach`, arrays, and raw objects.
-					// Delegates to **ECMAScript 5**'s native `forEach` if available.
-					var each = _.each = _.forEach = function(obj, iterator, context) {
-						if (obj == null) return;
-						if (nativeForEach && obj.forEach === nativeForEach) {
-						obj.forEach(iterator, context);
-						} else if (obj.length === +obj.length) {
-						for (var i = 0, l = obj.length; i < l; i++) {
-							if (i in obj && iterator.call(context, obj[i], i, obj) === breaker) return;
+					/**
+					 * Creates a random number generator.
+					 *
+					 * @param seed - seed that the rng is initialized with
+					 */
+					var createRandomNumberGenerator = function( seed ) {
+						if( seed === undefined ) {
+							seed = 0
 						}
-						} else {
-						for (var key in obj) {
-							if (hasOwnProperty.call(obj, key)) {
-							if (iterator.call(context, obj[key], key, obj) === breaker) return;
+
+						var constant  = Math.pow( 2, 13 ) + 1
+						var bigNumber = Math.pow( 2, 20 )
+						var prime     = 1987
+						var maximum   = 1000000 // number of decimal digits
+
+
+						return {
+							next : function( min, max ) {
+								seed = seed % bigNumber
+								seed *= constant
+								seed += prime
+
+
+								// if 'min' and 'max' are not provided, return random number between 0.0 and 1.0
+								return (
+									min !== undefined && max !== undefined ?
+									min + seed % maximum / maximum * ( max - min ) :
+									seed % maximum / maximum
+								)
 							}
 						}
-						}
-					};
+					}
 
-					// Return the results of applying the iterator to each element.
-					// Delegates to **ECMAScript 5**'s native `map` if available.
-					_.map = function(obj, iterator, context) {
-						var results = [];
-						if (obj == null) return results;
-						if (nativeMap && obj.map === nativeMap) return obj.map(iterator, context);
-						each(obj, function(value, index, list) {
-						results[results.length] = iterator.call(context, value, index, list);
-						});
-						return results;
-					};
 
-					// **Reduce** builds up a single result from a list of values, aka `inject`,
-					// or `foldl`. Delegates to **ECMAScript 5**'s native `reduce` if available.
-					_.reduce = _.foldl = _.inject = function(obj, iterator, memo, context) {
-						var initial = memo !== void 0;
-						if (obj == null) obj = [];
-						if (nativeReduce && obj.reduce === nativeReduce) {
-						if (context) iterator = _.bind(iterator, context);
-						return initial ? obj.reduce(iterator, memo) : obj.reduce(iterator);
-						}
-						each(obj, function(value, index, list) {
-						if (!initial) {
-							memo = value;
-							initial = true;
-						} else {
-							memo = iterator.call(context, memo, value, index, list);
-						}
-						});
-						if (!initial) throw new TypeError("Reduce of empty array with no initial value");
-						return memo;
-					};
-
-					// The right-associative version of reduce, also known as `foldr`.
-					// Delegates to **ECMAScript 5**'s native `reduceRight` if available.
-					_.reduceRight = _.foldr = function(obj, iterator, memo, context) {
-						if (obj == null) obj = [];
-						if (nativeReduceRight && obj.reduceRight === nativeReduceRight) {
-						if (context) iterator = _.bind(iterator, context);
-						return memo !== void 0 ? obj.reduceRight(iterator, memo) : obj.reduceRight(iterator);
-						}
-						var reversed = (_.isArray(obj) ? obj.slice() : _.toArray(obj)).reverse();
-						return _.reduce(reversed, iterator, memo, context);
-					};
-
-					// Return the first value which passes a truth test. Aliased as `detect`.
-					_.find = _.detect = function(obj, iterator, context) {
-						var result;
-						any(obj, function(value, index, list) {
-						if (iterator.call(context, value, index, list)) {
-							result = value;
-							return true;
-						}
-						});
-						return result;
-					};
-
-					// Return all the elements that pass a truth test.
-					// Delegates to **ECMAScript 5**'s native `filter` if available.
-					// Aliased as `select`.
-					_.filter = _.select = function(obj, iterator, context) {
-						var results = [];
-						if (obj == null) return results;
-						if (nativeFilter && obj.filter === nativeFilter) return obj.filter(iterator, context);
-						each(obj, function(value, index, list) {
-						if (iterator.call(context, value, index, list)) results[results.length] = value;
-						});
-						return results;
-					};
-
-					// Return all the elements for which a truth test fails.
-					_.reject = function(obj, iterator, context) {
-						var results = [];
-						if (obj == null) return results;
-						each(obj, function(value, index, list) {
-						if (!iterator.call(context, value, index, list)) results[results.length] = value;
-						});
-						return results;
-					};
-
-					// Determine whether all of the elements match a truth test.
-					// Delegates to **ECMAScript 5**'s native `every` if available.
-					// Aliased as `all`.
-					_.every = _.all = function(obj, iterator, context) {
-						var result = true;
-						if (obj == null) return result;
-						if (nativeEvery && obj.every === nativeEvery) return obj.every(iterator, context);
-						each(obj, function(value, index, list) {
-						if (!(result = result && iterator.call(context, value, index, list))) return breaker;
-						});
-						return result;
-					};
-
-					// Determine if at least one element in the object matches a truth test.
-					// Delegates to **ECMAScript 5**'s native `some` if available.
-					// Aliased as `any`.
-					var any = _.some = _.any = function(obj, iterator, context) {
-						iterator = iterator || _.identity;
-						var result = false;
-						if (obj == null) return result;
-						if (nativeSome && obj.some === nativeSome) return obj.some(iterator, context);
-						each(obj, function(value, index, list) {
-						if (result |= iterator.call(context, value, index, list)) return breaker;
-						});
-						return !!result;
-					};
-
-					// Determine if a given value is included in the array or object using `===`.
-					// Aliased as `contains`.
-					_._include = _.contains = function(obj, target) {
-						var found = false;
-						if (obj == null) return found;
-						if (nativeIndexOf && obj.indexOf === nativeIndexOf) return obj.indexOf(target) != -1;
-						any(obj, function(value) {
-						if (found = value === target) return true;
-						});
-						return found;
-					};
-
-					// Invoke a method (with arguments) on every item in a collection.
-					_.invoke = function(obj, method) {
-						var args = slice.call(arguments, 2);
-						return _.map(obj, function(value) {
-						return (method.call ? method || value : value[method]).apply(value, args);
-						});
-					};
-
-					// Convenience version of a common use case of `map`: fetching a property.
-					_.pluck = function(obj, key) {
-						return _.map(obj, function(value){ return value[key]; });
-					};
-
-					// Return the maximum element or (element-based computation).
-					_.max = function(obj, iterator, context) {
-						if (!iterator && _.isArray(obj)) return Math.max.apply(Math, obj);
-						var result = {computed : -Infinity};
-						each(obj, function(value, index, list) {
-						var computed = iterator ? iterator.call(context, value, index, list) : value;
-						computed >= result.computed && (result = {value : value, computed : computed});
-						});
-						return result.value;
-					};
-
-					// Return the minimum element (or element-based computation).
-					_.min = function(obj, iterator, context) {
-						if (!iterator && _.isArray(obj)) return Math.min.apply(Math, obj);
-						var result = {computed : Infinity};
-						each(obj, function(value, index, list) {
-						var computed = iterator ? iterator.call(context, value, index, list) : value;
-						computed < result.computed && (result = {value : value, computed : computed});
-						});
-						return result.value;
-					};
-
-					// Sort the object's values by a criterion produced by an iterator.
-					_.sortBy = function(obj, iterator, context) {
-						return _.pluck(_.map(obj, function(value, index, list) {
-						return {
-							value : value,
-							criteria : iterator.call(context, value, index, list)
-						};
-						}).sort(function(left, right) {
-						var a = left.criteria, b = right.criteria;
-						return a < b ? -1 : a > b ? 1 : 0;
-						}), 'value');
-					};
-
-					// Groups the object's values by a criterion produced by an iterator
-					_.groupBy = function(obj, iterator) {
-						var result = {};
-						each(obj, function(value, index) {
-						var key = iterator(value, index);
-						(result[key] || (result[key] = [])).push(value);
-						});
-						return result;
-					};
-
-					// Use a comparator function to figure out at what index an object should
-					// be inserted so as to maintain order. Uses binary search.
-					_.sortedIndex = function(array, obj, iterator) {
-						iterator || (iterator = _.identity);
-						var low = 0, high = array.length;
-						while (low < high) {
-						var mid = (low + high) >> 1;
-						iterator(array[mid]) < iterator(obj) ? low = mid + 1 : high = mid;
-						}
-						return low;
-					};
-
-					// Safely convert anything iterable into a real, live array.
-					_.toArray = function(iterable) {
-						if (!iterable)                return [];
-						if (iterable.toArray)         return iterable.toArray();
-						if (_.isArray(iterable))      return slice.call(iterable);
-						if (_.isArguments(iterable))  return slice.call(iterable);
-						return _.values(iterable);
-					};
-
-					// Return the number of elements in an object.
-					_.size = function(obj) {
-						return _.toArray(obj).length;
-					};
-
-					// Array Functions
-					// ---------------
-
-					// Get the first element of an array. Passing **n** will return the first N
-					// values in the array. Aliased as `head`. The **guard** check allows it to work
-					// with `_.map`.
-					_.first = _.head = function(array, n, guard) {
-						return (n != null) && !guard ? slice.call(array, 0, n) : array[0];
-					};
-
-					// Returns everything but the first entry of the array. Aliased as `tail`.
-					// Especially useful on the arguments object. Passing an **index** will return
-					// the rest of the values in the array from that index onward. The **guard**
-					// check allows it to work with `_.map`.
-					_.rest = _.tail = function(array, index, guard) {
-						return slice.call(array, (index == null) || guard ? 1 : index);
-					};
-
-					// Get the last element of an array.
-					_.last = function(array) {
-						return array[array.length - 1];
-					};
-
-					// Trim out all falsy values from an array.
-					_.compact = function(array) {
-						return _.filter(array, function(value){ return !!value; });
-					};
-
-					// Return a completely flattened version of an array.
-					_.flatten = function(array) {
-						return _.reduce(array, function(memo, value) {
-						if (_.isArray(value)) return memo.concat(_.flatten(value));
-						memo[memo.length] = value;
-						return memo;
-						}, []);
-					};
-
-					// Return a version of the array that does not contain the specified value(s).
-					_.without = function(array) {
-						return _.difference(array, slice.call(arguments, 1));
-					};
-
-					// Produce a duplicate-free version of the array. If the array has already
-					// been sorted, you have the option of using a faster algorithm.
-					// Aliased as `unique`.
-					_.uniq = _.unique = function(array, isSorted) {
-						return _.reduce(array, function(memo, el, i) {
-						if (0 == i || (isSorted === true ? _.last(memo) != el : !_._include(memo, el))) memo[memo.length] = el;
-						return memo;
-						}, []);
-					};
-
-					// Produce an array that contains the union: each distinct element from all of
-					// the passed-in arrays.
-					_.union = function() {
-						return _.uniq(_.flatten(arguments));
-					};
-
-					// Produce an array that contains every item shared between all the
-					// passed-in arrays. (Aliased as "intersect" for back-compat.)
-					_.intersection = _.intersect = function(array) {
-						var rest = slice.call(arguments, 1);
-						return _.filter(_.uniq(array), function(item) {
-						return _.every(rest, function(other) {
-							return _.indexOf(other, item) >= 0;
-						});
-						});
-					};
-
-					// Take the difference between one array and another.
-					// Only the elements present in just the first array will remain.
-					_.difference = function(array, other) {
-						return _.filter(array, function(value){ return !_._include(other, value); });
-					};
-
-					// Zip together multiple lists into a single array -- elements that share
-					// an index go together.
-					_.zip = function() {
-						var args = slice.call(arguments);
-						var length = _.max(_.pluck(args, 'length'));
-						var results = new Array(length);
-						for (var i = 0; i < length; i++) results[i] = _.pluck(args, "" + i);
-						return results;
-					};
-
-					// If the browser doesn't supply us with indexOf (I'm looking at you, **MSIE**),
-					// we need this function. Return the position of the first occurrence of an
-					// item in an array, or -1 if the item is not included in the array.
-					// Delegates to **ECMAScript 5**'s native `indexOf` if available.
-					// If the array is large and already in sort order, pass `true`
-					// for **isSorted** to use binary search.
-					_.indexOf = function(array, item, isSorted) {
-						if (array == null) return -1;
-						var i, l;
-						if (isSorted) {
-						i = _.sortedIndex(array, item);
-						return array[i] === item ? i : -1;
-						}
-						if (nativeIndexOf && array.indexOf === nativeIndexOf) return array.indexOf(item);
-						for (i = 0, l = array.length; i < l; i++) if (array[i] === item) return i;
-						return -1;
-					};
-
-
-					// Delegates to **ECMAScript 5**'s native `lastIndexOf` if available.
-					_.lastIndexOf = function(array, item) {
-						if (array == null) return -1;
-						if (nativeLastIndexOf && array.lastIndexOf === nativeLastIndexOf) return array.lastIndexOf(item);
-						var i = array.length;
-						while (i--) if (array[i] === item) return i;
-						return -1;
-					};
-
-					// Generate an integer Array containing an arithmetic progression. A port of
-					// the native Python `range()` function. See
-					// [the Python documentation](http://docs.python.org/library/functions.html#range).
-					_.range = function(start, stop, step) {
-						if (arguments.length <= 1) {
-						stop = start || 0;
-						start = 0;
-						}
-						step = arguments[2] || 1;
-
-						var len = Math.max(Math.ceil((stop - start) / step), 0);
-						var idx = 0;
-						var range = new Array(len);
-
-						while(idx < len) {
-						range[idx++] = start;
-						start += step;
-						}
-
-						return range;
-					};
-
-					// Function (ahem) Functions
-					// ------------------
-
-					// Create a function bound to a given object (assigning `this`, and arguments,
-					// optionally). Binding with arguments is also known as `curry`.
-					// Delegates to **ECMAScript 5**'s native `Function.bind` if available.
-					// We check for `func.bind` first, to fail fast when `func` is undefined.
-					_.bind = function(func, obj) {
-						if (func.bind === nativeBind && nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
-						var args = slice.call(arguments, 2);
-						return function() {
-						return func.apply(obj, args.concat(slice.call(arguments)));
-						};
-					};
-
-					// Bind all of an object's methods to that object. Useful for ensuring that
-					// all callbacks defined on an object belong to it.
-					_.bindAll = function(obj) {
-						var funcs = slice.call(arguments, 1);
-						if (funcs.length == 0) funcs = _.functions(obj);
-						each(funcs, function(f) { obj[f] = _.bind(obj[f], obj); });
-						return obj;
-					};
-
-					// Memoize an expensive function by storing its results.
-					_.memoize = function(func, hasher) {
-						var memo = {};
-						hasher || (hasher = _.identity);
-						return function() {
-						var key = hasher.apply(this, arguments);
-						return hasOwnProperty.call(memo, key) ? memo[key] : (memo[key] = func.apply(this, arguments));
-						};
-					};
-
-			//		// Delays a function for the given number of milliseconds, and then calls
-			//		// it with the arguments supplied.
-			//		_.delay = function(func, wait) {
-			//			var args = slice.call(arguments, 2);
-			//			return setTimeout(function(){ return func.apply(func, args); }, wait);
-			//		};
-			//
-			//		// Defers a function, scheduling it to run after the current call stack has
-			//		// cleared.
-			//		_.defer = function(func) {
-			//			return _.delay.apply(_, [func, 1].concat(slice.call(arguments, 1)));
-			//		};
-			//
-			//		// Internal function used to implement `_.throttle` and `_.debounce`.
-			//		var limit = function(func, wait, debounce) {
-			//			var timeout;
-			//			return function() {
-			//			var context = this, args = arguments;
-			//			var throttler = function() {
-			//				timeout = null;
-			//				func.apply(context, args);
-			//			};
-			//			if (debounce) clearTimeout(timeout);
-			//			if (debounce || !timeout) timeout = setTimeout(throttler, wait);
-			//			};
-			//		};
-			//
-			//		// Returns a function, that, when invoked, will only be triggered at most once
-			//		// during a given window of time.
-			//		_.throttle = function(func, wait) {
-			//			return limit(func, wait, false);
-			//		};
-			//
-			//		// Returns a function, that, as long as it continues to be invoked, will not
-			//		// be triggered. The function will be called after it stops being called for
-			//		// N milliseconds.
-			//		_.debounce = function(func, wait) {
-			//			return limit(func, wait, true);
-			//		};
-
-					// Returns a function that will be executed at most one time, no matter how
-					// often you call it. Useful for lazy initialization.
-					_.once = function(func) {
-						var ran = false, memo;
-						return function() {
-						if (ran) return memo;
-						ran = true;
-						return memo = func.apply(this, arguments);
-						};
-					};
-
-					// Returns the first function passed as an argument to the second,
-					// allowing you to adjust arguments, run code before and after, and
-					// conditionally execute the original function.
-					_.wrap = function(func, wrapper) {
-						return function() {
-						var args = [func].concat(slice.call(arguments));
-						return wrapper.apply(this, args);
-						};
-					};
-
-					// Returns a function that is the composition of a list of functions, each
-					// consuming the return value of the function that follows.
-					_.compose = function() {
-						var funcs = slice.call(arguments);
-						return function() {
-						var args = slice.call(arguments);
-						for (var i = funcs.length - 1; i >= 0; i--) {
-							args = [funcs[i].apply(this, args)];
-						}
-						return args[0];
-						};
-					};
-
-					// Returns a function that will only be executed after being called N times.
-					_.after = function(times, func) {
-						return function() {
-						if (--times < 1) { return func.apply(this, arguments); }
-						};
-					};
-
-
-					// Object Functions
-					// ----------------
-
-					// Retrieve the names of an object's properties.
-					// Delegates to **ECMAScript 5**'s native `Object.keys`
-					_.keys = nativeKeys || function(obj) {
-						if (obj !== Object(obj)) throw new TypeError('Invalid object');
-						var keys = [];
-						for (var key in obj) if (hasOwnProperty.call(obj, key)) keys[keys.length] = key;
-						return keys;
-					};
-
-					// Retrieve the values of an object's properties.
-					_.values = function(obj) {
-						return _.map(obj, _.identity);
-					};
-
-					// Return a sorted list of the function names available on the object.
-					// Aliased as `methods`
-					_.functions = _.methods = function(obj) {
-						var names = [];
-						for (var key in obj) {
-						if (_.isFunction(obj[key])) names.push(key);
-						}
-						return names.sort();
-					};
-
-					// Extend a given object with all the properties in passed-in object(s).
-					_.extend = function(obj) {
-						each(slice.call(arguments, 1), function(source) {
-						for (var prop in source) {
-							if (source[prop] !== void 0) obj[prop] = source[prop];
-						}
-						});
-						return obj;
-					};
-
-					// Fill in a given object with default properties.
-					_.defaults = function(obj) {
-						each(slice.call(arguments, 1), function(source) {
-						for (var prop in source) {
-							if (obj[prop] == null) obj[prop] = source[prop];
-						}
-						});
-						return obj;
-					};
-
-					// Create a (shallow-cloned) duplicate of an object.
-					_.clone = function(obj) {
-						return _.isArray(obj) ? obj.slice() : _.extend({}, obj);
-					};
-
-					// Invokes interceptor with the obj, and then returns obj.
-					// The primary purpose of this method is to "tap into" a method chain, in
-					// order to perform operations on intermediate results within the chain.
-					_.tap = function(obj, interceptor) {
-						interceptor(obj);
-						return obj;
-					};
-
-					// Perform a deep comparison to check if two objects are equal.
-					_.isEqual = function(a, b) {
-						// Check object identity.
-						if (a === b) return true;
-						// Different types?
-						var atype = typeof(a), btype = typeof(b);
-						if (atype != btype) return false;
-						// Basic equality test (watch out for coercions).
-						if (a == b) return true;
-						// One is falsy and the other truthy.
-						if ((!a && b) || (a && !b)) return false;
-						// Unwrap any wrapped objects.
-						if (a._chain) a = a._wrapped;
-						if (b._chain) b = b._wrapped;
-						// One of them implements an isEqual()?
-						if (a.isEqual) return a.isEqual(b);
-						if (b.isEqual) return b.isEqual(a);
-						// Check dates' integer values.
-						if (_.isDate(a) && _.isDate(b)) return a.getTime() === b.getTime();
-						// Both are NaN?
-						if (_.isNaN(a) && _.isNaN(b)) return false;
-						// Compare regular expressions.
-						if (_.isRegExp(a) && _.isRegExp(b))
-						return a.source     === b.source &&
-								 a.global     === b.global &&
-								 a.ignoreCase === b.ignoreCase &&
-								 a.multiline  === b.multiline;
-						// If a is not an object by this point, we can't handle it.
-						if (atype !== 'object') return false;
-						// Check for different array lengths before comparing contents.
-						if (a.length && (a.length !== b.length)) return false;
-						// Nothing else worked, deep compare the contents.
-						var aKeys = _.keys(a), bKeys = _.keys(b);
-						// Different object sizes?
-						if (aKeys.length != bKeys.length) return false;
-						// Recursive comparison of contents.
-						for (var key in a) if (!(key in b) || !_.isEqual(a[key], b[key])) return false;
-						return true;
-					};
-
-					// Is a given array or object empty?
-					_.isEmpty = function(obj) {
-						if (_.isArray(obj) || _.isString(obj)) return obj.length === 0;
-						for (var key in obj) if (hasOwnProperty.call(obj, key)) return false;
-						return true;
-					};
-
-					// Is a given value a DOM element?
-					_.isElement = function(obj) {
-						return !!(obj && obj.nodeType == 1);
-					};
-
-					// Is a given value an array?
-					// Delegates to ECMA5's native Array.isArray
-					_.isArray = nativeIsArray || function(obj) {
-						return toString.call(obj) === '[object Array]';
-					};
-
-					// Is a given variable an object?
-					_.isObject = function(obj) {
-						return obj === Object(obj);
-					};
-
-					// Is a given variable an arguments object?
-					_.isArguments = function(obj) {
-						return !!(obj && hasOwnProperty.call(obj, 'callee'));
-					};
-
-					// Is a given value a function?
-					_.isFunction = function(obj) {
-						return ( typeof( obj ) === "function" );
-					};
-
-					// Is a given value a string?
-					_.isString = function(obj) {
-						return !!(obj === '' || (obj && obj.charCodeAt && obj.substr));
-					};
-
-					// Is a given value a number?
-					_.isNumber = function(obj) {
-						return !!(obj === 0 || (obj && obj.toExponential && obj.toFixed));
-					};
-
-					// Is the given value `NaN`? `NaN` happens to be the only value in JavaScript
-					// that does not equal itself.
-					_.isNaN = function(obj) {
-						return obj !== obj;
-					};
-
-					// Is a given value a boolean?
-					_.isBoolean = function(obj) {
-						return obj === true || obj === false;
-					};
-
-					// Is a given value a date?
-					_.isDate = function(obj) {
-						return !!(obj && obj.getTimezoneOffset && obj.setUTCFullYear);
-					};
-
-					// Is the given value a regular expression?
-					_.isRegExp = function(obj) {
-						return !!(obj && obj.test && obj.exec && (obj.ignoreCase || obj.ignoreCase === false));
-					};
-
-					// Is a given value equal to null?
-					_.isNull = function(obj) {
-						return obj === null;
-					};
-
-					// Is a given variable undefined?
-					_.isUndefined = function(obj) {
-						return obj === void 0;
-					};
-
-					// Utility Functions
-					// -----------------
-
-					// Run Underscore.js in *noConflict* mode, returning the `_` variable to its
-					// previous owner. Returns a reference to the Underscore object.
-					_.noConflict = function() {
-						root._ = previousUnderscore;
-						return this;
-					};
-
-					// Keep the identity function around for default iterators.
-					_.identity = function(value) {
-						return value;
-					};
-
-					// Run a function **n** times.
-					_.times = function (n, iterator, context) {
-						for (var i = 0; i < n; i++) iterator.call(context, i);
-					};
-
-					// Add your own custom functions to the Underscore object, ensuring that
-					// they're correctly added to the OOP wrapper as well.
-					_.mixin = function(obj) {
-						each(_.functions(obj), function(name){
-						addToWrapper(name, _[name] = obj[name]);
-						});
-					};
-
-					// Generate a unique integer id (unique within the entire client session).
-					// Useful for temporary DOM ids.
-					var idCounter = 0;
-					_.uniqueId = function(prefix) {
-						var id = idCounter++;
-						return prefix ? prefix + id : id;
-					};
-
-			//		// By default, Underscore uses ERB-style template delimiters, change the
-			//		// following template settings to use alternative delimiters.
-			//		_.templateSettings = {
-			//			evaluate    : /<%([\s\S]+?)%>/g,
-			//			interpolate : /<%=([\s\S]+?)%>/g
-			//		};
-			//
-			//		// JavaScript micro-templating, similar to John Resig's implementation.
-			//		// Underscore templating handles arbitrary delimiters, preserves whitespace,
-			//		// and correctly escapes quotes within interpolated code.
-			//		_.template = function(str, data) {
-			//			var c  = _.templateSettings;
-			//			var tmpl = 'var __p=[],print=function(){__p.push.apply(__p,arguments);};' +
-			//			'with(obj||{}){__p.push(\'' +
-			//			str.replace(/\\/g, '\\\\')
-			//				 .replace(/'/g, "\\'")
-			//				 .replace(c.interpolate, function(match, code) {
-			//				 return "'," + code.replace(/\\'/g, "'") + ",'";
-			//				 })
-			//				 .replace(c.evaluate || null, function(match, code) {
-			//				 return "');" + code.replace(/\\'/g, "'")
-			//									.replace(/[\r\n\t]/g, ' ') + "__p.push('";
-			//				 })
-			//				 .replace(/\r/g, '\\r')
-			//				 .replace(/\n/g, '\\n')
-			//				 .replace(/\t/g, '\\t')
-			//				 + "');}return __p.join('');";
-			//			var func = new Function('obj', tmpl);
-			//			return data ? func(data) : func;
-			//		};
-
-					// The OOP Wrapper
-					// ---------------
-
-					// If Underscore is called as a function, it returns a wrapped object that
-					// can be used OO-style. This wrapper holds altered versions of all the
-					// underscore functions. Wrapped objects may be chained.
-					var wrapper = function(obj) { this._wrapped = obj; };
-
-					// Expose `wrapper.prototype` as `_.prototype`
-					_.prototype = wrapper.prototype;
-
-					// Helper function to continue chaining intermediate results.
-					var result = function(obj, chain) {
-						return chain ? _(obj).chain() : obj;
-					};
-
-					// A method to easily add functions to the OOP wrapper.
-					var addToWrapper = function(name, func) {
-						wrapper.prototype[name] = function() {
-						var args = slice.call(arguments);
-						unshift.call(args, this._wrapped);
-						return result(func.apply(_, args), this._chain);
-						};
-					};
-
-					// Add all of the Underscore functions to the wrapper object.
-					_.mixin(_);
-
-					// Add all mutator Array functions to the wrapper.
-					each(['pop', 'push', 'reverse', 'shift', 'sort', 'splice', 'unshift'], function(name) {
-						var method = ArrayProto[name];
-						wrapper.prototype[name] = function() {
-						method.apply(this._wrapped, arguments);
-						return result(this._wrapped, this._chain);
-						};
-					});
-
-					// Add all accessor Array functions to the wrapper.
-					each(['concat', 'join', 'slice'], function(name) {
-						var method = ArrayProto[name];
-						wrapper.prototype[name] = function() {
-						return result(method.apply(this._wrapped, arguments), this._chain);
-						};
-					});
-
-					// Start chaining a wrapped Underscore object.
-					wrapper.prototype.chain = function() {
-						this._chain = true;
-						return this;
-					};
-
-					// Extracts the result from a wrapped and chained object.
-					wrapper.prototype.value = function() {
-						return this._wrapped;
-					};
-
-
-					return _.noConflict()
+					return {
+						clamp: clamp,
+						createRandomNumberGenerator: createRandomNumberGenerator
+					}
 				}
 			)
+
+
+			define(
+				"spell/shared/util/color",
+				[
+					"spell/shared/util/math",
+
+					"glmatrix/vec3",
+					"underscore"
+				],
+				function(
+					MathHelper,
+
+					vec3,
+					_
+				) {
+					"use strict"
+
+
+					var toRange = function( value ) {
+						return Math.round( MathHelper.clamp( value, 0, 1 ) * 255 )
+					}
+
+
+					var createRgb = function( r, g, b ) {
+						return [ r, g, b ]
+					}
+
+
+					var createRgba = function( r, g, b, a ) {
+						return [ r, g, b, a ]
+					}
+
+
+					var createRandom = function() {
+						var primaryColorIndex = Math.round( Math.random() * 3 )
+						var colorVec = vec3.create( [ 0.8, 0.8, 0.8 ] )
+
+						for( var i = 0; i < colorVec.length; i++ ) {
+							if ( i === primaryColorIndex ) {
+								colorVec[ i ] = 0.95
+
+							} else {
+								colorVec[ i ] *= Math.random()
+							}
+						}
+
+						return colorVec
+					}
+
+
+					var formatCanvas = function( r, g, b, a ) {
+						if( a === undefined ) {
+							return 'rgb('
+								+ toRange( r ) + ', '
+								+ toRange( g ) + ', '
+								+ toRange( b ) + ')'
+						}
+
+						return 'rgba('
+							+ toRange( r ) + ', '
+							+ toRange( g ) + ', '
+							+ toRange( b ) + ', '
+							+ toRange( a ) + ')'
+					}
+
+
+					var isVec3Color = function( vec ) {
+						return _.size( vec ) === 3
+					}
+
+
+					var isVec4Color = function( vec ) {
+						return _.size( vec ) === 4
+					}
+
+
+					return {
+						createRgb    : createRgb,
+						createRgba   : createRgba,
+						createRandom : createRandom,
+						formatCanvas : formatCanvas,
+						isVec3Color  : isVec3Color,
+						isVec4Color  : isVec4Color
+					}
+				}
+			)
+
+
+			define(
+				"spell/shared/util/Events",
+				[
+					"underscore"
+				],
+				function(
+					_
+				) {
+					"use strict"
+
+
+					var events = [
+						// ResourceLoader
+						"RESOURCE_PROGRESS",
+						"RESOURCE_LOADING_COMPLETED",
+						"RESOURCE_ERROR"
+					]
+
+					return _.reduce(
+						events,
+						function( memo, event ) {
+							memo.result[ event ] = memo.index++
+
+							return memo
+						},
+						{
+							index  : 10,
+							result : {}
+						}
+					).result
+				}
+			)
+
 		}
 
 
@@ -3857,6 +3197,28 @@ define(
 )
 
 define(
+	"spell/client/components/sound/soundEmitter",
+	function() {
+		"use strict"
+
+		var soundEmitter = function( args ) {
+			this.soundId    = args.soundId
+			this.volume     = args.volume || 100
+			this.muted      = args.muted || false
+			this.onComplete = args.onComplete || ''
+			this.start      = args.start || false
+			this.stop       = args.stop || false
+		}
+
+		soundEmitter.ON_COMPLETE_LOOP               = 1
+		soundEmitter.ON_COMPLETE_REMOVE_COMPONENT   = 2
+		soundEmitter.ON_COMPLETE_STOP               = 3
+
+		return soundEmitter
+	}
+)
+
+define(
 	"funkysnakes/client/entities/speedPowerup",
 	[
 		"funkysnakes/client/components/animated",
@@ -3867,6 +3229,7 @@ define(
 		"funkysnakes/shared/components/position",
 		"funkysnakes/shared/components/assignedToPlayer",
 		"funkysnakes/shared/config/players",
+		"spell/client/components/sound/soundEmitter",
 
 		"spell/client/components/network/synchronizationSlave"
 	],
@@ -3879,6 +3242,7 @@ define(
 		position,
 		assignedToPlayer,
 		playerConfiguration,
+		soundEmitter,
 
 		synchronizationSlave
 	) {
@@ -3910,10 +3274,22 @@ define(
 					offset    :  [ -12, -12 ]
 				} )
 
+				this.soundEmitter = new soundEmitter( {
+					soundId:'spawn.mp3',
+					volume: 40
+				} )
+
 			} else if( args.type === "spentSpeed" ) {
 				this.appearance = new appearance( {
 					textureId : "items/dropped_container_0.png",
 					offset    :  [ -12, -12 ]
+				} )
+
+				this.soundEmitter = new soundEmitter( {
+					soundId:'speed.mp3',
+					volume: 60,
+					start: 500,
+					stop: 1200
 				} )
 			}
 
@@ -3940,12 +3316,14 @@ define(
 	[
 		"funkysnakes/shared/components/position",
 		"funkysnakes/client/components/appearance",
-		"funkysnakes/client/components/background"
+		"funkysnakes/client/components/background",
+		"spell/client/components/sound/soundEmitter"
 	],
 	function(
 		position,
 		appearance,
-		background
+		background,
+		soundEmitter
 	) {
 		"use strict"
 
@@ -3955,6 +3333,12 @@ define(
 
 			this.appearance = new appearance( {
 				textureId: args.textureId
+			} )
+
+			this.soundEmitter = new soundEmitter( {
+				soundId:'rain.mp3',
+				volume: 50,
+				onComplete: soundEmitter.ON_COMPLETE_LOOP
 			} )
 
 			this.background = new background()
@@ -4965,6 +4349,67 @@ define(
 )
 
 define(
+	"spell/client/systems/sound/processSound",
+	[
+		"underscore",
+        "spell/client/components/sound/soundEmitter"
+	],
+	function(
+		_,
+		soundEmitterConstructor
+	) {
+		"use strict"
+
+		var playing = {}
+		var backgroundSounds = {}
+
+		return function(
+			sounds, entities
+		) {
+
+			_.each( entities, function( entity ) {
+
+				if( sounds[ entity.soundEmitter.soundId ] === undefined ) return
+
+				var sound = sounds[ entity.soundEmitter.soundId ]
+
+				if( playing[ entity.id ] === undefined ) {
+
+					if( entity.soundEmitter.onComplete === soundEmitterConstructor.ON_COMPLETE_LOOP ) {
+
+						sound.setLoop()
+
+					} else if( entity.soundEmitter.onComplete === soundEmitterConstructor.ON_COMPLETE_STOP ) {
+
+					} else if( entity.soundEmitter.onComplete === soundEmitterConstructor.ON_COMPLETE_REMOVE_COMPONENT ) {
+						sound.setOnCompleteRemove()
+					}
+
+					sound.setStart( entity.soundEmitter.start )
+					sound.setStop( entity.soundEmitter.stop )
+					sound.setVolume( entity.soundEmitter.volume )
+					sound.play();
+
+					playing[ entity.id ] = true
+				}
+
+
+				//this.context.currentTime
+				/*               try {
+				 // DOM Exceptions are fired when Audio Element isn't ready yet.
+				 this.context.currentTime = value;
+				 return true;
+				 } catch(e) {
+				 return false;
+				 }
+				 */
+
+			} )
+		}
+	}
+)
+
+define(
 	"spell/client/systems/input/processLocalInput",
 	[
 		"underscore"
@@ -4983,7 +4428,7 @@ define(
 		) {
 			_.each( inputEvents, function( event ) {
 				_.each( inputDefinitions, function( definition ) {
-					var action = _.detect( definition.inputDefinition.actions, function( action ) {
+					var action = _.find( definition.inputDefinition.actions, function( action ) {
 						return action.key === event.keyCode
 					} )
 
@@ -5604,6 +5049,7 @@ define(
 		"funkysnakes/shared/config/players",
 		"funkysnakes/shared/systems/integrateOrientation",
 
+        "spell/client/systems/sound/processSound",
 		"spell/client/systems/input/processLocalInput",
 		"spell/client/systems/network/destroyEntities",
 		"spell/client/systems/network/processEntityUpdates",
@@ -5633,6 +5079,7 @@ define(
 		players,
 		integrateOrientation,
 
+		processSound,
 		processLocalInput,
 		destroyEntities,
 		processEntityUpdates,
@@ -5674,6 +5121,7 @@ define(
 			var textures         = globals.textures
 			var inputEvents      = globals.inputEvents
 			var stats            = globals.stats
+			var sounds           = globals.sounds
 
 			processLocalInput(
 				timeInMs,
@@ -5755,6 +5203,10 @@ define(
 				entityManager,
 				entities.executeQuery( queryIds[ "computeRenderFrameStats" ][ 0 ] ).singleton,
 				connection
+			)
+			processSound(
+				sounds,
+				entities.executeQuery( queryIds[ "soundEmitters" ][ 0 ] ).elements
 			)
 		}
 
@@ -5885,6 +5337,9 @@ define(
 					],
 					applyPowerupEffects: [
 						entities.prepareQuery( [ "appearance", "powerupEffects" ] )
+					],
+					soundEmitters: [
+						entities.prepareQuery( [ "soundEmitter" ] )
 					]
 				}
 
@@ -6080,7 +5535,7 @@ define(
 				var eventManager  = globals.eventManager
 
 				this.lobby = Types.createLobby( eventManager, connection )
-
+				this.lobby.init()
 
 				entityManager.createEntity( "gameStarter" )
 
@@ -6285,42 +5740,6 @@ define(
 )
 
 define(
-	"spell/shared/util/deepClone",
-	[
-		"underscore"
-	],
-	function(
-		_
-	) {
-		"use strict"
-
-
-		return function deepClone( o ) {
-			if (
-				_.isBoolean( o )   ||
-				_.isFunction( o )  ||
-				_.isNaN( o )       ||
-				_.isNull( o )      ||
-				_.isNumber( o )    ||
-				_.isString( o )    ||
-				_.isUndefined( o )
-			) {
-				return o
-			}
-			else {
-				var clone = {}
-
-				_.each( o, function( value, key ) {
-					clone[ key ] = deepClone( value )
-				} )
-
-				return clone
-			}
-		}
-	}
-)
-
-define(
 	"jsonh",
 	function () {
 		/**
@@ -6420,14 +5839,10 @@ define(
 define(
 	"funkysnakes/shared/util/networkProtocol",
 	[
-		"spell/shared/util/deepClone",
-
 		"jsonh",
 		"underscore"
 	],
 	function(
-		deepClone,
-
 		jsonh,
 		_
 	) {
@@ -6493,10 +5908,10 @@ define(
 		}
 
 		function getElements( node ) {
-			if ( node === undefined ) {
+			if ( !node ) {
 				return []
-			}
-			else {
+
+			} else {
 				return _.reduce(
 					node.subNodes,
 					function( elements, subNode ) {
@@ -6511,7 +5926,10 @@ define(
 			return _.reduce(
 				key,
 				function( node, keyComponent ) {
-					if ( eachNode !== undefined ) eachNode( node, keyComponent )
+					if( node === undefined ) return undefined
+
+					if( eachNode !== undefined ) eachNode( node, keyComponent )
+
 					return node.subNodes[ keyComponent ]
 				},
 				node
@@ -6592,12 +6010,12 @@ define(
 				if( _.size( this.eventQueue ) > 0 ) {
 					this.eventQueue = _.reject(
 						this.eventQueue,
-						// wrapping the function into an Object to satisfy the bitchy AS3 compiler
-						Object(
+						_.bind(
 							function( event ) {
 								return this.publish( event[ 0 ], event[ 1] )
-							}
-						).bind( this )
+							},
+							this
+						)
 					)
 				}
 
@@ -6652,6 +6070,201 @@ define(
 
 
 		return EventManager
+	}
+)
+
+define(
+	'spell/shared/util/ResourceLoader',
+	[
+		'spell/shared/util/platform/PlatformKit',
+		'spell/shared/util/Events',
+
+		'underscore'
+	],
+	function(
+		PlatformKit,
+		Events,
+
+		_
+	) {
+		'use strict'
+
+
+		/**
+		 * private
+		 */
+
+		var STATE_WAITING_FOR_PROCESSING = 0
+		var STATE_PROCESSING = 1
+		var STATE_COMPLETED = 2
+
+		var extensionToLoaderFactory = {
+			'png'  : PlatformKit.createImageLoader,
+			'jpg'  : PlatformKit.createImageLoader,
+			'json' : PlatformKit.createSoundLoader,
+			'txt'  : PlatformKit.createTextLoader
+		}
+
+
+		var createResourceBundle = function( name, resources ) {
+			return {
+				name                  : name,
+				state                 : STATE_WAITING_FOR_PROCESSING,
+				resources             : resources,
+				resourcesTotal        : resources.length,
+				resourcesNotCompleted : resources.length
+			}
+		}
+
+		/**
+		 * Returns true if a resource bundle with the provided name exists, false otherwise.
+		 *
+		 * @param resourceBundles
+		 * @param name
+		 */
+		var resourceBundleExists = function( resourceBundles, name ) {
+			return _.has( resourceBundles, name )
+		}
+
+		/**
+		 * Returns true if a resource with the provided name exists, false otherwise.
+		 *
+		 * @param resources
+		 * @param resourceName
+		 */
+		var isResourceInCache = function( resources, resourceName ) {
+			return _.has( resources, resourceName )
+		}
+
+		var updateProgress = function( resourceBundle ) {
+			resourceBundle.resourcesNotCompleted -= 1
+
+			var progress = 1.0 - resourceBundle.resourcesNotCompleted / resourceBundle.resourcesTotal
+
+			this.eventManager.publish(
+				[ Events.RESOURCE_PROGRESS, resourceBundle.name ],
+				[ progress ]
+			)
+
+			if( resourceBundle.resourcesNotCompleted === 0 ) {
+				resourceBundle.state = STATE_COMPLETED
+
+				this.eventManager.publish( [ Events.RESOURCE_LOADING_COMPLETED, resourceBundle.name ] )
+			}
+		}
+
+		var resourceLoadingCompletedCallback = function( resourceBundleName, resourceName, loadedResources ) {
+			if( loadedResources === undefined ||
+				_.size( loadedResources ) === 0 ) {
+
+				throw 'Resource "' + resourceName + '" from resource bundle "' + resourceBundleName + '" is undefined or empty on loading completed.'
+			}
+
+			// add newly loaded resources to cache
+			_.extend( this.resources, loadedResources )
+
+			_.bind( updateProgress, this, this.resourceBundles[ resourceBundleName ] )()
+		}
+
+		var createLoader = function( eventManager, resourceBundleName, resourceName, resourceLoadingCompletedCallback ) {
+			var extension = _.last( resourceName.split( '.' ) )
+			var loaderFactory = extensionToLoaderFactory[ extension ]
+
+			if( loaderFactory === undefined ) {
+				throw 'Could not create loader factory for resource "' + resourceName + '".'
+			}
+
+			var loader = loaderFactory(
+				eventManager,
+				resourceBundleName,
+				resourceName,
+				_.bind( resourceLoadingCompletedCallback, null, resourceBundleName, resourceName )
+			)
+
+			return loader
+		}
+
+		var startLoadingResourceBundle = function( resourceBundle ) {
+			_.each(
+				resourceBundle.resources,
+				_.bind(
+					function( resourceName ) {
+						if( isResourceInCache( this.resources, resourceName ) ) {
+							updateProgress( resourceBundle )
+
+							return
+						}
+
+						var loader = createLoader(
+							this.eventManager,
+							resourceBundle.name,
+							resourceName,
+							_.bind( resourceLoadingCompletedCallback, this )
+						)
+
+						if( loader !== undefined ) {
+							loader.start()
+
+						} else {
+							throw 'Could not create a loader for resource "' + resourceName + '".'
+						}
+					},
+					this
+				)
+			)
+		}
+
+
+		/**
+		 * public
+		 */
+
+		var ResourceLoader = function( eventManager ) {
+			if( eventManager === undefined ) throw 'Argument "eventManager" is undefined.'
+
+			this.eventManager = eventManager
+			this.resourceBundles = {}
+			this.resources = {}
+		}
+
+		ResourceLoader.prototype = {
+			addResourceBundle: function( name, resources ) {
+				if( _.size( resources ) === 0 ) {
+					throw 'Resource group with name "' + name + '" has zero assigned resources.'
+				}
+
+				if( resourceBundleExists( this.resourceBundles, name ) ) {
+					throw 'Resource group with name "' + name + '" already exists.'
+				}
+
+
+				this.resourceBundles[ name ] = createResourceBundle(
+					name,
+					resources
+				)
+			},
+
+			start: function() {
+				_.each(
+					this.resourceBundles,
+					_.bind(
+						function( resourceBundle ) {
+							if( resourceBundle.state !== STATE_WAITING_FOR_PROCESSING ) return
+
+							resourceBundle.state = STATE_PROCESSING
+							_.bind( startLoadingResourceBundle, this, resourceBundle )()
+						},
+						this
+					)
+				)
+			},
+
+			getResources: function() {
+				return this.resources
+			}
+		}
+
+		return ResourceLoader
 	}
 )
 
@@ -6754,137 +6367,212 @@ define(
 	}
 )
 
-define(
-	"spell/client/util/network/initializeClockSync",
-	[
-		"spell/shared/util/platform/Types",
-		"spell/shared/util/platform/PlatformKit"
-	],
-	function(
-		Types,
-		PlatformKit
-	) {
-		"use strict"
+			define(
+				"spell/client/util/network/initializeClockSync",
+				[
+					"spell/shared/util/platform/Types",
+					"spell/shared/util/platform/PlatformKit",
+
+					"underscore"
+				],
+				function(
+					Types,
+					PlatformKit,
+
+					_
+				) {
+					"use strict"
 
 
-		var numberOfUpdates = 5
+					function initializeClockSync( eventManager, connection ) {
+
+						var currentUpdateNumber = 1
+						var oneWayLatenciesInMs = []
+
+						connection.handlers[ "clockSync" ] = function( messageType, messageData ) {
+							var currentTimeInMs            = Types.Time.getCurrentInMs()
+							var sendTimeInMs               = messageData.clientTime
+							var roundTripLatencyInMs       = currentTimeInMs - sendTimeInMs
+							var estimatedOneWayLatencyInMs = roundTripLatencyInMs / 2
+
+							oneWayLatenciesInMs.push( estimatedOneWayLatencyInMs )
+
+							if ( currentUpdateNumber === 1 ) {
+								var serverGameTimeInMs = messageData.serverTime + estimatedOneWayLatencyInMs
+								eventManager.publish( [ "firstClockSyncResult" ], [ serverGameTimeInMs ] )
+							}
+							else if ( currentUpdateNumber === 5 ) {
+								var computedServerTimeInMs = computeServerTimeInMs( oneWayLatenciesInMs, messageData.serverTime )
+								eventManager.publish( [ "clockSyncResult" ], [ Types.Time.getCurrentInMs(), computedServerTimeInMs ] )
+							}
+
+							currentUpdateNumber += 1
+						}
+
+						var sendClockSyncMessage = function() {
+							connection.send( "clockSync", { clientTime: Types.Time.getCurrentInMs() } )
+
+							if ( currentUpdateNumber <= 5 ) {
+								PlatformKit.registerTimer( sendClockSyncMessage, 2000 )
+							}
+						}
+
+						sendClockSyncMessage()
+					}
 
 
-		function initializeClockSync( eventManager, connection ) {
+					function computeServerTimeInMs( oneWayLatenciesInMs, serverTimeInMs ) {
+						oneWayLatenciesInMs.sort( function( a, b ) {
+							return a - b
+						} )
 
-			var currentUpdateNumber = 1
-			var oneWayLatenciesInMs = []
+						var medianLatencyInMs
+						if ( oneWayLatenciesInMs.length % 2 === 0 ) {
+							var a = oneWayLatenciesInMs[ oneWayLatenciesInMs.length / 2 - 1 ]
+							var b = oneWayLatenciesInMs[ oneWayLatenciesInMs.length / 2     ]
 
-			connection.handlers[ "clockSync" ] = function( messageType, messageData ) {
-				var currentTimeInMs            = Types.Time.getCurrentInMs()
-				var sendTimeInMs               = messageData.clientTime
-				var roundTripLatencyInMs       = currentTimeInMs - sendTimeInMs
-				var estimatedOneWayLatencyInMs = roundTripLatencyInMs / 2
+							medianLatencyInMs = ( a + b ) / 2
+						}
+						else {
+							medianLatencyInMs = oneWayLatenciesInMs[ Math.floor( oneWayLatenciesInMs.length / 2 ) - 1 ]
+						}
 
-				oneWayLatenciesInMs.push( estimatedOneWayLatencyInMs )
+						var meanLatencyInMs = _.reduce(
+							oneWayLatenciesInMs,
+							function( a, b ) {
+								return a + b
+							},
+							0
+						) / oneWayLatenciesInMs.length
 
-				if ( currentUpdateNumber === 1 ) {
-					var serverGameTimeInMs = messageData.serverTime + estimatedOneWayLatencyInMs
-					eventManager.publish( [ "firstClockSyncResult" ], [ serverGameTimeInMs ] )
-				}
-				else if ( currentUpdateNumber === 5 ) {
-					var computedServerTimeInMs = computeServerTimeInMs( oneWayLatenciesInMs, messageData.serverTime )
-					eventManager.publish( [ "clockSyncResult" ], [ Types.Time.getCurrentInMs(), computedServerTimeInMs ] )
-				}
+						var varianceInMsSquared = _.reduce(
+							oneWayLatenciesInMs,
+							function( memo, latencyInMs ) {
+								return memo + Math.pow( latencyInMs - meanLatencyInMs, 2 )
+							},
+							0
+						)
 
-				currentUpdateNumber += 1
-			}
+						var standardDeviationInMs = Math.sqrt( varianceInMsSquared )
 
-			var sendClockSyncMessage = function() {
-				connection.send( "clockSync", { clientTime: Types.Time.getCurrentInMs() } )
+						var significantOneWayLatenciesInMs = _.filter(
+							oneWayLatenciesInMs,
+							function( latencyInMs ) {
+								return latencyInMs < medianLatencyInMs + standardDeviationInMs
+							}
+						)
 
-				if ( currentUpdateNumber <= 5 ) {
-					PlatformKit.registerTimer( sendClockSyncMessage, 2000 )
-				}
-			}
+						var meanSignificantOneWayLatencyInMs = _.reduce(
+							significantOneWayLatenciesInMs,
+							function( a, b ) {
+								return a + b
+							}
+						) / significantOneWayLatenciesInMs.length
 
-			sendClockSyncMessage()
-		}
-
-
-		function computeServerTimeInMs( oneWayLatenciesInMs, serverTimeInMs ) {
-			oneWayLatenciesInMs.sort( function( a, b ) {
-				return a - b
-			} )
-
-			var medianLatencyInMs
-			if ( oneWayLatenciesInMs.length % 2 === 0 ) {
-				var a = oneWayLatenciesInMs[ oneWayLatenciesInMs.length / 2 - 1 ]
-				var b = oneWayLatenciesInMs[ oneWayLatenciesInMs.length / 2     ]
-
-				medianLatencyInMs = ( a + b ) / 2
-			}
-			else {
-				medianLatencyInMs = oneWayLatenciesInMs[ Math.floor( oneWayLatenciesInMs.length / 2 ) - 1 ]
-			}
-
-			var meanLatencyInMs = oneWayLatenciesInMs.reduce( function( a, b ) { return a + b } ) / oneWayLatenciesInMs.length
-
-			var varianceInMsSquared = oneWayLatenciesInMs
-				.map( function( latencyInMs ) { return Math.pow( latencyInMs - meanLatencyInMs, 2 ) } )
-				.reduce( function( a, b ) { return a + b } ) / oneWayLatenciesInMs.length
-
-			var standardDeviationInMs = Math.sqrt( varianceInMsSquared )
-
-			var significantOneWayLatenciesInMs = oneWayLatenciesInMs.filter( function( latencyInMs ) {
-				return latencyInMs < medianLatencyInMs + standardDeviationInMs
-			} )
-
-			var meanSignificantOneWayLatencyInMs = significantOneWayLatenciesInMs.reduce( function( a, b ) { return a + b } ) / significantOneWayLatenciesInMs.length
-
-			return serverTimeInMs + meanSignificantOneWayLatencyInMs
-		}
+						return serverTimeInMs + meanSignificantOneWayLatencyInMs
+					}
 
 
-		return initializeClockSync
-	}
-)
-
-define(
-	"spell/client/util/network/initPathServiceConnection",
-	[
-		"spell/shared/util/platform/PlatformKit"
-	],
-	function(
-		PlatformKit
-	) {
-		"use strict"
-
-
-		return function( callback ) {
-			var pathServiceSocket = PlatformKit.createSocket( "/pathService" )
-
-			pathServiceSocket.on(
-				"connect",
-				function() {
-					callback( pathServiceSocket )
+					return initializeClockSync
 				}
 			)
-		}
-	}
-)
 
 define(
 	"spell/client/util/network/network",
 	[
-		"spell/client/util/network/initializeClockSync",
-		"spell/client/util/network/initPathServiceConnection"
+		"spell/client/util/network/initializeClockSync"
 	],
 	function(
-		initializeClockSync,
-		initPathServiceConnection
+		initializeClockSync
 	) {
 		"use strict"
 
 
 		return {
-			initializeClockSync       : initializeClockSync,
-			initPathServiceConnection : initPathServiceConnection
+			initializeClockSync       : initializeClockSync
+		}
+	}
+)
+
+define(
+	"spell/shared/util/Logger",
+	[
+		"spell/shared/util/platform/PlatformKit"
+	],
+	function(
+		PlatformKit
+	) {
+		"use strict"
+
+
+		/**
+		 * private
+		 */
+
+		var LOG_LEVEL_DEBUG = 0
+		var LOG_LEVEL_INFO  = 1
+		var LOG_LEVEL_WARN  = 2
+		var LOG_LEVEL_ERROR = 3
+
+		var logLevels = [
+			"DEBUG",
+			"INFO",
+			"WARN",
+			"ERROR"
+		]
+
+		var currentLogLevel = LOG_LEVEL_INFO
+
+
+		var setLogLevel = function( level ) {
+			currentLogLevel = level
+		}
+
+		var log = function( level, message ) {
+			if( level < 0 ||
+				level > 3 ) {
+
+				throw "Log level '" + level + "' is not supported."
+			}
+
+			if( level < currentLogLevel ) return
+
+
+			PlatformKit.log( logLevels[ level ] + " " + message )
+		}
+
+		var debug = function( message ) {
+			log( LOG_LEVEL_DEBUG, message )
+		}
+
+		var info = function( message ) {
+			log( LOG_LEVEL_INFO, message )
+		}
+
+		var warn = function( message ) {
+			log( LOG_LEVEL_WARN, message )
+		}
+
+		var error = function( message ) {
+			log( LOG_LEVEL_ERROR, message )
+		}
+
+
+		/**
+		 * public
+		 */
+
+		return {
+			LOG_LEVEL_DEBUG : LOG_LEVEL_DEBUG,
+			LOG_LEVEL_INFO  : LOG_LEVEL_INFO,
+			LOG_LEVEL_WARN  : LOG_LEVEL_WARN,
+			LOG_LEVEL_ERROR : LOG_LEVEL_ERROR,
+			setLogLevel     : setLogLevel,
+			log             : log,
+			debug           : debug,
+			info            : info,
+			warn            : warn,
+			error           : error
 		}
 	}
 )
@@ -6893,27 +6581,23 @@ define(
 	"spell/client/util/network/createServerConnection",
 	[
 		"funkysnakes/shared/util/stats",
-		"spell/shared/util/platform/PlatformKit"
+		"spell/shared/util/platform/PlatformKit",
+		"spell/shared/util/Logger"
 	],
 	function(
 		stats,
-		PlatformKit
+		PlatformKit,
+		Logger
 	) {
 		"use strict"
 
 
 		return function( protocol, eventManager, statistics ) {
-			stats.createStat( statistics, "sent"                , "chars/s" )
-			stats.createStat( statistics, "received"            , "chars/s" )
-			stats.createStat( statistics, "entityUpdateFraction", "%"       )
+			stats.createStat( statistics, "sent",                 "chars/s" )
+			stats.createStat( statistics, "received",             "chars/s" )
+			stats.createStat( statistics, "entityUpdateFraction", "%" )
 
-			var socket = PlatformKit.createSocket(
-				"/",
-				{
-					"auto connect"         : false,
-					"force new connection" : true
-				}
-			)
+			var socket = PlatformKit.createSocket()
 
 			var connection = {
 				protocol : protocol,
@@ -6928,13 +6612,26 @@ define(
 				send     : function( messageType, messageData ) {
 					var message = connection.protocol.encode( messageType, messageData )
 
-					socket.send( message )
+					try {
+						socket.send( message )
+
+					} catch ( e ) {
+						Logger.debug( 'FIXME: Could not send message, because the socket is not connected yet. Will retry in 0.5 sec' )
+
+						PlatformKit.registerTimer(
+							function() {
+								socket.send( message )
+							},
+							500
+						)
+					}
 
 					stats.charsSent += message.length
 				}
 			}
 
-			socket.on( "message", function( messageAsString ) {
+			socket.onmessage = function( messageEvent ) {
+				var messageAsString = messageEvent.data
 				var message = protocol.decode( messageAsString )
 
 				connection.stats.charsReceived += messageAsString.length
@@ -6953,13 +6650,11 @@ define(
 						connection.messages[ message.type ] = []
 					}
 					connection.messages[ message.type ].push( message.data )
-				}
-				else {
+
+				} else {
 					connection.handlers[ message.type ]( message.type, message.data )
 				}
-			} )
-
-			socket.socket.connect()
+			}
 
 			return connection
 		}
@@ -7046,20 +6741,16 @@ define(
 		"use strict"
 
 
-		return function( basePath, pathServiceSocket, callback ) {
-			pathServiceSocket.on(
-				"message",
-				function( message ) {
-					trace( message )
+		return function( basePath, connection, callback ) {
 
+			connection.handlers[ 'pathService' ] = function( client, message ) {
 
-					if( message.path === basePath ) {
-						callback( message.files )
-					}
+				if (  message.path === basePath ) {
+					callback( message.files )
 				}
-			)
+			}
 
-			pathServiceSocket.json.send( { path: basePath } )
+			connection.send( 'pathService', { path: basePath } )
 		}
 	}
 )
@@ -7094,7 +6785,7 @@ define(
 			codeDirectory,
 			spellModule,
 			gameModule,
-			pathServiceSocket,
+			connection,
 			callback
 		) {
 			var spellBasePath = codeDirectory+ "/" +spellModule+ "/"
@@ -7110,7 +6801,7 @@ define(
 				spellSharedEntitiesPath,
 				gameClientEntitiesPath,
 				gameSharedEntitiesPath,
-				pathServiceSocket,
+				connection,
 				function(
 					relativeSpellClientEntityPaths,
 					relativeSpellSharedEntityPaths,
@@ -7197,13 +6888,13 @@ define(
 			spellSharedEntitiesPath,
 			gameClientEntitiesPath,
 			gameSharedEntitiesPath,
-			pathServiceSocket,
+			connection,
 			callback
 		) {
-			loadPaths( spellClientEntitiesPath, pathServiceSocket, function( relativeSpellClientEntityPaths ) {
-				loadPaths( spellSharedEntitiesPath, pathServiceSocket, function( relativeSpellSharedEntityPaths ) {
-					loadPaths( gameClientEntitiesPath, pathServiceSocket, function( relativeGameClientEntityPaths ) {
-						loadPaths( gameSharedEntitiesPath, pathServiceSocket, function( relativeGameSharedEntityPaths ) {
+			loadPaths( spellClientEntitiesPath, connection, function( relativeSpellClientEntityPaths ) {
+				loadPaths( spellSharedEntitiesPath, connection, function( relativeSpellSharedEntityPaths ) {
+					loadPaths( gameClientEntitiesPath, connection, function( relativeGameClientEntityPaths ) {
+						loadPaths( gameSharedEntitiesPath, connection, function( relativeGameSharedEntityPaths ) {
 							callback(
 								relativeSpellClientEntityPaths,
 								relativeSpellSharedEntityPaths,
@@ -7255,53 +6946,28 @@ define(
 define(
 	"spell/client/main",
 	[
-		"spell/client/util/loadEntityModules",
-		"spell/client/util/loadPaths",
-		"spell/client/util/network/initPathServiceConnection",
-		"spell/shared/util/platform/PlatformKit"
+		"spell/client/util/loadEntityModules"
 	],
 	function(
-		loadEntityModules,
-		loadPaths,
-		initPathServiceConnection,
-		PlatformKit
+		loadEntityModules
 	) {
 		"use strict"
 
 
-		var imagePath      = "images"
 		var codeDirectory  = "code"
 		var spellModule    = "spell"
 
-
 		// return spell entry point
-		return function( gameModule, clientMain ) {
-			initPathServiceConnection(
-				function( pathServiceSocket ) {
-					loadPaths(
-						imagePath,
-						pathServiceSocket,
-						function( imageFiles ) {
-							loadEntityModules(
-								codeDirectory,
-								spellModule,
-								gameModule,
-								pathServiceSocket,
-								function( entityFunctions ) {
-									// This is a temporary solution. This will be refactored when the resource loader gets implemented.
-									PlatformKit.loadImages(
-										imagePath,
-										imageFiles,
-										function( images ) {
-											clientMain( entityFunctions, images )
-										}
-									)
-								}
-							)
-						}
-					)
-				}
-			)
+		return function( gameModule, clientMain, connection ) {
+//			loadEntityModules(
+//				codeDirectory,
+//				spellModule,
+//				gameModule,
+//				connection,
+//				clientMain
+//			)
+
+			clientMain()
 		}
 	}
 )
@@ -7324,12 +6990,15 @@ define(
 
 		"spell/client/components/network/markedForDestruction",
 		"spell/shared/util/EventManager",
+		"spell/shared/util/ResourceLoader",
 		"spell/shared/util/entities/Entities",
 		"spell/shared/util/entities/EntityManager",
 		"spell/client/util/network/network",
 		"spell/client/util/network/createServerConnection",
 		"spell/shared/util/zones/ZoneManager",
 		"spell/shared/util/platform/PlatformKit",
+		"spell/shared/util/Events",
+		"spell/shared/util/Logger",
 		"spell/client/main",
 
 		"underscore"
@@ -7350,12 +7019,15 @@ define(
 
 		markedForDestruction,
 		EventManager,
+		ResourceLoader,
 		Entities,
 		EntityManager,
 		network,
 		createServerConnection,
 		ZoneManager,
 		PlatformKit,
+		Events,
+		Logger,
 		enterMain,
 
 		_
@@ -7363,224 +7035,169 @@ define(
 		"use strict"
 
 
-		var main = function( entityFunctions, images ) {
-			var eventManager = new EventManager()
+		var resourceUris = [
+			'images/html5_webgl_logo_128x64.png',
+			'images/4.2.04_256.png',
+			'images/web/tile.jpg',
+			'images/web/menu.png',
+			'images/web/logo.png',
+			'images/html5_logo_64x64.png',
+			'images/environment/cloud_dark_02.png',
+			'images/environment/cloud_dark_07.png',
+			'images/environment/cloud_light_05.png',
+			'images/environment/cloud_light_07.png',
+			'images/environment/cloud_dark_03.png',
+			'images/environment/cloud_light_04.png',
+			'images/environment/arena.png',
+			'images/environment/cloud_dark_05.png',
+			'images/environment/cloud_dark_06.png',
+			'images/environment/cloud_dark_01.png',
+			'images/environment/cloud_light_01.png',
+			'images/environment/ground.jpg',
+			'images/environment/cloud_light_06.png',
+			'images/environment/cloud_light_03.png',
+			'images/environment/cloud_dark_04.png',
+			'images/environment/cloud_light_02.png',
+			'images/html5_webgl_logo_256_128.png',
+			'images/items/neutral_container.png',
+			'images/items/object_energy.png',
+			'images/items/player4_container.png',
+			'images/items/dropped_container_1.png',
+			'images/items/player3_container.png',
+			'images/items/player1_container.png',
+			'images/items/dropped_container_0.png',
+			'images/items/invincible.png',
+			'images/items/player2_container.png',
+			'images/shadows/object_energy.png',
+			'images/shadows/invincible.png',
+			'images/shadows/container.png',
+			'images/shadows/vehicle.png',
+			'images/html5_logo_128x128.png',
+			'images/tile_cloud.png',
+			'images/tile_cloud2.png',
+			'images/vehicles/ship_player1_invincible.png',
+			'images/vehicles/ship_player2_invincible.png',
+			'images/vehicles/ship_player4.png',
+			'images/vehicles/ship_player3_speed.png',
+			'images/vehicles/ship_player3_invincible.png',
+			'images/vehicles/ship_player4_speed.png',
+			'images/vehicles/ship_player4_invincible.png',
+			'images/vehicles/ship_player1.png',
+			'images/vehicles/ship_player2_speed.png',
+			'images/vehicles/ship_player1_speed.png',
+			'images/vehicles/ship_player3.png',
+			'images/vehicles/ship_player2.png',
+			'images/effects/shield.png'//,
+//			'sounds/sets/set2.json'
+		]
 
-			var componentConstructors = {
-				"markedForDestruction": markedForDestruction,
-				"position"            : position,
-				"orientation"         : orientation,
-				"collisionCircle"     : collisionCircle,
-				"shield"              : shield
-			}
 
-			var entityManager = new EntityManager( entities, componentConstructors )
+		Logger.setLogLevel( Logger.LOG_LEVEL_DEBUG )
 
-			var statistics = stats.initStats()
+		var eventManager   = new EventManager()
+		var resourceLoader = new ResourceLoader( eventManager )
+		var statistics     = stats.initStats()
+		var connection     = createServerConnection( networkProtocol, eventManager, statistics )
 
-			var connection = createServerConnection( networkProtocol, eventManager, statistics )
+		var main = function() {
+			resourceLoader.addResourceBundle( 'bundle1', resourceUris )
 
-			var renderingContext = PlatformKit.RenderingFactory.createContext2d( constants.xSize, constants.ySize )
-
-			var textures = {}
-
-			_.each( images, function( image, imageId ) {
-				textures[ imageId ] = renderingContext.createTexture( image )
-			} )
+			eventManager.subscribe(
+				[ Events.RESOURCE_LOADING_COMPLETED, "bundle1" ],
+				function( event ) {
+					Logger.info( "loading completed" )
 
 
-			var globals = {
-				renderingContext : renderingContext,
-				connection       : connection,
-				entityManager    : entityManager,
-				eventManager     : eventManager,
-				textures         : textures,
-				inputEvents      : PlatformKit.createInputEvents(),
-				stats            : statistics
-			}
+					var componentConstructors = {
+						"markedForDestruction": markedForDestruction,
+						"position"            : position,
+						"orientation"         : orientation,
+						"collisionCircle"     : collisionCircle,
+						"shield"              : shield
+					}
+
+					var entityManager = new EntityManager( entities, componentConstructors )
+
+					var statistics = stats.initStats()
+
+					var connection = createServerConnection( networkProtocol, eventManager, statistics )
+
+					var renderingContext = PlatformKit.RenderingFactory.createContext2d( constants.xSize, constants.ySize )
 
 
-			var zones = {
-				game : game,
-				lobby: lobby
-			}
+					// TODO: the resource loader should create spell texture object instances instead of raw html images
 
-			var zoneManager = new ZoneManager( eventManager, zones, globals )
+					// HACK: creating textures out of images
+					var resources = resourceLoader.getResources()
+					var textures = {}
 
-			globals.zoneManager = zoneManager
+					_.each(
+						resources,
+						function( resource, resourceId ) {
+							var extension =  _.last( resourceId.split( "." ) )
+							if( extension === "png" || extension === "jpg" ) {
+								textures[ resourceId.replace(/images\//g, '') ] = renderingContext.createTexture( resource )
+							}
+						}
+					)
 
 
-			eventManager.subscribe( [ "messageReceived", "zoneChange" ],
-				function( messageType, messageData ) {
-					// discard entity updates from the previous zone
-					connection.messages[ "entityUpdate" ] = []
+					var globals = {
+						renderingContext : renderingContext,
+						connection       : connection,
+						entityManager    : entityManager,
+						eventManager     : eventManager,
+						textures         : textures,
+						inputEvents      : PlatformKit.createInputEvents(),
+						stats            : statistics,
+						sounds           : resources
+					}
 
-					var currentZone = zoneManager.activeZones()[ 0 ]
-					var newZone     = messageData
 
-					zoneManager.destroyZone( currentZone )
-					zoneManager.createZone( newZone )
+					var zones = {
+						game : game,
+						lobby: lobby
+					}
+
+					var zoneManager = new ZoneManager( eventManager, zones, globals )
+
+					globals.zoneManager = zoneManager
+
+
+					eventManager.subscribe( [ "messageReceived", "zoneChange" ],
+						function( messageType, messageData ) {
+							// discard entity updates from the previous zone
+							connection.messages[ "entityUpdate" ] = []
+
+							var currentZone = zoneManager.activeZones()[ 0 ]
+							var newZone     = messageData
+
+							zoneManager.destroyZone( currentZone )
+							zoneManager.createZone( newZone )
+						}
+					)
+
+					eventManager.subscribe( [ "firstClockSyncResult" ], function( remoteGameTimeInMs ) {
+						var mainLoop = createMainLoop(
+							eventManager,
+							remoteGameTimeInMs
+						)
+
+						zoneManager.createZone( "lobby" )
+
+						mainLoop()
+					} )
+
+					network.initializeClockSync( eventManager, connection )
 				}
 			)
 
-			eventManager.subscribe( [ "firstClockSyncResult" ], function( remoteGameTimeInMs ) {
-				var mainLoop = createMainLoop(
-					eventManager,
-					remoteGameTimeInMs
-				)
-
-				zoneManager.createZone( "lobby" )
-
-				mainLoop()
-			} )
-
-			network.initializeClockSync( eventManager, connection )
+			resourceLoader.start()
 		}
 
-		enterMain( "funkysnakes", main )
+		enterMain( "funkysnakes", main, connection )
 	}
 )
-
-			define(
-				"spell/shared/util/math",
-				function(
-				) {
-					"use strict"
-
-
-					var clamp = function( value, lowerBound, upperBound ) {
-						if ( value < lowerBound) return lowerBound;
-						if ( value > upperBound) return upperBound;
-
-						return value;
-					}
-
-					/**
-					 * Creates a random number generator.
-					 *
-					 * @param seed - seed that the rng is initialized with
-					 */
-					var createRandomNumberGenerator = function( seed ) {
-						if( seed === undefined ) {
-							seed = 0
-						}
-
-						var constant  = Math.pow( 2, 13 ) + 1
-						var bigNumber = Math.pow( 2, 20 )
-						var prime     = 1987
-						var maximum   = 1000000 // number of decimal digits
-
-
-						return {
-							next : function( min, max ) {
-								seed = seed % bigNumber
-								seed *= constant
-								seed += prime
-
-
-								// if 'min' and 'max' are not provided, return random number between 0.0 and 1.0
-								return (
-									min !== undefined && max !== undefined ?
-									min + seed % maximum / maximum * ( max - min ) :
-									seed % maximum / maximum
-								)
-							}
-						}
-					}
-
-
-					return {
-						clamp: clamp,
-						createRandomNumberGenerator: createRandomNumberGenerator
-					}
-				}
-			)
-
-			define(
-				"spell/shared/util/color",
-				[
-					"spell/shared/util/math",
-
-					"glmatrix/vec3",
-					"underscore"
-				],
-				function(
-					MathHelper,
-
-					vec3,
-					_
-				) {
-					"use strict"
-
-
-					var toRange = function( value ) {
-						return Math.round( MathHelper.clamp( value, 0, 1 ) * 255 )
-					}
-
-
-					var createRgb = function( r, g, b ) {
-						return [ r, g, b ]
-					}
-
-
-					var createRgba = function( r, g, b, a ) {
-						return [ r, g, b, a ]
-					}
-
-
-					var createRandom = function() {
-						var primaryColorIndex = Math.round( Math.random() * 3 )
-						var colorVec = vec3.create( [ 0.8, 0.8, 0.8 ] )
-
-						for( var i = 0; i < colorVec.length; i++ ) {
-							if ( i === primaryColorIndex ) {
-								colorVec[ i ] = 0.95
-
-							} else {
-								colorVec[ i ] *= Math.random()
-							}
-						}
-
-						return colorVec
-					}
-
-
-					var formatCanvas = function( r, g, b, a ) {
-						if( a === undefined ) {
-							return 'rgb('
-								+ toRange( r ) + ', '
-								+ toRange( g ) + ', '
-								+ toRange( b ) + ')'
-						}
-
-						return 'rgba('
-							+ toRange( r ) + ', '
-							+ toRange( g ) + ', '
-							+ toRange( b ) + ', '
-							+ toRange( a ) + ')'
-					}
-
-
-					var isVec3Color = function( vec ) {
-						return _.size( vec ) === 3
-					}
-
-
-					var isVec4Color = function( vec ) {
-						return _.size( vec ) === 4
-					}
-
-
-					return {
-						createRgb    : createRgb,
-						createRgba   : createRgba,
-						createRandom : createRandom,
-						formatCanvas : formatCanvas,
-						isVec3Color  : isVec3Color,
-						isVec4Color  : isVec4Color
-					}
-				}
-			)
 		}
 	}
 }
