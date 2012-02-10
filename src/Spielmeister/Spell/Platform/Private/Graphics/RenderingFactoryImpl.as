@@ -16,8 +16,8 @@ package Spielmeister.Spell.Platform.Private.Graphics {
 			this.root = root
 		}
 
-		public function createContext2d( width : uint, height : uint, id : String, requestedBackEnd : uint ) : DisplayListContext {
-			return new DisplayListContext( this.root )
+		public function createContext2d( width : uint, height : uint, id : String = null, requestedBackEnd : uint = BACK_END_DISPLAY_LIST ) : DisplayListContext {
+			return new DisplayListContext( this.root, width, height )
 		}
 	}
 }

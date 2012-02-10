@@ -10,11 +10,11 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 	import flash.geom.Matrix3D
 	import flash.geom.Vector3D
 
-	import mx.core.BitmapAsset
-
 
 	public class DisplayListContext {
 		private var root : Sprite
+		private var width : uint
+		private var height : uint
 		private var colorBuffer : Bitmap
 		private var clearColor : uint
 
@@ -25,19 +25,26 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		private var tmpShape : Shape         = new Shape()
 
 
-		public function DisplayListContext( _root : DisplayObject ) {
-			root = Sprite( _root )
+		public function DisplayListContext( _root : DisplayObject, width : uint, height: uint ) {
+			this.root = Sprite( _root )
+			this.width = width
+			this.height = height
 			clearColor = 0x000000
 
 			// setting up the color buffer
 			colorBuffer = new Bitmap()
-			colorBuffer.bitmapData = new BitmapData( 320, 240, false, 0x000000)
+			colorBuffer.bitmapData = new BitmapData(
+				this.width,
+				this.height,
+				false,
+				clearColor
+			)
 
 			root.addChild( colorBuffer )
 
 
 			// initializing state stack
-			for( var i = 0; i < stateStack.length; i++ ) {
+			for( var i : int = 0; i < stateStack.length; i++ ) {
 				stateStack[ i ] = createDefaultState()
 			}
 		}
@@ -111,7 +118,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 
 		public function setClearColor( vec : Array ) : void {
-			for( var i = 0; i < 3; i++ ) {
+			for( var i : int = 0; i < 3; i++ ) {
 				clearColor += uint( clampToUnit( vec[ i ] ) * 255 ) << ( ( 2 - i ) * 8 )
 			}
 		}
@@ -174,7 +181,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			}
 
 			colorBuffer.bitmapData.draw(
-				texture.privateBitmapDateResource,
+				texture.privateBitmapDataResource,
 				tmpMatrix,
 				colorTransform,
 				null,
@@ -184,20 +191,20 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		}
 
 
-		public function createTexture( bitmapAsset : BitmapAsset ) : Object {
+		public function createTexture( bitmapData : BitmapData ) : Object {
 			return {
 				/**
 				 * public
 				 */
-				width  : bitmapAsset.width,
-				height : bitmapAsset.height,
+				width  : bitmapData.width,
+				height : bitmapData.height,
 
 				/**
 				 * private
 				 *
 				 * This is an implementation detail of the class. If you write code that depends on this you better know what you are doing.
 				 */
-				privateBitmapDateResource: bitmapAsset.bitmapData
+				privateBitmapDataResource: bitmapData
 			}
 		}
 
