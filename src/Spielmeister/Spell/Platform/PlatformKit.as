@@ -33,7 +33,7 @@ package Spielmeister.Spell.Platform {
 		}
 
 		public function updateDebugData( localTimeInMs : int ) : void {
-			trace( "updateDebugData - not yet implemented" )
+//			trace( "updateDebugData - not yet implemented" )
 		}
 
 		public function createInputEvents() : Object {
