@@ -1,21 +1,30 @@
 package Spielmeister.Spell.Platform.Private {
+import Spielmeister.Underscore
 
 	public class Lobby {
 		private var eventManager : Object
 		private var connection : Object
+		// TODO: find solution for this
+		private var _ : Underscore
 
 
 		public function Lobby( eventManager : Object, connection : Object ) {
 			this.eventManager = eventManager
 			this.connection   = connection
+			this._            = new Underscore()
 		}
 
 		public function init() : void {
 			this.eventManager.subscribe(
-				[ "messageReceived", "setName" ],
-				function( messageType, messageData ) {
-					trace( 'Lobby: My name is ' + messageData + '.' )
-				}
+				[ 'messageReceived', 'setName' ],
+				_.bind(
+					function( messageType, messageData ) {
+						trace( 'Lobby: My name is ' + messageData + '.' )
+
+						this.connection.send( 'createGame' )
+					},
+					this
+				)
 			)
 		}
 
@@ -27,8 +36,11 @@ package Spielmeister.Spell.Platform.Private {
 
 		}
 
-		public function refreshGameList( ) : void {
+		public function refreshGameList( games : Object ) : void {
+			var game = _.last( games )
 
+			this.connection.send( "selectGame", game.game.name )
+			this.connection.send( 'startGame', game.game.name )
 		}
 	}
 }
