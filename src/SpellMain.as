@@ -21,6 +21,7 @@ package {
 
 			var moduleDefinitions : ModuleDefinitions = new ModuleDefinitions(
 				this.root,
+				this.stage,
 				needjs.createDefine(),
 				needjs.createRequire()
 			)

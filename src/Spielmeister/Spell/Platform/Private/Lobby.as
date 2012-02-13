@@ -18,9 +18,7 @@ import Spielmeister.Underscore
 			this.eventManager.subscribe(
 				[ 'messageReceived', 'setName' ],
 				_.bind(
-					function( messageType, messageData ) {
-						trace( 'Lobby: My name is ' + messageData + '.' )
-
+					function( messageType : String , messageData : String ) : void {
 						this.connection.send( 'createGame' )
 					},
 					this
@@ -37,9 +35,9 @@ import Spielmeister.Underscore
 		}
 
 		public function refreshGameList( games : Object ) : void {
-			var game = _.last( games )
+			var game : Object = _.last( games )
 
-			this.connection.send( "selectGame", game.game.name )
+			this.connection.send( 'selectGame', game.game.name )
 			this.connection.send( 'startGame', game.game.name )
 		}
 	}

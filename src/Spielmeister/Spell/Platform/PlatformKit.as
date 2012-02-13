@@ -1,6 +1,7 @@
 package Spielmeister.Spell.Platform {
 
 	import Spielmeister.Spell.Platform.Private.Graphics.*
+	import Spielmeister.Spell.Platform.Private.Input
 	import Spielmeister.Spell.Platform.Private.Loader.*
 	import Spielmeister.Spell.Platform.Private.Socket.WebSocketAdapter
 
@@ -15,21 +16,24 @@ package Spielmeister.Spell.Platform {
 		private static const embeddedBitmapAsset1 : Class
 
 		private var root : DisplayObject
+		private var stage : Stage
 		private var origin : String
 		private var renderingFactory : RenderingFactoryImpl
+		private var registeredNextFrame : Boolean = false
 
 
-		public function PlatformKit( root : DisplayObject, origin : String ) {
+		public function PlatformKit( root : DisplayObject, stage : Stage, origin : String ) {
 			this.root = root
+			this.stage = stage
 			this.origin = origin
 			this.renderingFactory = new RenderingFactoryImpl( root )
 		}
 
 		public function callNextFrame( callback : Function ) : void {
-//			trace( "callNextFrame - not yet implemented" )
+			if( registeredNextFrame ) return
 
-			// TODO: only register for this event once, not every main loop iteration
 			root.addEventListener( Event.ENTER_FRAME, callback )
+			registeredNextFrame = true
 		}
 
 		public function updateDebugData( localTimeInMs : int ) : void {
@@ -37,9 +41,7 @@ package Spielmeister.Spell.Platform {
 		}
 
 		public function createInputEvents() : Object {
-			trace( "createInputEvents - not yet implemented" )
-
-			return new Array()
+			return Input.createInputEvents( stage )
 		}
 
 		public function get RenderingFactory() : RenderingFactoryImpl {
