@@ -11,6 +11,10 @@ package Spielmeister {
 			return getQualifiedClassName( collection ) == 'Array'
 		}
 
+		public function isObject( object : * ) : Boolean {
+			return getQualifiedClassName( object ) == 'Object'
+		}
+
 		public function size( collection : * ) : int {
 			return toArray( collection ).length
 		}
@@ -36,7 +40,7 @@ package Spielmeister {
 		}
 
 		public function map( collection : *, iterator : Function, context : * = null ) : Array {
-			var result = toArray( collection )
+			var result : Array = toArray( collection )
 
 			for( var i in result ) {
 				result[ i ] = iterator.apply( context, [ result[ i ], i, result ] )
@@ -46,7 +50,9 @@ package Spielmeister {
 		}
 
 		public function last( collection : *, count : int = 1 ) : Object {
-			return ( count == 1 ? collection[ collection.length - 1 ] : collection.slice( collection.length - count, collection.length ) )
+			var tmp : Array = toArray( collection )
+
+			return ( count == 1 ? tmp[ tmp.length - 1 ] : tmp.slice( tmp.length - count, tmp.length ) )
 		}
 
 		public function filter( collection : *, iterator : Function, context : * = null ) : Array {
@@ -168,6 +174,11 @@ package Spielmeister {
 					return !iterator.call( context, item )
 				}
 			)
+		}
+
+		public function clone( object : Object ) : Object {
+			if( !isObject( object ) ) return object
+			return isArray( object ) ? object.slice() : extend( {}, object )
 		}
 
 
