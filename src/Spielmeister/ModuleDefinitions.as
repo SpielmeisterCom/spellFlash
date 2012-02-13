@@ -5908,7 +5908,7 @@ define(
 		}
 
 		function getElements( node ) {
-			if ( !node ) {
+			if( !node ) {
 				return []
 
 			} else {
@@ -6367,115 +6367,116 @@ define(
 	}
 )
 
-			define(
-				"spell/client/util/network/initializeClockSync",
-				[
-					"spell/shared/util/platform/Types",
-					"spell/shared/util/platform/PlatformKit",
+define(
+	"spell/client/util/network/initializeClockSync",
+	[
+		"spell/shared/util/platform/Types",
+		"spell/shared/util/platform/PlatformKit",
 
-					"underscore"
-				],
-				function(
-					Types,
-					PlatformKit,
+		"underscore"
+	],
+	function(
+		Types,
+		PlatformKit,
 
-					_
-				) {
-					"use strict"
-
-
-					function initializeClockSync( eventManager, connection ) {
-
-						var currentUpdateNumber = 1
-						var oneWayLatenciesInMs = []
-
-						connection.handlers[ "clockSync" ] = function( messageType, messageData ) {
-							var currentTimeInMs            = Types.Time.getCurrentInMs()
-							var sendTimeInMs               = messageData.clientTime
-							var roundTripLatencyInMs       = currentTimeInMs - sendTimeInMs
-							var estimatedOneWayLatencyInMs = roundTripLatencyInMs / 2
-
-							oneWayLatenciesInMs.push( estimatedOneWayLatencyInMs )
-
-							if ( currentUpdateNumber === 1 ) {
-								var serverGameTimeInMs = messageData.serverTime + estimatedOneWayLatencyInMs
-								eventManager.publish( [ "firstClockSyncResult" ], [ serverGameTimeInMs ] )
-							}
-							else if ( currentUpdateNumber === 5 ) {
-								var computedServerTimeInMs = computeServerTimeInMs( oneWayLatenciesInMs, messageData.serverTime )
-								eventManager.publish( [ "clockSyncResult" ], [ Types.Time.getCurrentInMs(), computedServerTimeInMs ] )
-							}
-
-							currentUpdateNumber += 1
-						}
-
-						var sendClockSyncMessage = function() {
-							connection.send( "clockSync", { clientTime: Types.Time.getCurrentInMs() } )
-
-							if ( currentUpdateNumber <= 5 ) {
-								PlatformKit.registerTimer( sendClockSyncMessage, 2000 )
-							}
-						}
-
-						sendClockSyncMessage()
-					}
+		_
+	) {
+		"use strict"
 
 
-					function computeServerTimeInMs( oneWayLatenciesInMs, serverTimeInMs ) {
-						oneWayLatenciesInMs.sort( function( a, b ) {
-							return a - b
-						} )
+		function initializeClockSync( eventManager, connection ) {
 
-						var medianLatencyInMs
-						if ( oneWayLatenciesInMs.length % 2 === 0 ) {
-							var a = oneWayLatenciesInMs[ oneWayLatenciesInMs.length / 2 - 1 ]
-							var b = oneWayLatenciesInMs[ oneWayLatenciesInMs.length / 2     ]
+			var currentUpdateNumber = 1
+			var oneWayLatenciesInMs = []
 
-							medianLatencyInMs = ( a + b ) / 2
-						}
-						else {
-							medianLatencyInMs = oneWayLatenciesInMs[ Math.floor( oneWayLatenciesInMs.length / 2 ) - 1 ]
-						}
+			connection.handlers[ "clockSync" ] = function( messageType, messageData ) {
+				var currentTimeInMs            = Types.Time.getCurrentInMs()
+				var sendTimeInMs               = messageData.clientTime
+				var roundTripLatencyInMs       = currentTimeInMs - sendTimeInMs
+				var estimatedOneWayLatencyInMs = roundTripLatencyInMs / 2
 
-						var meanLatencyInMs = _.reduce(
-							oneWayLatenciesInMs,
-							function( a, b ) {
-								return a + b
-							},
-							0
-						) / oneWayLatenciesInMs.length
+				oneWayLatenciesInMs.push( estimatedOneWayLatencyInMs )
 
-						var varianceInMsSquared = _.reduce(
-							oneWayLatenciesInMs,
-							function( memo, latencyInMs ) {
-								return memo + Math.pow( latencyInMs - meanLatencyInMs, 2 )
-							},
-							0
-						)
+				if( currentUpdateNumber === 1 ) {
+					var serverGameTimeInMs = messageData.serverTime + estimatedOneWayLatencyInMs
+					eventManager.publish( [ "firstClockSyncResult" ], [ serverGameTimeInMs ] )
 
-						var standardDeviationInMs = Math.sqrt( varianceInMsSquared )
+				} else if ( currentUpdateNumber === 5 ) {
+					var computedServerTimeInMs = computeServerTimeInMs( oneWayLatenciesInMs, messageData.serverTime )
+					eventManager.publish( [ "clockSyncResult" ], [ Types.Time.getCurrentInMs(), computedServerTimeInMs ] )
+				}
 
-						var significantOneWayLatenciesInMs = _.filter(
-							oneWayLatenciesInMs,
-							function( latencyInMs ) {
-								return latencyInMs < medianLatencyInMs + standardDeviationInMs
-							}
-						)
+				currentUpdateNumber += 1
+			}
 
-						var meanSignificantOneWayLatencyInMs = _.reduce(
-							significantOneWayLatenciesInMs,
-							function( a, b ) {
-								return a + b
-							}
-						) / significantOneWayLatenciesInMs.length
+			var sendClockSyncMessage = function() {
+				connection.send( "clockSync", { clientTime: Types.Time.getCurrentInMs() } )
 
-						return serverTimeInMs + meanSignificantOneWayLatencyInMs
-					}
+				if ( currentUpdateNumber <= 5 ) {
+					PlatformKit.registerTimer( sendClockSyncMessage, 2000 )
+				}
+			}
+
+			sendClockSyncMessage()
+		}
 
 
-					return initializeClockSync
+		function computeServerTimeInMs( oneWayLatenciesInMs, serverTimeInMs ) {
+			oneWayLatenciesInMs.sort( function( a, b ) {
+				return a - b
+			} )
+
+			var medianLatencyInMs
+			if( oneWayLatenciesInMs.length % 2 === 0 ) {
+				var a = oneWayLatenciesInMs[ oneWayLatenciesInMs.length / 2 - 1 ]
+				var b = oneWayLatenciesInMs[ oneWayLatenciesInMs.length / 2     ]
+
+				medianLatencyInMs = ( a + b ) / 2
+
+			} else {
+				medianLatencyInMs = oneWayLatenciesInMs[ Math.floor( oneWayLatenciesInMs.length / 2 ) - 1 ]
+			}
+
+			var meanLatencyInMs = _.reduce(
+				oneWayLatenciesInMs,
+				function( a, b ) {
+					return a + b
+				},
+				0
+			) / oneWayLatenciesInMs.length
+
+			var varianceInMsSquared = _.reduce(
+				oneWayLatenciesInMs,
+				function( memo, latencyInMs ) {
+					return memo + Math.pow( latencyInMs - meanLatencyInMs, 2 )
+				},
+				0
+			)
+
+			var standardDeviationInMs = Math.sqrt( varianceInMsSquared )
+
+			var significantOneWayLatenciesInMs = _.filter(
+				oneWayLatenciesInMs,
+				function( latencyInMs ) {
+					return latencyInMs < medianLatencyInMs + standardDeviationInMs
 				}
 			)
+
+			var meanSignificantOneWayLatencyInMs = _.reduce(
+				significantOneWayLatenciesInMs,
+				function( a, b ) {
+					return a + b
+				},
+				0
+			) / significantOneWayLatenciesInMs.length
+
+			return serverTimeInMs + meanSignificantOneWayLatencyInMs
+		}
+
+
+		return initializeClockSync
+	}
+)
 
 define(
 	"spell/client/util/network/network",
@@ -6630,31 +6631,32 @@ define(
 				}
 			}
 
-			socket.onmessage = function( messageEvent ) {
-				var messageAsString = messageEvent.data
-				var message = protocol.decode( messageAsString )
+			socket.setOnMessage(
+				function( messageData ) {
+					var message = protocol.decode( messageData )
 
-				connection.stats.charsReceived += messageAsString.length
-				if ( !connection.stats.messageCharsReceived.hasOwnProperty( message.type ) ) {
-					connection.stats.messageCharsReceived[ message.type ] = 0
-				}
-				connection.stats.messageCharsReceived[ message.type ] += messageAsString.length
-
-				eventManager.publish(
-					[ "messageReceived", message.type ],
-					[ message.type, message.data ]
-				)
-
-				if( connection.handlers[ message.type ] === undefined ) {
-					if ( !connection.messages.hasOwnProperty( message.type ) ) {
-						connection.messages[ message.type ] = []
+					connection.stats.charsReceived += messageData.length
+					if ( !connection.stats.messageCharsReceived.hasOwnProperty( message.type ) ) {
+						connection.stats.messageCharsReceived[ message.type ] = 0
 					}
-					connection.messages[ message.type ].push( message.data )
+					connection.stats.messageCharsReceived[ message.type ] += messageData.length
 
-				} else {
-					connection.handlers[ message.type ]( message.type, message.data )
+					eventManager.publish(
+						[ "messageReceived", message.type ],
+						[ message.type, message.data ]
+					)
+
+					if( connection.handlers[ message.type ] === undefined ) {
+						if ( !connection.messages.hasOwnProperty( message.type ) ) {
+							connection.messages[ message.type ] = []
+						}
+						connection.messages[ message.type ].push( message.data )
+
+					} else {
+						connection.handlers[ message.type ]( message.type, message.data )
+					}
 				}
-			}
+			)
 
 			return connection
 		}
