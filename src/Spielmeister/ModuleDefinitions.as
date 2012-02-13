@@ -7089,8 +7089,8 @@ define(
 			'images/vehicles/ship_player1_speed.png',
 			'images/vehicles/ship_player3.png',
 			'images/vehicles/ship_player2.png',
-			'images/effects/shield.png'//,
-//			'sounds/sets/set2.json'
+			'images/effects/shield.png',
+			'sounds/sets/set2.json'
 		]
 
 
