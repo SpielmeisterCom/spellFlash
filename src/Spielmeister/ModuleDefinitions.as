@@ -4467,15 +4467,14 @@ define(
 						return action.key === event.keyCode
 					} )
 
-					if ( action === undefined ) {
-						return
-					}
+					if( !action ) return
+
 
 					var type
-					if ( event.type === "keydown" ) {
+					if( event.type === "keydown" ) {
 						type = "start"
-					}
-					else if ( event.type === "keyup" ) {
+
+					} else if( event.type === "keyup" ) {
 						type = "stop"
 					}
 
