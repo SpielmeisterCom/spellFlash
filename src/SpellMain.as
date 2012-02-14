@@ -13,9 +13,6 @@ package {
 			this.stage.align     = StageAlign.TOP_LEFT
 			this.stage.scaleMode = StageScaleMode.NO_SCALE
 
-			Security.allowDomain("*");
-			Security.loadPolicyFile("xmlsocket://127.0.0.1:10843");
-
 
 			var needjs : Needjs = new Needjs()
 

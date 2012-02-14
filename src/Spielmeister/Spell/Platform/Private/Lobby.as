@@ -38,7 +38,7 @@ import Spielmeister.Underscore
 			var game : Object = _.last( games )
 
 			this.connection.send( 'selectGame', game.game.name )
-			this.connection.send( 'startGame', game.game.name )
+//			this.connection.send( 'startGame', game.game.name )
 		}
 	}
 }

@@ -8,10 +8,20 @@ package Spielmeister.Spell.Platform {
 	import flash.display.*
 	import flash.events.Event
 	import flash.events.TimerEvent
+	import flash.system.Security
 	import flash.utils.Timer
 
 
 	public class PlatformKit {
+		/**
+		 * The hostname and port of the game server used when run in deployment mode.
+		 */
+		private static var serverHostPortDeployment : String = 'guybrush.hq.hauptmedia.de:8080'
+
+		/**
+		 * The hostname and port of the game server used when run in development mode.
+		 */
+		private static var serverHostPortDevelopment : String = 'localhost:8080'
 
 		private var root : DisplayObject
 		private var stage : Stage
@@ -25,6 +35,11 @@ package Spielmeister.Spell.Platform {
 			this.stage = stage
 			this.origin = origin
 			this.renderingFactory = new RenderingFactoryImpl( root )
+		}
+
+		public function init() : void {
+			Security.allowDomain( '*' )
+			Security.loadPolicyFile( 'xmlsocket://' + getServerHostPort() )
 		}
 
 		public function callNextFrame( callback : Function ) : void {
@@ -53,11 +68,11 @@ package Spielmeister.Spell.Platform {
 		}
 
 		public function createSocket() : Object {
-			var url : String = 'ws://localhost:8080/'
+			var serverUrl : String = 'ws://' + getServerHostPort()
 			var protocol: String = 'socketrocket-0.1'
 
 			return new WebSocketAdapter(
-				url,
+				serverUrl,
 				// see https://github.com/Worlize/WebSocket-Node/wiki/Documentation - "origin"
 				origin,
 				protocol
@@ -71,15 +86,38 @@ package Spielmeister.Spell.Platform {
 		}
 
 		public function createImageLoader( eventManager : Object, resourceBundleName : String, resourceUri : String, callback : Function ) : ImageLoader {
-			return new ImageLoader( eventManager, resourceBundleName, resourceUri, callback )
+			return new ImageLoader(
+				getServerHostPort(),
+				eventManager,
+				resourceBundleName,
+				resourceUri,
+				callback
+			)
 		}
 
 		public function createSoundLoader( eventManager : Object, resourceBundleName : String, resourceUri : String, callback : Function ) : SoundLoader {
-			return new SoundLoader( eventManager, resourceBundleName, resourceUri, callback )
+			return new SoundLoader(
+				getServerHostPort(),
+				eventManager,
+				resourceBundleName,
+				resourceUri,
+				callback
+			)
 		}
 
 		public function createTextLoader( eventManager : Object, resourceBundleName : String, resourceUri : String, callback : Function ) : TextLoader {
-			return new TextLoader( eventManager, resourceBundleName, resourceUri, callback )
+			return new TextLoader(
+				getServerHostPort(),
+				eventManager,
+				resourceBundleName,
+				resourceUri,
+				callback
+			)
+		}
+
+		private function getServerHostPort() : String {
+			var regexp : RegExp = /^file:\/\/\//
+			return ( regexp.test( this.origin ) ? serverHostPortDevelopment : serverHostPortDeployment )
 		}
 	}
 }

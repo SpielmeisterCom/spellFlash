@@ -13,6 +13,7 @@ package Spielmeister {
 
 		public function ModuleDefinitions( root : DisplayObject, stage : Stage, define : Function, require : Function ) {
 			this.platformKit = new PlatformKit( root, stage, root.loaderInfo.loaderURL )
+			this.platformKit.init()
 
 			this.define = define
 			this.require = require
