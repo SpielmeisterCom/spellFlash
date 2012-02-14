@@ -35,25 +35,38 @@ package Spielmeister {
 			define(
 				"spell/client/renderingTestMain",
 				[
-					"spell/shared/util/platform/PlatformKit"
+					"spell/shared/util/EventManager",
+					"spell/shared/util/ResourceLoader",
+					"spell/shared/util/Logger",
+					"spell/shared/util/platform/PlatformKit",
+					"spell/shared/util/Events"
 				],
 				function(
-					PlatformKit
+					EventManager,
+					ResourceLoader,
+					Logger,
+					PlatformKit,
+					Events
 				) {
 					"use strict"
 
+
+					Logger.setLogLevel( Logger.LOG_LEVEL_DEBUG )
 
 					var bufferWidth = 320
 					var bufferHeight = 240
 					var renderingContexts = []
 					var objectCount = 7
 
-					var imagePath = "images"
-					var imageFiles = [ "4.2.04_256.png" ]
 
+					var eventManager = new EventManager()
 
-					var draw = function( images ) {
-						var image = images[ "4.2.04_256.png" ]
+					var resourceUris = [
+						"images/4.2.04_256.png"
+					]
+
+					var draw = function( resources ) {
+						var image = resources[ "images/4.2.04_256.png" ]
 
 						renderingContexts.push(
 							PlatformKit.RenderingFactory.createContext2d(
@@ -84,16 +97,37 @@ package Spielmeister {
 							}
 						}
 
-						PlatformKit.log( "drawing completed" )
+						Logger.info( "drawing completed" )
 					}
 
-					PlatformKit.loadImages(
-						imagePath,
-						imageFiles,
-						function( images ) {
-							draw( images )
+
+					var resourceLoader = new ResourceLoader( eventManager )
+
+					resourceLoader.addResourceBundle( "bundle1", resourceUris )
+
+					eventManager.subscribe(
+						[ Events.RESOURCE_PROGRESS, "bundle1" ],
+						function( event ) {
+							Logger.info( event )
 						}
 					)
+
+					eventManager.subscribe(
+						[ Events.RESOURCE_LOADING_COMPLETED, "bundle1" ],
+						function( event ) {
+							Logger.info( "loading completed" )
+							draw( resourceLoader.getResources() )
+						}
+					)
+
+					eventManager.subscribe(
+						[ Events.RESOURCE_ERROR, "bundle1" ],
+						function( event ) {
+							Logger.info( "Error while loading '" + event + "'." )
+						}
+					)
+
+					resourceLoader.start()
 				}
 			)
 
