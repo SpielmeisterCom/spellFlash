@@ -12,8 +12,6 @@ package Spielmeister.Spell.Platform {
 
 
 	public class PlatformKit {
-		[Embed(source="/home/martin/workspace/spell/SpellJS/images/4.2.04_256.png")]
-		private static const embeddedBitmapAsset1 : Class
 
 		private var root : DisplayObject
 		private var stage : Stage
@@ -46,20 +44,6 @@ package Spielmeister.Spell.Platform {
 
 		public function get RenderingFactory() : RenderingFactoryImpl {
 			return renderingFactory
-		}
-
-		// TODO: remove this because its deprecated
-		public function loadImages( basePath, imagePaths, callback : Function ) : Object {
-			var bitmapAsset = new embeddedBitmapAsset1()
-
-
-			var images = new Object()
-			images[ imagePaths[ 0 ] ] = bitmapAsset.bitmapData
-
-			callback( images )
-
-
-			return images
 		}
 
 		public function log( message : String ) : void {
