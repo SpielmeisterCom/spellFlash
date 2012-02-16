@@ -153,7 +153,7 @@ package Spielmeister {
 			return range
 		}
 
-		public function reduce( collection : Object, iterator : Function, memo : * = undefined, context : * = null ) : Object {
+		public function reduce( collection : Object, iterator : Function, memo : * = undefined, context : * = null ) : * {
 			for each( var item : Object in collection ) {
 				memo = iterator.call( context, memo, item )
 			}
