@@ -2,22 +2,21 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 	import flash.display.Bitmap
 	import flash.display.BitmapData
-	import flash.display.DisplayObject
 	import flash.display.Shape
-	import flash.display.Sprite
 	import flash.geom.ColorTransform
 	import flash.geom.Matrix
 	import flash.geom.Matrix3D
 	import flash.geom.Vector3D
 
+	import mx.core.IChildList
+
 
 	public class DisplayListContext {
-		private var root : Sprite
+		private var container : IChildList
 		private var width : uint
 		private var height : uint
 		private var colorBuffer : Bitmap
 		private var clearColor : uint
-
 		private var stateStackDepth : uint   = 32
 		private var stateStack : Array       = new Array( stateStackDepth )
 		private var currentStateIndex : uint = 0
@@ -25,8 +24,8 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		private var tmpShape : Shape         = new Shape()
 
 
-		public function DisplayListContext( _root : DisplayObject, width : uint, height: uint ) {
-			this.root = Sprite( _root )
+		public function DisplayListContext( container : IChildList, width : uint, height: uint ) {
+			this.container = container
 			this.width = width
 			this.height = height
 			clearColor = 0x000000
@@ -40,7 +39,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 				clearColor
 			)
 
-			root.addChild( colorBuffer )
+			container.addChild( colorBuffer )
 
 
 			// initializing state stack

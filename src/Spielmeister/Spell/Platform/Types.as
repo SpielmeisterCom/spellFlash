@@ -13,10 +13,6 @@ package Spielmeister.Spell.Platform {
 			return new Array( length )
 		}
 
-		public function createLobby( eventManager : Object, connection : Object ) : Lobby {
-			return new Lobby( eventManager, connection )
-		}
-
 		public function get Time() : TimeImpl {
 			return time
 		}

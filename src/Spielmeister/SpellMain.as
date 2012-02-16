@@ -1,24 +1,20 @@
-package {
+package Spielmeister {
 	import Spielmeister.ModuleDefinitions
 	import Spielmeister.Needjs
 
-	import flash.display.*
-	import flash.system.Security
+	import mx.core.Application
 
 
-	public class SpellMain extends Sprite {
+	public class SpellMain extends Application {
 
-		public function SpellMain() {
-			// stage setup
-			this.stage.align     = StageAlign.TOP_LEFT
-			this.stage.scaleMode = StageScaleMode.NO_SCALE
-
-
+		public function run() : void {
 			var needjs : Needjs = new Needjs()
 
 			var moduleDefinitions : ModuleDefinitions = new ModuleDefinitions(
-				this.root,
 				this.stage,
+				this.root,
+				this.rawChildren,
+				this.loaderInfo.loaderURL,
 				needjs.createDefine(),
 				needjs.createRequire()
 			)

@@ -3,6 +3,7 @@ package Spielmeister.Spell.Platform {
 	import Spielmeister.Spell.Platform.Private.Graphics.*
 	import Spielmeister.Spell.Platform.Private.Input
 	import Spielmeister.Spell.Platform.Private.Loader.*
+	import Spielmeister.Spell.Platform.Private.Lobby
 	import Spielmeister.Spell.Platform.Private.Socket.WebSocketAdapter
 
 	import flash.display.*
@@ -10,6 +11,7 @@ package Spielmeister.Spell.Platform {
 	import flash.events.TimerEvent
 	import flash.system.Security
 	import flash.utils.Timer
+	import mx.core.IChildList
 
 
 	public class PlatformKit {
@@ -23,18 +25,20 @@ package Spielmeister.Spell.Platform {
 		 */
 		private static var serverHostPortDevelopment : String = 'localhost:8080'
 
-		private var root : DisplayObject
+		private var container : IChildList
 		private var stage : Stage
+		private var root : DisplayObject
 		private var origin : String
 		private var renderingFactory : RenderingFactoryImpl
 		private var registeredNextFrame : Boolean = false
 
 
-		public function PlatformKit( root : DisplayObject, stage : Stage, origin : String ) {
-			this.root = root
-			this.stage = stage
-			this.origin = origin
-			this.renderingFactory = new RenderingFactoryImpl( root )
+		public function PlatformKit( stage : Stage, root : DisplayObject, container : IChildList, origin : String ) {
+			this.stage            = stage
+			this.root             = root
+			this.container        = container
+			this.origin           = origin
+			this.renderingFactory = new RenderingFactoryImpl( container )
 		}
 
 		public function init() : void {
@@ -113,6 +117,10 @@ package Spielmeister.Spell.Platform {
 				resourceUri,
 				callback
 			)
+		}
+
+		public function createLobby( eventManager : Object, connection : Object ) : Lobby {
+			return new Lobby( root, eventManager, connection )
 		}
 
 		private function getServerHostPort() : String {

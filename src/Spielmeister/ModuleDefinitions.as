@@ -1,7 +1,9 @@
 package Spielmeister {
-	import flash.display.*
 
 	import Spielmeister.Spell.Platform.*
+
+	import flash.display.*
+	import mx.core.IChildList
 
 
 	public class ModuleDefinitions {
@@ -11,8 +13,8 @@ package Spielmeister {
 		private var require     : Function
 
 
-		public function ModuleDefinitions( root : DisplayObject, stage : Stage, define : Function, require : Function ) {
-			this.platformKit = new PlatformKit( root, stage, root.loaderInfo.loaderURL )
+		public function ModuleDefinitions( stage: Stage, root : DisplayObject, container : IChildList, loaderURL : String, define : Function, require : Function ) {
+			this.platformKit = new PlatformKit( stage, root, container, loaderURL )
 			this.platformKit.init()
 
 			this.define = define
@@ -3416,6 +3418,7 @@ define(
 
 
 		return function( args ) {
+			this.id         = args.id
 			this.hasChanged = true
 			this.name       = args.name
 			this.players    = []
@@ -5469,23 +5472,20 @@ define(
 			lobby,
 			games
 		) {
-			if( _.size( games ) === 0 ) {
-				lobby.setNoGamesOptionVisibility( true )
-				return
+			var numberOfGames = _.size( games )
+
+			if( numberOfGames > 0 ) {
+				var gamesHaveChanged = _.any(
+					games,
+					function( game ) {
+						return ( game.game.hasChanged === true )
+					}
+				)
+
+				if( gamesHaveChanged === false ) return
 			}
 
-
-			var gamesHaveChanged = _.any(
-				games,
-				function( game ) {
-					return ( game.game.hasChanged === true )
-				}
-			)
-
-			if( gamesHaveChanged !== true ) return
-
-
-			lobby.setNoGamesOptionVisibility( false )
+			lobby.setNoGamesOptionVisibility( numberOfGames === 0 )
 			lobby.refreshGameList( games )
 		}
 	}
@@ -5503,7 +5503,7 @@ define(
 		"spell/shared/util/entities/Entities",
 		"spell/shared/util/entities/datastructures/entityMap",
 		"spell/shared/util/zones/ZoneEntityManager",
-		"spell/shared/util/platform/Types"
+		"spell/shared/util/platform/PlatformKit"
 	],
 	function(
 		render,
@@ -5515,7 +5515,7 @@ define(
 		Entities,
 		entityMap,
 		ZoneEntityManager,
-		Types
+		PlatformKit
 	) {
 		"use strict"
 
@@ -5568,7 +5568,7 @@ define(
 				var connection    = globals.connection
 				var eventManager  = globals.eventManager
 
-				this.lobby = Types.createLobby( eventManager, connection )
+				this.lobby = PlatformKit.createLobby( eventManager, connection )
 				this.lobby.init()
 
 				entityManager.createEntity( "gameStarter" )
