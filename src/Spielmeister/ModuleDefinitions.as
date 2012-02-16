@@ -2312,6 +2312,29 @@ package Spielmeister {
 				}
 			)
 
+			define(
+				"spell/client/components/sound/soundEmitter",
+				function() {
+					"use strict"
+
+					var soundEmitter = function( args ) {
+						this.soundId    = args.soundId
+						this.volume     = args.volume     || 1
+						this.muted      = args.muted      || false
+						this.onComplete = args.onComplete || ''
+						this.start      = args.start      || false
+						this.stop       = args.stop       || false
+						this.background = args.background || false
+					}
+
+					soundEmitter.ON_COMPLETE_LOOP               = 1
+					soundEmitter.ON_COMPLETE_REMOVE_COMPONENT   = 2
+					soundEmitter.ON_COMPLETE_STOP               = 3
+
+					return soundEmitter
+				}
+			)
+
 		}
 
 
@@ -3234,28 +3257,6 @@ define(
 )
 
 define(
-	"spell/client/components/sound/soundEmitter",
-	function() {
-		"use strict"
-
-		var soundEmitter = function( args ) {
-			this.soundId    = args.soundId
-			this.volume     = args.volume || 100
-			this.muted      = args.muted || false
-			this.onComplete = args.onComplete || ''
-			this.start      = args.start || false
-			this.stop       = args.stop || false
-		}
-
-		soundEmitter.ON_COMPLETE_LOOP               = 1
-		soundEmitter.ON_COMPLETE_REMOVE_COMPONENT   = 2
-		soundEmitter.ON_COMPLETE_STOP               = 3
-
-		return soundEmitter
-	}
-)
-
-define(
 	"funkysnakes/client/entities/speedPowerup",
 	[
 		"funkysnakes/client/components/animated",
@@ -3312,8 +3313,8 @@ define(
 				} )
 
 				this.soundEmitter = new soundEmitter( {
-					soundId:'spawn.mp3',
-					volume: 40
+					soundId:'fx/spawn',
+					volume: 0.40
 				} )
 
 			} else if( args.type === "spentSpeed" ) {
@@ -3323,10 +3324,8 @@ define(
 				} )
 
 				this.soundEmitter = new soundEmitter( {
-					soundId:'speed.mp3',
-					volume: 60,
-					start: 500,
-					stop: 1200
+					soundId:'fx/speed',
+					volume: 0.60
 				} )
 			}
 
@@ -3373,9 +3372,10 @@ define(
 			} )
 
 			this.soundEmitter = new soundEmitter( {
-				soundId:'rain.mp3',
-				volume: 50,
-				onComplete: soundEmitter.ON_COMPLETE_LOOP
+				soundId:'music/rain',
+				volume: 0.5,
+				onComplete: soundEmitter.ON_COMPLETE_LOOP,
+				background: true
 			} )
 
 			this.background = new background()
@@ -4399,7 +4399,6 @@ define(
 		"use strict"
 
 		var playing = {}
-		var backgroundSounds = {}
 
 		return function(
 			sounds, entities
@@ -4409,7 +4408,7 @@ define(
 
 				if( sounds[ entity.soundEmitter.soundId ] === undefined ) return
 
-				var sound = sounds[ entity.soundEmitter.soundId ]
+				var sound = _.clone(sounds[ entity.soundEmitter.soundId ])
 
 				if( playing[ entity.id ] === undefined ) {
 
@@ -4423,24 +4422,23 @@ define(
 						sound.setOnCompleteRemove()
 					}
 
-					sound.setStart( entity.soundEmitter.start )
-					sound.setStop( entity.soundEmitter.stop )
+
+					if( entity.soundEmitter.start !== false ) {
+						sound.setStart( entity.soundEmitter.start )
+					}
+
+					if( entity.soundEmitter.stop !== false ) {
+						sound.setStop( entity.soundEmitter.stop )
+					}
+
+					sound.setBackground( entity.soundEmitter.background )
+
 					sound.setVolume( entity.soundEmitter.volume )
+
 					sound.play();
 
 					playing[ entity.id ] = true
 				}
-
-
-				//this.context.currentTime
-				/*               try {
-				 // DOM Exceptions are fired when Audio Element isn't ready yet.
-				 this.context.currentTime = value;
-				 return true;
-				 } catch(e) {
-				 return false;
-				 }
-				 */
 
 			} )
 		}
@@ -5669,7 +5667,7 @@ define(
 			} )
 
 
-			eventManager.subscribe( [ "clockSyncResult" ], function( timeOfUpdate, updatedGameTimeInMs ) {
+			eventManager.subscribe( [ "clockSyncUpdate" ], function( timeOfUpdate, updatedGameTimeInMs ) {
 				var ageOfUpdate = Types.Time.getCurrentInMs() - timeOfUpdate
 				remoteGameTimeInMs = updatedGameTimeInMs + ageOfUpdate
 			} )
@@ -6402,134 +6400,6 @@ define(
 )
 
 define(
-	"spell/client/util/network/initializeClockSync",
-	[
-		"spell/shared/util/platform/Types",
-		"spell/shared/util/platform/PlatformKit",
-
-		"underscore"
-	],
-	function(
-		Types,
-		PlatformKit,
-
-		_
-	) {
-		"use strict"
-
-
-		function initializeClockSync( eventManager, connection ) {
-
-			var currentUpdateNumber = 1
-			var oneWayLatenciesInMs = []
-
-			connection.handlers[ "clockSync" ] = function( messageType, messageData ) {
-				var currentTimeInMs            = Types.Time.getCurrentInMs()
-				var sendTimeInMs               = messageData.clientTime
-				var roundTripLatencyInMs       = currentTimeInMs - sendTimeInMs
-				var estimatedOneWayLatencyInMs = roundTripLatencyInMs / 2
-
-				oneWayLatenciesInMs.push( estimatedOneWayLatencyInMs )
-
-				if( currentUpdateNumber === 1 ) {
-					var serverGameTimeInMs = messageData.serverTime + estimatedOneWayLatencyInMs
-					eventManager.publish( [ "firstClockSyncResult" ], [ serverGameTimeInMs ] )
-
-				} else if ( currentUpdateNumber === 5 ) {
-					var computedServerTimeInMs = computeServerTimeInMs( oneWayLatenciesInMs, messageData.serverTime )
-					eventManager.publish( [ "clockSyncResult" ], [ Types.Time.getCurrentInMs(), computedServerTimeInMs ] )
-				}
-
-				currentUpdateNumber += 1
-			}
-
-			var sendClockSyncMessage = function() {
-				connection.send( "clockSync", { clientTime: Types.Time.getCurrentInMs() } )
-
-				if ( currentUpdateNumber <= 5 ) {
-					PlatformKit.registerTimer( sendClockSyncMessage, 2000 )
-				}
-			}
-
-			sendClockSyncMessage()
-		}
-
-
-		function computeServerTimeInMs( oneWayLatenciesInMs, serverTimeInMs ) {
-			oneWayLatenciesInMs.sort( function( a, b ) {
-				return a - b
-			} )
-
-			var medianLatencyInMs
-			if( oneWayLatenciesInMs.length % 2 === 0 ) {
-				var a = oneWayLatenciesInMs[ oneWayLatenciesInMs.length / 2 - 1 ]
-				var b = oneWayLatenciesInMs[ oneWayLatenciesInMs.length / 2     ]
-
-				medianLatencyInMs = ( a + b ) / 2
-
-			} else {
-				medianLatencyInMs = oneWayLatenciesInMs[ Math.floor( oneWayLatenciesInMs.length / 2 ) - 1 ]
-			}
-
-			var meanLatencyInMs = _.reduce(
-				oneWayLatenciesInMs,
-				function( a, b ) {
-					return a + b
-				},
-				0
-			) / oneWayLatenciesInMs.length
-
-			var varianceInMsSquared = _.reduce(
-				oneWayLatenciesInMs,
-				function( memo, latencyInMs ) {
-					return memo + Math.pow( latencyInMs - meanLatencyInMs, 2 )
-				},
-				0
-			)
-
-			var standardDeviationInMs = Math.sqrt( varianceInMsSquared )
-
-			var significantOneWayLatenciesInMs = _.filter(
-				oneWayLatenciesInMs,
-				function( latencyInMs ) {
-					return latencyInMs < medianLatencyInMs + standardDeviationInMs
-				}
-			)
-
-			var meanSignificantOneWayLatencyInMs = _.reduce(
-				significantOneWayLatenciesInMs,
-				function( a, b ) {
-					return a + b
-				},
-				0
-			) / significantOneWayLatenciesInMs.length
-
-			return serverTimeInMs + meanSignificantOneWayLatencyInMs
-		}
-
-
-		return initializeClockSync
-	}
-)
-
-define(
-	"spell/client/util/network/network",
-	[
-		"spell/client/util/network/initializeClockSync"
-	],
-	function(
-		initializeClockSync
-	) {
-		"use strict"
-
-
-		return {
-			initializeClockSync       : initializeClockSync
-		}
-	}
-)
-
-define(
 	"spell/shared/util/Logger",
 	[
 		"spell/shared/util/platform/PlatformKit"
@@ -6608,6 +6478,173 @@ define(
 			info            : info,
 			warn            : warn,
 			error           : error
+		}
+	}
+)
+
+define(
+	"spell/client/util/network/initializeClockSync",
+	[
+		"spell/shared/util/platform/Types",
+		"spell/shared/util/platform/PlatformKit",
+		"spell/shared/util/Logger",
+
+		"underscore"
+	],
+	function(
+		Types,
+		PlatformKit,
+		Logger,
+
+		_
+	) {
+		"use strict"
+
+
+
+		var HIGH_SYNC_FREQUENCY = 5
+		var MEDIUM_SYNC_FREQUENCY = 2
+		var LOW_SYNC_FREQUENCY = 1
+
+		/**
+		 * the minimum number of performed clock synchronization round trips until clock synchronization is established
+		 */
+		var minNumberOfClockSyncRoundTrips = 5
+
+		/**
+		 * the frequency at which clock synchronization is performed
+		 */
+		var synchronizationFrequency = HIGH_SYNC_FREQUENCY
+
+		/**
+		 * the number of measurements the computation is based on
+		 */
+		var numberOfOneWayLatencyMeasurements = 5
+
+
+		function initializeClockSync( eventManager, connection ) {
+
+			var currentUpdateNumber = 1
+			var oneWayLatenciesInMs = []
+
+			connection.handlers[ "clockSync" ] = function( messageType, messageData ) {
+				var currentTimeInMs            = Types.Time.getCurrentInMs()
+				var sendTimeInMs               = messageData.clientTime
+				var roundTripLatencyInMs       = currentTimeInMs - sendTimeInMs
+				var estimatedOneWayLatencyInMs = roundTripLatencyInMs / 2
+
+
+				oneWayLatenciesInMs.push( estimatedOneWayLatencyInMs )
+				if( oneWayLatenciesInMs.length > numberOfOneWayLatencyMeasurements) oneWayLatenciesInMs.shift()
+
+				var computedServerTimeInMs = computeServerTimeInMs( oneWayLatenciesInMs, messageData.serverTime )
+
+
+				if( currentUpdateNumber === minNumberOfClockSyncRoundTrips ) {
+					eventManager.publish(
+						[ "clockSyncEstablished" ],
+						[ computedServerTimeInMs ]
+					)
+
+					synchronizationFrequency = LOW_SYNC_FREQUENCY
+
+					Logger.debug( 'clock synchronization established' )
+
+				} else {
+					eventManager.publish(
+						[ "clockSyncUpdate" ],
+						[ Types.Time.getCurrentInMs(), computedServerTimeInMs ]
+					)
+				}
+
+				currentUpdateNumber += 1
+			}
+
+			var sendClockSyncMessage = function() {
+				connection.send(
+					"clockSync",
+					{
+						clientTime: Types.Time.getCurrentInMs()
+					}
+				)
+
+				PlatformKit.registerTimer( sendClockSyncMessage, 1000 / synchronizationFrequency )
+			}
+
+			sendClockSyncMessage()
+		}
+
+
+		function computeServerTimeInMs( oneWayLatenciesInMs, serverTimeInMs ) {
+			oneWayLatenciesInMs.sort( function( a, b ) {
+				return a - b
+			} )
+
+			var medianLatencyInMs
+			if( oneWayLatenciesInMs.length % 2 === 0 ) {
+				var a = oneWayLatenciesInMs[ oneWayLatenciesInMs.length / 2 - 1 ]
+				var b = oneWayLatenciesInMs[ oneWayLatenciesInMs.length / 2     ]
+
+				medianLatencyInMs = ( a + b ) / 2
+
+			} else {
+				medianLatencyInMs = oneWayLatenciesInMs[ Math.floor( oneWayLatenciesInMs.length / 2 ) ]
+			}
+
+			var meanLatencyInMs = _.reduce(
+				oneWayLatenciesInMs,
+				function( a, b ) {
+					return a + b
+				},
+				0
+			) / oneWayLatenciesInMs.length
+
+			var varianceInMsSquared = _.reduce(
+				oneWayLatenciesInMs,
+				function( memo, latencyInMs ) {
+					return memo + Math.pow( latencyInMs - meanLatencyInMs, 2 )
+				},
+				0
+			)
+
+			var standardDeviationInMs = Math.sqrt( varianceInMsSquared )
+
+			var significantOneWayLatenciesInMs = _.filter(
+				oneWayLatenciesInMs,
+				function( latencyInMs ) {
+					return latencyInMs <= medianLatencyInMs + standardDeviationInMs
+				}
+			)
+
+			var meanSignificantOneWayLatencyInMs = _.reduce(
+				significantOneWayLatenciesInMs,
+				function( a, b ) {
+					return a + b
+				},
+				0
+			) / significantOneWayLatenciesInMs.length
+
+			return Math.floor( serverTimeInMs + meanSignificantOneWayLatencyInMs )
+		}
+
+
+		return initializeClockSync
+	}
+)
+
+define(
+	"spell/client/util/network/network",
+	[
+		"spell/client/util/network/initializeClockSync"
+	],
+	function(
+		initializeClockSync
+	) {
+		"use strict"
+
+
+		return {
+			initializeClockSync       : initializeClockSync
 		}
 	}
 )
@@ -7124,7 +7161,7 @@ define(
 			'images/vehicles/ship_player3.png',
 			'images/vehicles/ship_player2.png',
 			'images/effects/shield.png',
-			'sounds/sets/set2.json'
+			'sounds/sets/set1.json'
 		]
 
 
@@ -7213,7 +7250,7 @@ define(
 						}
 					)
 
-					eventManager.subscribe( [ "firstClockSyncResult" ], function( remoteGameTimeInMs ) {
+					eventManager.subscribe( [ "clockSyncEstablished" ], function( remoteGameTimeInMs ) {
 						var mainLoop = createMainLoop(
 							eventManager,
 							remoteGameTimeInMs
