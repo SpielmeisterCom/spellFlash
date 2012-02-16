@@ -5,12 +5,14 @@ package Spielmeister.Spell.Platform.Private {
 	import flash.display.DisplayObject
 	import flash.display.Sprite
 	import flash.events.MouseEvent
+	import flashx.textLayout.container.ScrollPolicy
 
 	import mx.collections.ArrayCollection
 	import mx.core.UIComponent
 
 	import spark.components.*
 	import spark.events.*
+	import spark.layouts.HorizontalLayout
 	import spark.utils.DataItem
 
 
@@ -97,8 +99,22 @@ package Spielmeister.Spell.Platform.Private {
 
 
 		private function createUI() : UIComponent {
-			var container : VGroup = new VGroup()
+			var container : BorderContainer = new BorderContainer()
+			container.width  = 1024
+			container.height = 768
 			container.opaqueBackground = 0xffffff
+			container.setStyle( 'borderVisible', false )
+
+			var layout : HorizontalLayout = new HorizontalLayout()
+			layout.horizontalAlign = 'center'
+			container.layout = layout
+
+
+			var vgroup : VGroup = new VGroup()
+			vgroup.horizontalAlign = 'center'
+			vgroup.paddingTop = 20
+			vgroup.paddingBottom = 20
+			vgroup.gap = 20
 
 
 			var yourNameLabel : Label = new Label()
@@ -112,6 +128,9 @@ package Spielmeister.Spell.Platform.Private {
 			existingGamesLabel.text = 'Existing games:'
 
 			gamesList = new List()
+			gamesList.height = 330
+			gamesList.width = 300
+			gamesList.setStyle( 'verticalScrollPolicy', ScrollPolicy.ON )
 			gamesList.dataProvider = new ArrayCollection()
 			gamesList.addEventListener( IndexChangeEvent.CHANGE, selectGameHandler )
 
@@ -119,24 +138,25 @@ package Spielmeister.Spell.Platform.Private {
 			var hgroup : HGroup = new HGroup()
 
 			createGameButton = new Button()
-			createGameButton.label = 'Create game'
+			createGameButton.label = 'Create Game'
 			createGameButton.enabled = false
 			createGameButton.addEventListener( MouseEvent.CLICK, createGameHandler )
 
 			startGameButton = new Button()
-			startGameButton.label = 'Start game'
+			startGameButton.label = 'Start Selected Game'
 			startGameButton.enabled = false
 			startGameButton.addEventListener( MouseEvent.CLICK, startGameHandler )
 
 			hgroup.addElement( createGameButton )
 			hgroup.addElement( startGameButton )
 
+			vgroup.addElement( yourNameLabel )
+			vgroup.addElement( playerNameTextInput )
+			vgroup.addElement( existingGamesLabel )
+			vgroup.addElement( gamesList )
+			vgroup.addElement( hgroup )
 
-			container.addElement( yourNameLabel )
-			container.addElement( playerNameTextInput )
-			container.addElement( existingGamesLabel )
-			container.addElement( gamesList )
-			container.addElement( hgroup )
+			container.addElement( vgroup )
 
 
 			return container
