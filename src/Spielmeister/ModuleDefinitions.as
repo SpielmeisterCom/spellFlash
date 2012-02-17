@@ -6400,6 +6400,40 @@ define(
 )
 
 define(
+	"spell/shared/util/CircularBuffer",
+	function() {
+		"use strict"
+
+
+		function CircularBuffer( length, defaultValue ) {
+			if( !length ) throw 'Argument "length" is missing'
+
+			this.length = length
+			this.index = 0
+			this.array = new Array()
+
+			if( !defaultValue ) return
+
+			for( var i = 0; i < length; i++ ) {
+				this.array[ i ] = defaultValue
+			}
+		}
+
+		CircularBuffer.prototype = {
+			push: function( value ) {
+				this.array[ this.index ] = value
+				this.index = ( this.index + 1 ) % this.length
+			},
+			toArray: function() {
+				return this.array.slice()
+			}
+		}
+
+		return CircularBuffer
+	}
+)
+
+define(
 	"spell/shared/util/Logger",
 	[
 		"spell/shared/util/platform/PlatformKit"
@@ -6487,6 +6521,7 @@ define(
 	[
 		"spell/shared/util/platform/Types",
 		"spell/shared/util/platform/PlatformKit",
+		"spell/shared/util/CircularBuffer",
 		"spell/shared/util/Logger",
 
 		"underscore"
@@ -6494,12 +6529,12 @@ define(
 	function(
 		Types,
 		PlatformKit,
+		CircularBuffer,
 		Logger,
 
 		_
 	) {
 		"use strict"
-
 
 
 		var HIGH_SYNC_FREQUENCY = 5
@@ -6521,11 +6556,12 @@ define(
 		 */
 		var numberOfOneWayLatencyMeasurements = 5
 
+		var initialSynchronization = true
+
 
 		function initializeClockSync( eventManager, connection ) {
-
 			var currentUpdateNumber = 1
-			var oneWayLatenciesInMs = []
+			var oneWayLatenciesInMs = new CircularBuffer( numberOfOneWayLatencyMeasurements )
 
 			connection.handlers[ "clockSync" ] = function( messageType, messageData ) {
 				var currentTimeInMs            = Types.Time.getCurrentInMs()
@@ -6535,10 +6571,7 @@ define(
 
 
 				oneWayLatenciesInMs.push( estimatedOneWayLatencyInMs )
-				if( oneWayLatenciesInMs.length > numberOfOneWayLatencyMeasurements) oneWayLatenciesInMs.shift()
-
-				var computedServerTimeInMs = computeServerTimeInMs( oneWayLatenciesInMs, messageData.serverTime )
-
+				var computedServerTimeInMs = computeServerTimeInMs( oneWayLatenciesInMs.toArray(), messageData.serverTime )
 
 				if( currentUpdateNumber === minNumberOfClockSyncRoundTrips ) {
 					eventManager.publish(
@@ -6546,7 +6579,7 @@ define(
 						[ computedServerTimeInMs ]
 					)
 
-					synchronizationFrequency = LOW_SYNC_FREQUENCY
+					initialSynchronization = false
 
 					Logger.debug( 'clock synchronization established' )
 
@@ -6572,6 +6605,23 @@ define(
 			}
 
 			sendClockSyncMessage()
+		}
+
+
+		function computeSynchronizationFrequency( standardDeviationInMs ) {
+			if( initialSynchronization ) {
+				return HIGH_SYNC_FREQUENCY
+			}
+
+			if( standardDeviationInMs > 25 ) {
+				return HIGH_SYNC_FREQUENCY
+
+			} else if( standardDeviationInMs > 10 ) {
+				return MEDIUM_SYNC_FREQUENCY
+
+			} else {
+				return LOW_SYNC_FREQUENCY
+			}
 		}
 
 
@@ -6608,6 +6658,9 @@ define(
 			)
 
 			var standardDeviationInMs = Math.sqrt( varianceInMsSquared )
+
+			synchronizationFrequency = computeSynchronizationFrequency( standardDeviationInMs )
+
 
 			var significantOneWayLatenciesInMs = _.filter(
 				oneWayLatenciesInMs,
