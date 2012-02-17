@@ -70,7 +70,7 @@ package Spielmeister.Spell.Platform {
 		public function log( message : String ) : void {
 			var now : Date = new Date()
 
-			trace( "[" + now.toDateString() + " " + now.toLocaleTimeString() + " " + now.getFullYear() + "] " +  message )
+			trace( "[" + now.toDateString() + " " + now.toLocaleTimeString() + "] " +  message )
 		}
 
 		public function createSocket() : Object {
