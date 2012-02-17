@@ -39,6 +39,8 @@ package Spielmeister.Spell.Platform {
 			this.container        = container
 			this.origin           = origin
 			this.renderingFactory = new RenderingFactoryImpl( container )
+
+			this.stage.quality = StageQuality.MEDIUM
 		}
 
 		public function init() : void {
