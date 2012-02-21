@@ -154,8 +154,8 @@ package Spielmeister {
 		}
 
 		public function reduce( collection : Object, iterator : Function, memo : * = undefined, context : * = null ) : * {
-			for each( var item : Object in collection ) {
-				memo = iterator.call( context, memo, item )
+			for( var i in collection ) {
+				memo = iterator.call( context, memo, collection[ i ], i, collection )
 			}
 
 			return memo
