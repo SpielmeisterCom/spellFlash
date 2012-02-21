@@ -210,7 +210,9 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 		public function getConfiguration() : Object {
 			return {
-				type: "display-list"
+				type   : "display-list",
+				width  : width,
+				height : height
 			}
 		}
 	}
