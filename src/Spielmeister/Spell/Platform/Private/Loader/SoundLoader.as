@@ -11,7 +11,7 @@ package Spielmeister.Spell.Platform.Private.Loader {
 		}
 
 		public function start() : void {
-			trace( 'Soundloader.start() - not yet implemented')
+//			trace( 'Soundloader.start() - not yet implemented')
 
 			onCompleteCallback( {
 				thisIsAStub: 'sound_loading_is_not_yet_implemented'

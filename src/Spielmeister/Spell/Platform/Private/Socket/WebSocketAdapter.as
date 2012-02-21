@@ -12,7 +12,7 @@ package Spielmeister.Spell.Platform.Private.Socket {
 
 
 		public function WebSocketAdapter( url : String, origin : String, protocol : String ) {
-			trace( 'Creating socket...' )
+//			trace( 'Creating socket...' )
 
 			socket = new WebSocket( url, origin, protocol )
 			socket.connect()
@@ -21,21 +21,21 @@ package Spielmeister.Spell.Platform.Private.Socket {
 			socket.addEventListener(
 				WebSocketEvent.OPEN,
 				function( event : WebSocketEvent ) : void {
-					trace( 'Socket opened connection.' )
+//					trace( 'Socket opened connection.' )
 				}
 			)
 
 			socket.addEventListener(
 				WebSocketEvent.CLOSED,
 				function( event : WebSocketEvent ) : void {
-					trace( 'Socket closed connection.' )
+//					trace( 'Socket closed connection.' )
 				}
 			)
 
 			socket.addEventListener(
 				WebSocketErrorEvent.CONNECTION_FAIL,
 				function( event : WebSocketErrorEvent ) : void {
-					trace( 'Error on socket: ' + event.text )
+//					trace( 'Error on socket: ' + event.text )
 				}
 			)
 
