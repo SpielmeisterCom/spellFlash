@@ -33,15 +33,21 @@ package Spielmeister.Spell.Platform.Private {
 		private var createGameButton : Button
 		private var startGameButton : Button
 
+		// WORKAROUND: until lobby is rendered in "native spell" knowledge of color buffer dimensions is required
+		private var width : uint
+		private var height : uint
+
 
 		// TODO: find solution for this
 		private var _ : Underscore
 
 
-		public function Lobby( root : DisplayObject, eventManager : Object, connection : Object ) {
+		public function Lobby( root : DisplayObject, eventManager : Object, connection : Object, width : uint, height : int ) {
 			this.root         = Sprite( root )
 			this.eventManager = eventManager
 			this.connection   = connection
+			this.width        = width
+			this.height       = height
 			this._            = new Underscore()
 
 			this.ui = createUI()
@@ -104,8 +110,8 @@ package Spielmeister.Spell.Platform.Private {
 
 		private function createUI() : UIComponent {
 			var container : BorderContainer = new BorderContainer()
-			container.width  = 800
-			container.height = 600
+			container.width  = width
+			container.height = height
 			container.opaqueBackground = 0xffffff
 			container.setStyle( 'borderVisible', false )
 
@@ -155,10 +161,8 @@ package Spielmeister.Spell.Platform.Private {
 			hgroup.addElement( startGameButton )
 
 
-			var helpTextAsHtml : String = "<p><b>In the lobby:</b> Create a new game or join an existing one by clicking on the list. Up to 4 players can join a game. Once you're happy with the number of players, start the game.</p><p><b>In the game:</b> Steer with left and right. Try not to run into anything yourself, but try to trap the other guys! Reload the page to get back to the lobby.</p>"
+			var helpTextAsHtml : String = "<p><b>In the lobby:</b> Create a new game or join an existing one by clicking on the list.<br/>Up to 4 players can join a game. Once you're happy with the number of players, start the game.</p><p><b>In the game:</b> Steer with left and right. Try not to run into anything yourself, but try to trap the other guys!<br/>Reload the page to get back to the lobby.</p>"
 			var helpTextRichText : RichText = new RichText()
-			helpTextRichText.setStyle( 'lineBreak', LineBreak.TO_FIT )
-			helpTextRichText.setStyle( 'breakOpportunity', BreakOpportunity.ANY )
 			helpTextRichText.setStyle( 'fontSize', 14 )
 			helpTextRichText.textFlow = TextConverter.importToFlow( helpTextAsHtml, TextConverter.TEXT_FIELD_HTML_FORMAT )
 

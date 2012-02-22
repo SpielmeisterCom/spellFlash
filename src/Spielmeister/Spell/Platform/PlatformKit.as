@@ -116,7 +116,7 @@ package Spielmeister.Spell.Platform {
 		}
 
 		public function createLobby( eventManager : Object, connection : Object ) : Lobby {
-			return new Lobby( root, eventManager, connection )
+			return new Lobby( root, eventManager, connection, stage.width, stage.height )
 		}
 
 		public function getHost() : String {
