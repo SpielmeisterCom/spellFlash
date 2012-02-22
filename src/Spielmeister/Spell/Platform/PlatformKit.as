@@ -149,6 +149,10 @@ package Spielmeister.Spell.Platform {
 			}
 		}
 
+		public function getPlatformInfo() : String {
+			return 'flash'
+		}
+
 		private function createHost( loaderUrl : String ) : String {
 			var pattern : RegExp = /^(?:http:\/\/)?([^\/]+)/
 			var matches : Array = loaderUrl.match( pattern )

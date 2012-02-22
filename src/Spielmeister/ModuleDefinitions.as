@@ -2442,7 +2442,28 @@ package Spielmeister {
 				}
 			)
 
+			define(
+				"spell/shared/components/sound/soundEmitter",
+				function() {
+					"use strict"
 
+					var soundEmitter = function( args ) {
+						this.soundId    = args.soundId
+						this.volume     = args.volume     || 1
+						this.muted      = args.muted      || false
+						this.onComplete = args.onComplete || ''
+						this.start      = args.start      || false
+						this.stop       = args.stop       || false
+						this.background = args.background || false
+					}
+
+					soundEmitter.ON_COMPLETE_LOOP               = 1
+					soundEmitter.ON_COMPLETE_REMOVE_COMPONENT   = 2
+					soundEmitter.ON_COMPLETE_STOP               = 3
+
+					return soundEmitter
+				}
+			)
 		}
 
 
@@ -3268,7 +3289,7 @@ define(
 		"funkysnakes/shared/components/position",
 		"funkysnakes/shared/components/assignedToPlayer",
 		"funkysnakes/shared/config/players",
-		"spell/client/components/sound/soundEmitter",
+		"spell/shared/components/sound/soundEmitter",
 
 		"spell/client/components/network/synchronizationSlave"
 	],
@@ -3354,7 +3375,7 @@ define(
 		"funkysnakes/shared/components/position",
 		"funkysnakes/client/components/appearance",
 		"funkysnakes/client/components/background",
-		"spell/client/components/sound/soundEmitter"
+		"spell/shared/components/sound/soundEmitter"
 	],
 	function(
 		position,
@@ -4391,7 +4412,7 @@ define(
 	"spell/client/systems/sound/processSound",
 	[
 		"underscore",
-        "spell/client/components/sound/soundEmitter"
+        "spell/shared/components/sound/soundEmitter"
 	],
 	function(
 		_,
@@ -5130,6 +5151,27 @@ define(
 		"use strict"
 
 
+		function addPlatformLogo( entityManager, platform ) {
+			var textureId
+
+			if( platform === 'html5' ) {
+				textureId = 'html5_logo_64x64.png'
+
+			} else if( platform === 'flash' ) {
+				textureId = 'flash_logo_64x64.png'
+			}
+
+			if( !textureId ) return
+
+			entityManager.createEntity(
+				"widget",
+				[ {
+					position  : [ 5, 10, 0 ],
+					textureId : textureId
+				} ]
+			)
+		}
+
 		function updateZone(
 			timeInMs,
 			dtInS,
@@ -5291,16 +5333,7 @@ define(
 				)
 
 
-				// add logo
-				var logoTextureId = "html5_logo_64x64.png"
-
-				entityManager.createEntity(
-					"widget",
-					[ {
-						position  : [ 5, 10, 0 ],
-						textureId : logoTextureId
-					} ]
-				)
+				addPlatformLogo( entityManager, globals.configurationManager.platform )
 
 
 				entityManager.createEntity( "arena" )
@@ -6604,6 +6637,8 @@ define(
 				{}
 			)
 
+			config.platform = PlatformKit.getPlatformInfo()
+
 			return config
 		}
 
@@ -7096,12 +7131,12 @@ define(
 
 
 		var resourceUris = [
-			'images/html5_webgl_logo_128x64.png',
 			'images/4.2.04_256.png',
 			'images/web/tile.jpg',
 			'images/web/menu.png',
 			'images/web/logo.png',
 			'images/html5_logo_64x64.png',
+			'images/flash_logo_64x64.png',
 			'images/environment/cloud_dark_02.png',
 			'images/environment/cloud_dark_07.png',
 			'images/environment/cloud_light_05.png',
@@ -7118,7 +7153,6 @@ define(
 			'images/environment/cloud_light_03.png',
 			'images/environment/cloud_dark_04.png',
 			'images/environment/cloud_light_02.png',
-			'images/html5_webgl_logo_256_128.png',
 			'images/items/neutral_container.png',
 			'images/items/object_energy.png',
 			'images/items/player4_container.png',
@@ -7132,7 +7166,6 @@ define(
 			'images/shadows/invincible.png',
 			'images/shadows/container.png',
 			'images/shadows/vehicle.png',
-			'images/html5_logo_128x128.png',
 			'images/tile_cloud.png',
 			'images/tile_cloud2.png',
 			'images/vehicles/ship_player1_invincible.png',
