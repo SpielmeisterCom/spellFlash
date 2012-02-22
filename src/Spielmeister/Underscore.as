@@ -181,6 +181,20 @@ package Spielmeister {
 			return isArray( object ) ? object.slice() : extend( {}, object )
 		}
 
+		public function defaults( object : Object, ... arguments ) : Object {
+			for each( var otherObject : Object in arguments ) {
+				for( var propertyName in otherObject ) {
+					if( object[ propertyName ] == undefined ) object[ propertyName ] = otherObject[ propertyName ]
+				}
+			}
+
+			return object
+		}
+
+		public function indexOf( array : Array, item : Object, isSorted : Boolean = false ) : int {
+			return array.indexOf( item )
+		}
+
 
 		public function runTests() : void {
 			trace( 'testing...' )
