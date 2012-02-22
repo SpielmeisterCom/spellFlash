@@ -6588,9 +6588,16 @@ define(
 						optionValue
 					)
 
-					if( configValue === false ) return memo
+					if( configValue !== false ) {
+						memo[ optionName ] = configValue
 
-					memo[ optionName ] = configValue
+					} else {
+						// use the default value
+						memo[ optionName ] = option.extractor(
+							option.validValues,
+							defaultOptions[ optionName ]
+						)
+					}
 
 					return memo
 				},
