@@ -161,7 +161,7 @@ package Spielmeister.Spell.Platform.Private {
 			hgroup.addElement( startGameButton )
 
 
-			var helpTextAsHtml : String = "<p><b>In the lobby:</b> Create a new game or join an existing one by clicking on the list.<br/>Up to 4 players can join a game. Once you're happy with the number of players, start the game.</p><p><b>In the game:</b> Steer with left and right. Try not to run into anything yourself, but try to trap the other guys!<br/>Reload the page to get back to the lobby.</p>"
+			var helpTextAsHtml : String = "<p><b>In the lobby:</b> Create a new game or join an existing one by clicking on the list. Up to 4 players can join a game.</p><p><b>In the game:</b> Control your ship with the <i>left</i> and <i>right arrow keys</i>. Use the <i>space key</i> to activate items you collected. Cut all<br />your opponents off to win the game.</p>"
 			var helpTextRichText : RichText = new RichText()
 			helpTextRichText.setStyle( 'fontSize', 14 )
 			helpTextRichText.textFlow = TextConverter.importToFlow( helpTextAsHtml, TextConverter.TEXT_FIELD_HTML_FORMAT )
