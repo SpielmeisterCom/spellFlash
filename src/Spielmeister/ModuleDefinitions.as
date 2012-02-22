@@ -13,8 +13,8 @@ package Spielmeister {
 		private var require     : Function
 
 
-		public function ModuleDefinitions( stage: Stage, root : DisplayObject, container : IChildList, loaderURL : String, define : Function, require : Function ) {
-			this.platformKit = new PlatformKit( stage, root, container, loaderURL )
+		public function ModuleDefinitions( stage: Stage, root : DisplayObject, container : IChildList, loaderURL : String, urlParameters : Object, define : Function, require : Function ) {
+			this.platformKit = new PlatformKit( stage, root, container, loaderURL, urlParameters )
 			this.platformKit.init()
 
 			this.define = define
@@ -2335,6 +2335,114 @@ package Spielmeister {
 				}
 			)
 
+			define(
+				"spell/shared/util/input/keyCodes",
+				function() {
+					return {
+						"backspace": 8,
+						"tab"      : 9,
+						"enter"    : 13,
+						"shift"    : 16,
+						"ctrl"     : 17,
+						"alt"      : 18,
+						"pause"    : 19,
+						"caps lock": 20,
+						"escape"   : 27,
+						"space"    : 32,
+						"page up"  : 33,
+						"page down": 34,
+						"end"      : 35,
+						"home"     : 36,
+						"left arrow": 37,
+						"up arrow"  : 38,
+						"right arrow": 39,
+						"down arrow" : 40,
+						"insert"     : 45,
+						"delete"     : 46,
+						"0"          : 48,
+						"1"          : 49,
+						"2"          : 50,
+						"3"          : 51,
+						"4"          : 52,
+						"5"          : 53,
+						"6"          : 54,
+						"7"          : 55,
+						"8"          : 56,
+						"9"          : 57,
+						"a"          : 65,
+						"b"          : 66,
+						"c"          : 67,
+						"d"          : 68,
+						"e"          : 69,
+						"f"          : 70,
+						"g"          : 71,
+						"h"          : 72,
+						"i"          : 73,
+						"j"          : 74,
+						"k"          : 75,
+						"l"          : 76,
+						"m"          : 77,
+						"n"          : 78,
+						"o"          : 79,
+						"p"          : 80,
+						"q"          : 81,
+						"r"          : 82,
+						"s"          : 83,
+						"t"          : 84,
+						"u"          : 85,
+						"v"          : 86,
+						"w"          : 87,
+						"x"          : 88,
+						"y"          : 89,
+						"z"          : 90,
+						"left window key": 91,
+						"right window key": 92,
+						"select key"      : 93,
+						"numpad 0"        : 96,
+						"numpad 1"        : 97,
+						"numpad 2"        : 98,
+						"numpad 3"        : 99,
+						"numpad 4"        : 100,
+						"numpad 5"        : 101,
+						"numpad 6"        : 102,
+						"numpad 7"        : 103,
+						"numpad 8"        : 104,
+						"numpad 9"        : 105,
+						"multiply"        : 106,
+						"add"             : 107,
+						"subtract"        : 109,
+						"decimal point"   : 110,
+						"divide"          : 111,
+						"f1"              : 112,
+						"f2"              : 113,
+						"f3"              : 114,
+						"f4"              : 115,
+						"f5"              : 116,
+						"f6"              : 117,
+						"f7"              : 118,
+						"f8"              : 119,
+						"f9"              : 120,
+						"f10"             : 121,
+						"f11"             : 122,
+						"f12"             : 123,
+						"num lock"        : 144,
+						"scroll lock"     : 145,
+						"semi-colon"      : 186,
+						"equal sign"      : 187,
+						"comma"           : 188,
+						"dash"            : 189,
+						"period"          : 190,
+						"forward slash"   : 191,
+						"grave accent"    : 192,
+						"open bracket"    : 219,
+						"back slash"      : 220,
+						"close bracket"   : 221,
+						"single quote"    : 222
+					}
+				}
+			)
+
+
 		}
 
 
@@ -2598,113 +2706,6 @@ define(
 			actions.forEach( function( action ) {
 				self.actions[ action ] = false
 			} )
-		}
-	}
-)
-
-define(
-	"spell/shared/util/input/keyCodes",
-	function() {
-		return {
-			"backspace": 8,
-			"tab"      : 9,
-			"enter"    : 13,
-			"shift"    : 16,
-			"ctrl"     : 17,
-			"alt"      : 18,
-			"pause"    : 19,
-			"caps lock": 20,
-			"escape"   : 27,
-			"space"    : 32,
-			"page up"  : 33,
-			"page down": 34,
-			"end"      : 35,
-			"home"     : 36,
-			"left arrow": 37,
-			"up arrow"  : 38,
-			"right arrow": 39,
-			"down arrow" : 40,
-			"insert"     : 45,
-			"delete"     : 46,
-			"0"          : 48,
-			"1"          : 49,
-			"2"          : 50,
-			"3"          : 51,
-			"4"          : 52,
-			"5"          : 53,
-			"6"          : 54,
-			"7"          : 55,
-			"8"          : 56,
-			"9"          : 57,
-			"a"          : 65,
-			"b"          : 66,
-			"c"          : 67,
-			"d"          : 68,
-			"e"          : 69,
-			"f"          : 70,
-			"g"          : 71,
-			"h"          : 72,
-			"i"          : 73,
-			"j"          : 74,
-			"k"          : 75,
-			"l"          : 76,
-			"m"          : 77,
-			"n"          : 78,
-			"o"          : 79,
-			"p"          : 80,
-			"q"          : 81,
-			"r"          : 82,
-			"s"          : 83,
-			"t"          : 84,
-			"u"          : 85,
-			"v"          : 86,
-			"w"          : 87,
-			"x"          : 88,
-			"y"          : 89,
-			"z"          : 90,
-			"left window key": 91,
-			"right window key": 92,
-			"select key"      : 93,
-			"numpad 0"        : 96,
-			"numpad 1"        : 97,
-			"numpad 2"        : 98,
-			"numpad 3"        : 99,
-			"numpad 4"        : 100,
-			"numpad 5"        : 101,
-			"numpad 6"        : 102,
-			"numpad 7"        : 103,
-			"numpad 8"        : 104,
-			"numpad 9"        : 105,
-			"multiply"        : 106,
-			"add"             : 107,
-			"subtract"        : 109,
-			"decimal point"   : 110,
-			"divide"          : 111,
-			"f1"              : 112,
-			"f2"              : 113,
-			"f3"              : 114,
-			"f4"              : 115,
-			"f5"              : 116,
-			"f6"              : 117,
-			"f7"              : 118,
-			"f8"              : 119,
-			"f9"              : 120,
-			"f10"             : 121,
-			"f11"             : 122,
-			"f12"             : 123,
-			"num lock"        : 144,
-			"scroll lock"     : 145,
-			"semi-colon"      : 186,
-			"equal sign"      : 187,
-			"comma"           : 188,
-			"dash"            : 189,
-			"period"          : 190,
-			"forward slash"   : 191,
-			"grave accent"    : 192,
-			"open bracket"    : 219,
-			"back slash"      : 220,
-			"close bracket"   : 221,
-			"single quote"    : 222
 		}
 	}
 )
@@ -5922,385 +5923,6 @@ define(
 )
 
 define(
-	"spell/shared/util/forestMultiMap",
-	[
-		"underscore"
-	],
-	function(
-		_
-	) {
-		"use strict"
-
-
-		function createNode() {
-			return {
-				subNodes: {},
-				elements: []
-			}
-		}
-
-		function getElements( node ) {
-			if( !node ) {
-				return []
-
-			} else {
-				return _.reduce(
-					node.subNodes,
-					function( elements, subNode ) {
-						return elements.concat( getElements( subNode ) )
-					},
-					node.elements
-				)
-			}
-		}
-
-		function getNode( node, key, eachNode ) {
-			return _.reduce(
-				key,
-				function( node, keyComponent ) {
-					if( node === undefined ) return undefined
-
-					if( eachNode !== undefined ) eachNode( node, keyComponent )
-
-					return node.subNodes[ keyComponent ]
-				},
-				node
-			)
-		}
-
-
-		return {
-			create: function() {
-				return createNode()
-			},
-
-			add: function(
-				data,
-				key,
-				element
-			) {
-				var node = getNode(
-					data,
-					key,
-					function( node, keyComponent ) {
-						if ( !node.subNodes.hasOwnProperty( keyComponent ) ) {
-							node.subNodes[ keyComponent ] = createNode()
-						}
-					}
-				)
-
-				node.elements.push( element )
-			},
-
-			remove: function(
-				data,
-				key,
-				elementToRemove
-			) {
-				var node = getNode( data, key )
-
-				node.elements = _.filter( node.elements, function( element ) {
-					return element !== elementToRemove
-				} )
-			},
-
-			get: function(
-				data,
-				key
-			) {
-				return getElements( getNode( data, key ) )
-			}
-		}
-	}
-)
-
-define(
-	"spell/shared/util/EventManager",
-	[
-		"spell/shared/util/forestMultiMap",
-
-		"underscore"
-	],
-	function(
-		forestMultiMap,
-
-		_
-	) {
-		"use strict"
-
-
-		function EventManager() {
-			this.subscribers = forestMultiMap.create()
-			this.eventQueue = []
-		}
-
-		EventManager.prototype = {
-			subscribe: function(
-				scope,
-				subscriber
-			) {
-				if( _.size( this.eventQueue ) > 0 ) {
-					this.eventQueue = _.reject(
-						this.eventQueue,
-						_.bind(
-							function( event ) {
-								return this.publish( event[ 0 ], event[ 1] )
-							},
-							this
-						)
-					)
-				}
-
-				forestMultiMap.add(
-					this.subscribers,
-					scope,
-					subscriber
-				)
-
-				this.publish( [ "subscribe" ], [ scope, subscriber ] )
-			},
-
-			unsubscribe: function(
-				scope,
-				subscriber
-			) {
-				forestMultiMap.remove(
-					this.subscribers,
-					scope,
-					subscriber
-				)
-
-				this.publish( [ "unsubscribe" ], [ scope, subscriber ] )
-			},
-
-			publish: function(
-				scope,
-				eventArgs
-			) {
-				var subscribersInScope = forestMultiMap.get(
-					this.subscribers,
-					scope
-				)
-
-				// WORKAROUND: at the moment only the event "setName" is queued
-				if( _.size( subscribersInScope ) === 0 &&
-					scope[ 1 ] === "setName" ) {
-					this.eventQueue.push( [ scope, eventArgs ] )
-
-
-					return false
-				}
-
-				_.each( subscribersInScope, function( subscriber ) {
-					subscriber.apply( undefined, eventArgs )
-				} )
-
-
-				return true
-			}
-		}
-
-
-		return EventManager
-	}
-)
-
-define(
-	'spell/shared/util/ResourceLoader',
-	[
-		'spell/shared/util/platform/PlatformKit',
-		'spell/shared/util/Events',
-
-		'underscore'
-	],
-	function(
-		PlatformKit,
-		Events,
-
-		_
-	) {
-		'use strict'
-
-
-		/**
-		 * private
-		 */
-
-		var STATE_WAITING_FOR_PROCESSING = 0
-		var STATE_PROCESSING = 1
-		var STATE_COMPLETED = 2
-
-		var extensionToLoaderFactory = {
-			'png'  : PlatformKit.createImageLoader,
-			'jpg'  : PlatformKit.createImageLoader,
-			'json' : PlatformKit.createSoundLoader,
-			'txt'  : PlatformKit.createTextLoader
-		}
-
-
-		var createResourceBundle = function( name, resources ) {
-			return {
-				name                  : name,
-				state                 : STATE_WAITING_FOR_PROCESSING,
-				resources             : resources,
-				resourcesTotal        : resources.length,
-				resourcesNotCompleted : resources.length
-			}
-		}
-
-		/**
-		 * Returns true if a resource bundle with the provided name exists, false otherwise.
-		 *
-		 * @param resourceBundles
-		 * @param name
-		 */
-		var resourceBundleExists = function( resourceBundles, name ) {
-			return _.has( resourceBundles, name )
-		}
-
-		/**
-		 * Returns true if a resource with the provided name exists, false otherwise.
-		 *
-		 * @param resources
-		 * @param resourceName
-		 */
-		var isResourceInCache = function( resources, resourceName ) {
-			return _.has( resources, resourceName )
-		}
-
-		var updateProgress = function( resourceBundle ) {
-			resourceBundle.resourcesNotCompleted -= 1
-
-			var progress = 1.0 - resourceBundle.resourcesNotCompleted / resourceBundle.resourcesTotal
-
-			this.eventManager.publish(
-				[ Events.RESOURCE_PROGRESS, resourceBundle.name ],
-				[ progress ]
-			)
-
-			if( resourceBundle.resourcesNotCompleted === 0 ) {
-				resourceBundle.state = STATE_COMPLETED
-
-				this.eventManager.publish( [ Events.RESOURCE_LOADING_COMPLETED, resourceBundle.name ] )
-			}
-		}
-
-		var resourceLoadingCompletedCallback = function( resourceBundleName, resourceName, loadedResources ) {
-			if( loadedResources === undefined ||
-				_.size( loadedResources ) === 0 ) {
-
-				throw 'Resource "' + resourceName + '" from resource bundle "' + resourceBundleName + '" is undefined or empty on loading completed.'
-			}
-
-			// add newly loaded resources to cache
-			_.extend( this.resources, loadedResources )
-
-			_.bind( updateProgress, this, this.resourceBundles[ resourceBundleName ] )()
-		}
-
-		var createLoader = function( eventManager, resourceBundleName, resourceName, resourceLoadingCompletedCallback ) {
-			var extension = _.last( resourceName.split( '.' ) )
-			var loaderFactory = extensionToLoaderFactory[ extension ]
-
-			if( loaderFactory === undefined ) {
-				throw 'Could not create loader factory for resource "' + resourceName + '".'
-			}
-
-			var loader = loaderFactory(
-				eventManager,
-				resourceBundleName,
-				resourceName,
-				_.bind( resourceLoadingCompletedCallback, null, resourceBundleName, resourceName )
-			)
-
-			return loader
-		}
-
-		var startLoadingResourceBundle = function( resourceBundle ) {
-			_.each(
-				resourceBundle.resources,
-				_.bind(
-					function( resourceName ) {
-						if( isResourceInCache( this.resources, resourceName ) ) {
-							updateProgress( resourceBundle )
-
-							return
-						}
-
-						var loader = createLoader(
-							this.eventManager,
-							resourceBundle.name,
-							resourceName,
-							_.bind( resourceLoadingCompletedCallback, this )
-						)
-
-						if( loader !== undefined ) {
-							loader.start()
-
-						} else {
-							throw 'Could not create a loader for resource "' + resourceName + '".'
-						}
-					},
-					this
-				)
-			)
-		}
-
-
-		/**
-		 * public
-		 */
-
-		var ResourceLoader = function( eventManager ) {
-			if( eventManager === undefined ) throw 'Argument "eventManager" is undefined.'
-
-			this.eventManager = eventManager
-			this.resourceBundles = {}
-			this.resources = {}
-		}
-
-		ResourceLoader.prototype = {
-			addResourceBundle: function( name, resources ) {
-				if( _.size( resources ) === 0 ) {
-					throw 'Resource group with name "' + name + '" has zero assigned resources.'
-				}
-
-				if( resourceBundleExists( this.resourceBundles, name ) ) {
-					throw 'Resource group with name "' + name + '" already exists.'
-				}
-
-
-				this.resourceBundles[ name ] = createResourceBundle(
-					name,
-					resources
-				)
-			},
-
-			start: function() {
-				_.each(
-					this.resourceBundles,
-					_.bind(
-						function( resourceBundle ) {
-							if( resourceBundle.state !== STATE_WAITING_FOR_PROCESSING ) return
-
-							resourceBundle.state = STATE_PROCESSING
-							_.bind( startLoadingResourceBundle, this, resourceBundle )()
-						},
-						this
-					)
-				)
-			},
-
-			getResources: function() {
-				return this.resources
-			}
-		}
-
-		return ResourceLoader
-	}
-)
-
-define(
 	"spell/shared/util/create",
 	function() {
 		"use strict"
@@ -6717,12 +6339,12 @@ define(
 		"use strict"
 
 
-		return function( protocol, eventManager, statistics ) {
+		return function( host, protocol, eventManager, statistics ) {
 			stats.createStat( statistics, "sent",                 "chars/s" )
 			stats.createStat( statistics, "received",             "chars/s" )
 			stats.createStat( statistics, "entityUpdateFraction", "%" )
 
-			var socket = PlatformKit.createSocket()
+			var socket = PlatformKit.createSocket( host )
 
 			var connection = {
 				protocol : protocol,
@@ -6862,272 +6484,579 @@ define(
 )
 
 define(
-	"spell/client/util/loadPaths",
-	function() {
-		"use strict"
-
-
-		return function( basePath, connection, callback ) {
-
-			connection.handlers[ 'pathService' ] = function( client, message ) {
-
-				if (  message.path === basePath ) {
-					callback( message.files )
-				}
-			}
-
-			connection.send( 'pathService', { path: basePath } )
-		}
-	}
-)
-
-define(
-	"spell/client/util/loadEntityModules",
+	"spell/shared/util/ConfigurationManager",
 	[
-		"spell/client/util/loadPaths",
+		"spell/shared/util/platform/PlatformKit",
 
 		"underscore"
 	],
 	function(
-		loadPaths,
+		PlatformKit,
 
 		_
 	) {
 		"use strict"
 
 
-		var sharedEntitiesRelativePath = "shared/entities"
-		var clientEntitiesRelativePath = "client/entities"
+		/**
+		 * private
+		 */
+
+		/**
+		 * Generates a structure holding server host configuration information
+		 *
+		 * The returned structure looks like this:
+		 * {
+		 * 	host - the host, i.e. "acme.org:8080"
+		 * 	type - This can take the value "internal" (same host as client was delivered from) or "external" (different host that the client was delivered from).
+		 * }
+		 *
+		 * @param validValues
+		 * @param value
+		 */
+		var extractServer = function( validValues, value ) {
+			if( _.indexOf( validValues, '*' ) === -1 ) return false
+
+			// TODO: validate that the value is a valid host
+			var host = ( value === 'internal' ? PlatformKit.getHost() : value )
+			var type = ( value === 'internal' ? 'internal' : 'external' )
+
+			return {
+				host : host,
+				type : type
+			}
+		}
+
+		var extractScreenSize = function( validValues, value ) {
+			if( _.indexOf( validValues, value ) === -1 ) return false
+
+			var parts = value.split( 'x' )
+
+			return {
+				width  : parseInt( parts[ 0 ] ),
+				height : parseInt( parts[ 1 ] )
+			}
+		}
+
+		/**
+		 * These are the platform agnostic options.
+		 *
+		 * gameserver/resourceServer - "internal" means "same as the server that the client was delivered from"; "*" matches any valid host/port combination, i.e. "acme.org:8080"
+		 */
+		var validOptions = {
+			screenSize : {
+				validValues : [ '800x600', '1024x768' ],
+				extractor   : extractScreenSize
+			},
+			gameServer : {
+				validValues : [ 'internal', '*' ],
+				extractor   : extractServer
+			},
+			resourceServer : {
+				validValues : [ 'internal', '*' ],
+				extractor   : extractServer
+			}
+		}
+
+		/**
+		 * These options are used when they are not overridden by the environment configuration set up by the stage-0-loader.
+		 */
+		var defaultOptions = {
+			screenSize     : '1024x768',
+			gameServer     : 'internal',
+			resourceServer : 'internal'
+		}
+
+		var createConfiguration = function( defaultOptions, validOptions ) {
+			if( !defaultOptions ) defaultOptions = {}
+			if( !validOptions ) validOptions = {}
+
+			// PlatformKit.configurationOptions.* holds the platform specific options
+			_.defaults( defaultOptions, PlatformKit.configurationOptions.defaultOptions )
+			_.defaults( validOptions, PlatformKit.configurationOptions.validOptions )
+
+			var suppliedParameters = PlatformKit.getUrlParameters()
+			_.defaults( suppliedParameters, defaultOptions )
+
+			var config = _.reduce(
+				suppliedParameters,
+				function( memo, optionValue, optionName ) {
+					var option = validOptions[ optionName ]
+
+					var configValue = option.extractor(
+						option.validValues,
+						optionValue
+					)
+
+					if( configValue === false ) return memo
+
+					memo[ optionName ] = configValue
+
+					return memo
+				},
+				{}
+			)
+
+			return config
+		}
 
 
 		/**
-		 * This function loads all entity modules and passes them to a callback.
-		 * The code in here is terribly redundant and not very maintainable. I tried to fix this, but:
-		 * 1. I didn't succeed before running out of time.
-		 * 2. I ended up with some code that was less redundant but much harder to understand than this.
-		 * Until someone finds the time to figure this out it has to stay like this.
+		 * public
 		 */
-		function loadEntityModules(
-			codeDirectory,
-			spellModule,
-			gameModule,
-			connection,
-			callback
-		) {
-			var spellBasePath = codeDirectory+ "/" +spellModule+ "/"
-			var gameBasePath  = codeDirectory+ "/" +gameModule+ "/"
 
-			var spellClientEntitiesPath = spellBasePath + clientEntitiesRelativePath
-			var spellSharedEntitiesPath = spellBasePath + sharedEntitiesRelativePath
-			var gameClientEntitiesPath  = gameBasePath + clientEntitiesRelativePath
-			var gameSharedEntitiesPath  = gameBasePath + sharedEntitiesRelativePath
+		return function() {
+			return createConfiguration( defaultOptions, validOptions )
+		}
+	}
+)
 
-			loadEntityModulePaths(
-				spellClientEntitiesPath,
-				spellSharedEntitiesPath,
-				gameClientEntitiesPath,
-				gameSharedEntitiesPath,
-				connection,
-				function(
-					relativeSpellClientEntityPaths,
-					relativeSpellSharedEntityPaths,
-					relativeGameClientEntityPaths,
-					relativeGameSharedEntityPaths
-				) {
-					var spellClientEntityPaths = relativeSpellClientEntityPaths
-						.map( function( path ) {
-							return spellModule+ "/" +clientEntitiesRelativePath+ "/" +path
-						} )
-						.map( function( path ) {
-							return path.slice( 0, path.lastIndexOf( "." ) )
-						} )
-					var spellSharedEntityPaths = relativeSpellSharedEntityPaths
-						.map( function( path ) {
-							return spellModule+ "/" +sharedEntitiesRelativePath+ "/" +path
-						} )
-						.map( function( path ) {
-							return path.slice( 0, path.lastIndexOf( "." ) )
-						} )
-					var gameClientEntityPaths = relativeGameClientEntityPaths
-						.map( function( path ) {
-							return gameModule+ "/" +clientEntitiesRelativePath+ "/" +path
-						} )
-						.map( function( path ) {
-							return path.slice( 0, path.lastIndexOf( "." ) )
-						} )
-					var gameSharedEntityPaths = relativeGameSharedEntityPaths
-						.map( function( path ) {
-							return gameModule+ "/" +sharedEntitiesRelativePath+ "/" +path
-						} )
-						.map( function( path ) {
-							return path.slice( 0, path.lastIndexOf( "." ) )
-						} )
+define(
+	"spell/shared/util/forestMultiMap",
+	[
+		"underscore"
+	],
+	function(
+		_
+	) {
+		"use strict"
 
-					loadEntityModuleFunctions(
-						spellClientEntityPaths,
-						spellSharedEntityPaths,
-						gameClientEntityPaths,
-						gameSharedEntityPaths,
-						function(
-							spellClientEntityModuleFunctions,
-							spellSharedEntityModuleFunctions,
-							gameClientEntityModuleFunctions,
-							gameSharedEntityModuleFunctions
-						) {
-							var spellClientEntityTypeNames = relativeSpellClientEntityPaths.map( function( path ) {
-								return path.slice( 0, path.lastIndexOf( "." ) )
-							} )
-							var spellSharedEntityTypeNames = relativeSpellSharedEntityPaths.map( function( path ) {
-								return path.slice( 0, path.lastIndexOf( "." ) )
-							} )
-							var gameClientEntityTypeNames = relativeGameClientEntityPaths.map( function( path ) {
-								return path.slice( 0, path.lastIndexOf( "." ) )
-							} )
-							var gameSharedEntityTypeNames = relativeGameSharedEntityPaths.map( function( path ) {
-								return path.slice( 0, path.lastIndexOf( "." ) )
-							} )
 
-							var entityFunctions = {}
-							_.times( spellClientEntityTypeNames.length, function( i ) {
-								entityFunctions[ "spell:" +spellClientEntityTypeNames[ i ] ] = spellClientEntityModuleFunctions[ i ]
-							} )
-							_.times( spellSharedEntityTypeNames.length, function( i ) {
-								entityFunctions[ "spell:" +spellSharedEntityTypeNames[ i ] ] = spellSharedEntityModuleFunctions[ i ]
-							} )
-							_.times( gameClientEntityTypeNames.length, function( i ) {
-								entityFunctions[ gameClientEntityTypeNames[ i ] ] = gameClientEntityModuleFunctions[ i ]
-							} )
-							_.times( gameSharedEntityTypeNames.length, function( i ) {
-								entityFunctions[ gameSharedEntityTypeNames[ i ] ] = gameSharedEntityModuleFunctions[ i ]
-							} )
+		function createNode() {
+			return {
+				subNodes: {},
+				elements: []
+			}
+		}
 
-							callback( entityFunctions )
-						}
-					)
-				}
+		function getElements( node ) {
+			if( !node ) {
+				return []
+
+			} else {
+				return _.reduce(
+					node.subNodes,
+					function( elements, subNode ) {
+						return elements.concat( getElements( subNode ) )
+					},
+					node.elements
+				)
+			}
+		}
+
+		function getNode( node, key, eachNode ) {
+			return _.reduce(
+				key,
+				function( node, keyComponent ) {
+					if( node === undefined ) return undefined
+
+					if( eachNode !== undefined ) eachNode( node, keyComponent )
+
+					return node.subNodes[ keyComponent ]
+				},
+				node
 			)
 		}
 
 
-		function loadEntityModulePaths(
-			spellClientEntitiesPath,
-			spellSharedEntitiesPath,
-			gameClientEntitiesPath,
-			gameSharedEntitiesPath,
-			connection,
-			callback
-		) {
-			loadPaths( spellClientEntitiesPath, connection, function( relativeSpellClientEntityPaths ) {
-				loadPaths( spellSharedEntitiesPath, connection, function( relativeSpellSharedEntityPaths ) {
-					loadPaths( gameClientEntitiesPath, connection, function( relativeGameClientEntityPaths ) {
-						loadPaths( gameSharedEntitiesPath, connection, function( relativeGameSharedEntityPaths ) {
-							callback(
-								relativeSpellClientEntityPaths,
-								relativeSpellSharedEntityPaths,
-								relativeGameClientEntityPaths,
-								relativeGameSharedEntityPaths
-							)
-						} )
-					} )
+		return {
+			create: function() {
+				return createNode()
+			},
+
+			add: function(
+				data,
+				key,
+				element
+			) {
+				var node = getNode(
+					data,
+					key,
+					function( node, keyComponent ) {
+						if ( !node.subNodes.hasOwnProperty( keyComponent ) ) {
+							node.subNodes[ keyComponent ] = createNode()
+						}
+					}
+				)
+
+				node.elements.push( element )
+			},
+
+			remove: function(
+				data,
+				key,
+				elementToRemove
+			) {
+				var node = getNode( data, key )
+
+				node.elements = _.filter( node.elements, function( element ) {
+					return element !== elementToRemove
 				} )
-			} )
+			},
+
+			get: function(
+				data,
+				key
+			) {
+				return getElements( getNode( data, key ) )
+			}
+		}
+	}
+)
+
+define(
+	"spell/shared/util/EventManager",
+	[
+		"spell/shared/util/forestMultiMap",
+
+		"underscore"
+	],
+	function(
+		forestMultiMap,
+
+		_
+	) {
+		"use strict"
+
+
+		function EventManager() {
+			this.subscribers = forestMultiMap.create()
+			this.eventQueue = []
 		}
 
-		function loadEntityModuleFunctions(
-			spellClientEntityPaths,
-			spellSharedEntityPaths,
-			gameClientEntityPaths,
-			gameSharedEntityPaths,
-			callback
-		) {
-			require( spellClientEntityPaths, function() {
-				var spellClientEntityModuleFunctions = arguments
+		EventManager.prototype = {
+			subscribe: function(
+				scope,
+				subscriber
+			) {
+				if( _.size( this.eventQueue ) > 0 ) {
+					this.eventQueue = _.reject(
+						this.eventQueue,
+						_.bind(
+							function( event ) {
+								return this.publish( event[ 0 ], event[ 1] )
+							},
+							this
+						)
+					)
+				}
 
-				require( spellSharedEntityPaths, function() {
-					var spellSharedEntityModuleFunctions = arguments
+				forestMultiMap.add(
+					this.subscribers,
+					scope,
+					subscriber
+				)
 
-					require( gameClientEntityPaths, function() {
-					var gameClientEntityModuleFunctions = arguments
+				this.publish( [ "subscribe" ], [ scope, subscriber ] )
+			},
 
-						require( gameSharedEntityPaths, function() {
-							var gameSharedEntityModuleFunctions = arguments
+			unsubscribe: function(
+				scope,
+				subscriber
+			) {
+				forestMultiMap.remove(
+					this.subscribers,
+					scope,
+					subscriber
+				)
 
-							callback(
-								spellClientEntityModuleFunctions,
-								spellSharedEntityModuleFunctions,
-								gameClientEntityModuleFunctions,
-								gameSharedEntityModuleFunctions
-							)
-						} )
-					} )
+				this.publish( [ "unsubscribe" ], [ scope, subscriber ] )
+			},
+
+			publish: function(
+				scope,
+				eventArgs
+			) {
+				var subscribersInScope = forestMultiMap.get(
+					this.subscribers,
+					scope
+				)
+
+				// WORKAROUND: at the moment only the event "setName" is queued
+				if( _.size( subscribersInScope ) === 0 &&
+					scope[ 1 ] === "setName" ) {
+					this.eventQueue.push( [ scope, eventArgs ] )
+
+
+					return false
+				}
+
+				_.each( subscribersInScope, function( subscriber ) {
+					subscriber.apply( undefined, eventArgs )
 				} )
-			} )
+
+
+				return true
+			}
 		}
 
 
-		return loadEntityModules
+		return EventManager
+	}
+)
+
+define(
+	'spell/shared/util/ResourceLoader',
+	[
+		'spell/shared/util/platform/PlatformKit',
+		'spell/shared/util/Events',
+
+		'underscore'
+	],
+	function(
+		PlatformKit,
+		Events,
+
+		_
+	) {
+		'use strict'
+
+
+		/**
+		 * private
+		 */
+
+		var STATE_WAITING_FOR_PROCESSING = 0
+		var STATE_PROCESSING = 1
+		var STATE_COMPLETED = 2
+
+		var extensionToLoaderFactory = {
+			'png'  : PlatformKit.createImageLoader,
+			'jpg'  : PlatformKit.createImageLoader,
+			'json' : PlatformKit.createSoundLoader,
+			'txt'  : PlatformKit.createTextLoader
+		}
+
+
+		var createResourceBundle = function( name, resources ) {
+			return {
+				name                  : name,
+				state                 : STATE_WAITING_FOR_PROCESSING,
+				resources             : resources,
+				resourcesTotal        : resources.length,
+				resourcesNotCompleted : resources.length
+			}
+		}
+
+		/**
+		 * Returns true if a resource bundle with the provided name exists, false otherwise.
+		 *
+		 * @param resourceBundles
+		 * @param name
+		 */
+		var resourceBundleExists = function( resourceBundles, name ) {
+			return _.has( resourceBundles, name )
+		}
+
+		/**
+		 * Returns true if a resource with the provided name exists, false otherwise.
+		 *
+		 * @param resources
+		 * @param resourceName
+		 */
+		var isResourceInCache = function( resources, resourceName ) {
+			return _.has( resources, resourceName )
+		}
+
+		var updateProgress = function( resourceBundle ) {
+			resourceBundle.resourcesNotCompleted -= 1
+
+			var progress = 1.0 - resourceBundle.resourcesNotCompleted / resourceBundle.resourcesTotal
+
+			this.eventManager.publish(
+				[ Events.RESOURCE_PROGRESS, resourceBundle.name ],
+				[ progress ]
+			)
+
+			if( resourceBundle.resourcesNotCompleted === 0 ) {
+				resourceBundle.state = STATE_COMPLETED
+
+				this.eventManager.publish( [ Events.RESOURCE_LOADING_COMPLETED, resourceBundle.name ] )
+			}
+		}
+
+		var resourceLoadingCompletedCallback = function( resourceBundleName, resourceName, loadedResources ) {
+			if( loadedResources === undefined ||
+				_.size( loadedResources ) === 0 ) {
+
+				throw 'Resource "' + resourceName + '" from resource bundle "' + resourceBundleName + '" is undefined or empty on loading completed.'
+			}
+
+			// add newly loaded resources to cache
+			_.extend( this.resources, loadedResources )
+
+			_.bind( updateProgress, this, this.resourceBundles[ resourceBundleName ] )()
+		}
+
+		var createLoader = function( eventManager, host, resourceBundleName, resourceName, resourceLoadingCompletedCallback ) {
+			var extension = _.last( resourceName.split( '.' ) )
+			var loaderFactory = extensionToLoaderFactory[ extension ]
+
+			if( loaderFactory === undefined ) {
+				throw 'Could not create loader factory for resource "' + resourceName + '".'
+			}
+
+			var loader = loaderFactory(
+				eventManager,
+				host,
+				resourceBundleName,
+				resourceName,
+				_.bind( resourceLoadingCompletedCallback, null, resourceBundleName, resourceName )
+			)
+
+			return loader
+		}
+
+		var startLoadingResourceBundle = function( resourceBundle ) {
+			_.each(
+				resourceBundle.resources,
+				_.bind(
+					function( resourceName ) {
+						if( isResourceInCache( this.resources, resourceName ) ) {
+							updateProgress( resourceBundle )
+
+							return
+						}
+
+						var loader = createLoader(
+							this.eventManager,
+							this.host,
+							resourceBundle.name,
+							resourceName,
+							_.bind( resourceLoadingCompletedCallback, this )
+						)
+
+						if( loader !== undefined ) {
+							loader.start()
+
+						} else {
+							throw 'Could not create a loader for resource "' + resourceName + '".'
+						}
+					},
+					this
+				)
+			)
+		}
+
+
+		/**
+		 * public
+		 */
+
+		var ResourceLoader = function( eventManager, hostConfig ) {
+			if( eventManager === undefined ) throw 'Argument "eventManager" is undefined.'
+
+			this.eventManager = eventManager
+			this.resourceBundles = {}
+			this.resources = {}
+			this.host = ( hostConfig.type === 'internal' ? '' : 'http://' + hostConfig.host )
+		}
+
+		ResourceLoader.prototype = {
+			addResourceBundle: function( name, resources ) {
+				if( _.size( resources ) === 0 ) {
+					throw 'Resource group with name "' + name + '" has zero assigned resources.'
+				}
+
+				if( resourceBundleExists( this.resourceBundles, name ) ) {
+					throw 'Resource group with name "' + name + '" already exists.'
+				}
+
+
+				this.resourceBundles[ name ] = createResourceBundle(
+					name,
+					resources
+				)
+			},
+
+			start: function() {
+				_.each(
+					this.resourceBundles,
+					_.bind(
+						function( resourceBundle ) {
+							if( resourceBundle.state !== STATE_WAITING_FOR_PROCESSING ) return
+
+							resourceBundle.state = STATE_PROCESSING
+							_.bind( startLoadingResourceBundle, this, resourceBundle )()
+						},
+						this
+					)
+				)
+			},
+
+			getResources: function() {
+				return this.resources
+			}
+		}
+
+		return ResourceLoader
 	}
 )
 
 define(
 	"spell/client/main",
 	[
-		"spell/client/util/loadEntityModules"
+		"spell/shared/util/ConfigurationManager",
+		'spell/shared/util/EventManager',
+		'spell/shared/util/ResourceLoader',
+		"spell/shared/util/platform/PlatformKit"
 	],
 	function(
-		loadEntityModules
+		ConfigurationManager,
+		EventManager,
+		ResourceLoader,
+		PlatformKit
 	) {
 		"use strict"
 
 
-		var codeDirectory  = "code"
-		var spellModule    = "spell"
-
 		// return spell entry point
-		return function( gameModule, clientMain, connection ) {
-//			loadEntityModules(
-//				codeDirectory,
-//				spellModule,
-//				gameModule,
-//				connection,
-//				clientMain
-//			)
+		return function( gameModule, clientMain ) {
+			var inputEvents          = PlatformKit.createInputEvents()
+			var configurationManager = new ConfigurationManager()
+			var eventManager         = new EventManager()
+			var resourceLoader       = new ResourceLoader( eventManager, configurationManager.resourceServer )
 
-			clientMain()
+			var globals = {
+				configurationManager : configurationManager,
+				eventManager         : eventManager,
+				inputEvents          : inputEvents,
+				resourceLoader       : resourceLoader
+			}
+
+			clientMain( globals )
 		}
 	}
 )
 
 define(
-	"funkysnakes/client/main",
+	'funkysnakes/client/main',
 	[
-		"funkysnakes/client/entities",
-		"funkysnakes/client/systems/render",
-		"funkysnakes/client/zones/game",
-		"funkysnakes/client/zones/lobby",
-		"funkysnakes/shared/config/constants",
-		"funkysnakes/shared/util/createMainLoop",
-		"funkysnakes/shared/components/position",
-		"funkysnakes/shared/components/orientation",
-		"funkysnakes/shared/components/collisionCircle",
-		"funkysnakes/shared/components/shield",
-		"funkysnakes/shared/util/networkProtocol",
-		"funkysnakes/shared/util/stats",
+		'funkysnakes/client/entities',
+		'funkysnakes/client/systems/render',
+		'funkysnakes/client/zones/game',
+		'funkysnakes/client/zones/lobby',
+		'funkysnakes/shared/config/constants',
+		'funkysnakes/shared/util/createMainLoop',
+		'funkysnakes/shared/components/position',
+		'funkysnakes/shared/components/orientation',
+		'funkysnakes/shared/components/collisionCircle',
+		'funkysnakes/shared/components/shield',
+		'funkysnakes/shared/util/networkProtocol',
+		'funkysnakes/shared/util/stats',
 
-		"spell/client/components/network/markedForDestruction",
-		"spell/shared/util/EventManager",
-		"spell/shared/util/ResourceLoader",
-		"spell/shared/util/entities/Entities",
-		"spell/shared/util/entities/EntityManager",
-		"spell/client/util/network/network",
-		"spell/client/util/network/createServerConnection",
-		"spell/shared/util/zones/ZoneManager",
-		"spell/shared/util/platform/PlatformKit",
-		"spell/shared/util/Events",
-		"spell/shared/util/Logger",
-		"spell/client/main",
+		'spell/client/components/network/markedForDestruction',
+		'spell/shared/util/entities/Entities',
+		'spell/shared/util/entities/EntityManager',
+		'spell/client/util/network/network',
+		'spell/client/util/network/createServerConnection',
+		'spell/shared/util/zones/ZoneManager',
+		'spell/shared/util/platform/PlatformKit',
+		'spell/shared/util/Events',
+		'spell/shared/util/Logger',
+		'spell/client/main',
 
-		"underscore"
+		'underscore'
 	],
 	function(
 		entities,
@@ -7144,8 +7073,6 @@ define(
 		stats,
 
 		markedForDestruction,
-		EventManager,
-		ResourceLoader,
 		Entities,
 		EntityManager,
 		network,
@@ -7154,11 +7081,11 @@ define(
 		PlatformKit,
 		Events,
 		Logger,
-		enterMain,
+		spellMain,
 
 		_
 	) {
-		"use strict"
+		'use strict'
 
 
 		var resourceUris = [
@@ -7220,35 +7147,49 @@ define(
 
 		Logger.setLogLevel( Logger.LOG_LEVEL_DEBUG )
 
-		var eventManager   = new EventManager()
-		var resourceLoader = new ResourceLoader( eventManager )
-		var statistics     = stats.initStats()
-		var connection     = createServerConnection( networkProtocol, eventManager, statistics )
+		var main = function( globals ) {
+			var configurationManager = globals.configurationManager
+			var resourceLoader       = globals.resourceLoader
+			var eventManager         = globals.eventManager
 
-		var main = function() {
+
 			resourceLoader.addResourceBundle( 'bundle1', resourceUris )
 
 			eventManager.subscribe(
-				[ Events.RESOURCE_LOADING_COMPLETED, "bundle1" ],
+				[ Events.RESOURCE_LOADING_COMPLETED, 'bundle1' ],
 				function( event ) {
-					Logger.info( "loading completed" )
+					Logger.debug( 'completed loading resources' )
 
 
 					var componentConstructors = {
-						"markedForDestruction": markedForDestruction,
-						"position"            : position,
-						"orientation"         : orientation,
-						"collisionCircle"     : collisionCircle,
-						"shield"              : shield
+						'markedForDestruction': markedForDestruction,
+						'position'            : position,
+						'orientation'         : orientation,
+						'collisionCircle'     : collisionCircle,
+						'shield'              : shield
 					}
 
 					var entityManager = new EntityManager( entities, componentConstructors )
-
 					var statistics = stats.initStats()
 
-					var connection = createServerConnection( networkProtocol, eventManager, statistics )
 
-					var renderingContext = PlatformKit.RenderingFactory.createContext2d( constants.xSize, constants.ySize )
+					Logger.debug( 'connecting to game-server "' + configurationManager.gameServer.host + '"' )
+
+					var connection = createServerConnection(
+						configurationManager.gameServer.host,
+						networkProtocol,
+						eventManager,
+						statistics
+					)
+
+					var renderingContext = PlatformKit.RenderingFactory.createContext2d(
+						globals.configurationManager.screenSize.width,
+						globals.configurationManager.screenSize.height,
+						globals.configurationManager.renderingBackEnd
+					)
+
+					var renderingContextConfig = renderingContext.getConfiguration()
+					Logger.debug( 'created rendering context: type=' + renderingContextConfig.type + '; size=' + renderingContextConfig.width + 'x' + renderingContextConfig.height )
 
 
 					// TODO: the resource loader should create spell texture object instances instead of raw html images
@@ -7260,24 +7201,26 @@ define(
 					_.each(
 						resources,
 						function( resource, resourceId ) {
-							var extension =  _.last( resourceId.split( "." ) )
-							if( extension === "png" || extension === "jpg" ) {
+							var extension =  _.last( resourceId.split( '.' ) )
+							if( extension === 'png' || extension === 'jpg' ) {
 								textures[ resourceId.replace(/images\//g, '') ] = renderingContext.createTexture( resource )
 							}
 						}
 					)
 
 
-					var globals = {
-						renderingContext : renderingContext,
-						connection       : connection,
-						entityManager    : entityManager,
-						eventManager     : eventManager,
-						textures         : textures,
-						inputEvents      : PlatformKit.createInputEvents(),
-						stats            : statistics,
-						sounds           : resources
-					}
+					_.extend(
+						globals,
+						{
+							renderingContext : renderingContext,
+							connection       : connection,
+							entityManager    : entityManager,
+							eventManager     : eventManager,
+							textures         : textures,
+							stats            : statistics,
+							sounds           : resources
+						}
+					)
 
 
 					var zones = {
@@ -7290,10 +7233,10 @@ define(
 					globals.zoneManager = zoneManager
 
 
-					eventManager.subscribe( [ "messageReceived", "zoneChange" ],
+					eventManager.subscribe( [ 'messageReceived', 'zoneChange' ],
 						function( messageType, messageData ) {
 							// discard entity updates from the previous zone
-							connection.messages[ "entityUpdate" ] = []
+							connection.messages[ 'entityUpdate' ] = []
 
 							var currentZone = zoneManager.activeZones()[ 0 ]
 							var newZone     = messageData
@@ -7303,13 +7246,13 @@ define(
 						}
 					)
 
-					eventManager.subscribe( [ "clockSyncEstablished" ], function( remoteGameTimeInMs ) {
+					eventManager.subscribe( [ 'clockSyncEstablished' ], function( remoteGameTimeInMs ) {
 						var mainLoop = createMainLoop(
 							eventManager,
 							remoteGameTimeInMs
 						)
 
-						zoneManager.createZone( "lobby" )
+						zoneManager.createZone( 'lobby' )
 
 						mainLoop()
 					} )
@@ -7321,7 +7264,7 @@ define(
 			resourceLoader.start()
 		}
 
-		enterMain( "funkysnakes", main, connection )
+		spellMain( 'funkysnakes', main )
 	}
 )
 		}

@@ -9,17 +9,17 @@ package Spielmeister.Spell.Platform.Private.Loader {
 
 
 	public class ImageLoader implements Spielmeister.Spell.Platform.Private.Loader.Loader {
-		private var serverHostPort : String
 		private var eventManager : Object
+		private var host : String
 		private var resourceBundleName : String
 		private var resourceUri : String
 		private var onCompleteCallback : Function
 		private var loader : flash.display.Loader
 
 
-		public function ImageLoader( serverHostPort : String, eventManager : Object, resourceBundleName : String, resourceUri : String, callback : Function ) {
-			this.serverHostPort     = serverHostPort
+		public function ImageLoader( eventManager : Object, host : String, resourceBundleName : String, resourceUri : String, callback : Function ) {
 			this.eventManager       = eventManager
+			this.host               = host
 			this.resourceBundleName = resourceBundleName
 			this.resourceUri        = resourceUri
 			this.onCompleteCallback = callback
@@ -29,8 +29,8 @@ package Spielmeister.Spell.Platform.Private.Loader {
 			loader = new flash.display.Loader()
 			loader.contentLoaderInfo.addEventListener( Event.COMPLETE, onLoad )
 
-			var uri : String = 'http://' + serverHostPort + '/' + resourceUri
-			loader.load( new URLRequest( uri ) )
+			var url : String = host + '/' + resourceUri
+			loader.load( new URLRequest( url ) )
 		}
 
 		private function onLoad( event : Event ) : void {

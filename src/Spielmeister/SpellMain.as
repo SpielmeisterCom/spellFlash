@@ -15,12 +15,12 @@ package Spielmeister {
 				this.root,
 				this.rawChildren,
 				this.loaderInfo.loaderURL,
+				this.loaderInfo.parameters,
 				needjs.createDefine(),
 				needjs.createRequire()
 			)
 
 			moduleDefinitions.loadModuleDefinitions()
-
 
 			var enterMain : Function = needjs.createEnterMain()
 

@@ -5,8 +5,11 @@ package Spielmeister.Spell.Platform.Private {
 	import flash.display.DisplayObject
 	import flash.display.Sprite
 	import flash.events.MouseEvent
+	import flash.text.engine.BreakOpportunity
+
 	import flashx.textLayout.container.ScrollPolicy
 	import flashx.textLayout.conversion.TextConverter
+	import flashx.textLayout.formats.LineBreak
 
 	import mx.collections.ArrayCollection
 	import mx.core.UIComponent
@@ -101,8 +104,8 @@ package Spielmeister.Spell.Platform.Private {
 
 		private function createUI() : UIComponent {
 			var container : BorderContainer = new BorderContainer()
-			container.width  = 1024
-			container.height = 768
+			container.width  = 800
+			container.height = 600
 			container.opaqueBackground = 0xffffff
 			container.setStyle( 'borderVisible', false )
 
@@ -154,6 +157,8 @@ package Spielmeister.Spell.Platform.Private {
 
 			var helpTextAsHtml : String = "<p><b>In the lobby:</b> Create a new game or join an existing one by clicking on the list. Up to 4 players can join a game. Once you're happy with the number of players, start the game.</p><p><b>In the game:</b> Steer with left and right. Try not to run into anything yourself, but try to trap the other guys! Reload the page to get back to the lobby.</p>"
 			var helpTextRichText : RichText = new RichText()
+			helpTextRichText.setStyle( 'lineBreak', LineBreak.TO_FIT )
+			helpTextRichText.setStyle( 'breakOpportunity', BreakOpportunity.ANY )
 			helpTextRichText.setStyle( 'fontSize', 14 )
 			helpTextRichText.textFlow = TextConverter.importToFlow( helpTextAsHtml, TextConverter.TEXT_FIELD_HTML_FORMAT )
 

@@ -1,12 +1,12 @@
 package Spielmeister.Spell.Platform.Private.Loader {
 
 	public class SoundLoader implements Loader {
-		private var serverHostPort : String
+		private var host : String
 		private var onCompleteCallback : Function
 
 
-		public function SoundLoader( serverHostPort : String, eventManager : Object, resourceBundleName : String, resourceUri : String, callback : Function ) {
-			this.serverHostPort     = serverHostPort
+		public function SoundLoader(eventManager : Object, host : String, resourceBundleName : String, resourceUri : String, callback : Function ) {
+			this.host               = host
 			this.onCompleteCallback = callback
 		}
 
