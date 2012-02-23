@@ -2492,6 +2492,7 @@ define(
 			this.textureId = args.textureId
 			this.offset    = ( args.offset !== undefined ? [ args.offset[ 0 ], args.offset[ 1 ], 0 ] : [ 0, 0, 0 ] )
 			this.scale     = ( args.scale !== undefined ? [ args.scale[ 0 ], args.scale[ 1 ], 0 ] : [ 1, 1, 0 ] )
+			this.opacity   = 1.0
 		}
 	}
 )
@@ -3427,8 +3428,51 @@ define(
 			} )
 
 			this.position   = new position( args.position || [ 0, 0, 0 ] )
+			this.renderData = new renderData( { pass: 100 } ) // "100" means render it in the last pass
+		}
+	}
+)
 
-			this.renderData = new renderData( { pass: 100 } ) // "100" should means render it at last
+define(
+	"funkysnakes/client/components/fadeOut",
+	function() {
+		"use strict"
+
+
+		return function( args ) {
+			this.beginAfter = args.beginAfter
+			this.duration   = args.duration
+			this.age        = 0
+		}
+	}
+)
+
+define(
+	"funkysnakes/client/entities/widgetThatFadesOut",
+	[
+		"funkysnakes/client/components/appearance",
+		"funkysnakes/client/components/fadeOut",
+		"funkysnakes/shared/components/position",
+		"funkysnakes/client/components/renderData"
+	],
+	function(
+		appearance,
+		fadeOut,
+		position,
+		renderData
+	) {
+		"use strict"
+
+
+		return function( args ) {
+			this.appearance = new appearance( {
+				scale     : args.scale,
+				textureId : args.textureId
+			} )
+
+			this.position   = new position( args.position || [ 0, 0, 0 ] )
+			this.renderData = new renderData( { pass: 100 } ) // "100" means render it in the last pass
+			this.fadeOut    = new fadeOut( args.fadeOut )
 		}
 	}
 )
@@ -3482,6 +3526,7 @@ define(
 		"funkysnakes/client/entities/speedPowerup",
 		"funkysnakes/client/entities/background",
 		"funkysnakes/client/entities/widget",
+		"funkysnakes/client/entities/widgetThatFadesOut",
 		"funkysnakes/shared/entities/lobby/game"
 	],
 	function(
@@ -3498,6 +3543,7 @@ define(
 		speedPowerup,
 		background,
 		widget,
+		widgetThatFadesOut,
 		game
 	) {
 		"use strict"
@@ -3517,6 +3563,7 @@ define(
 			"speedPowerup"        : speedPowerup,
 			"background"          : background,
 			"widget"              : widget,
+			"widgetThatFadesOut"  : widgetThatFadesOut,
 
 			"lobby/game"          : game
 		}
@@ -3524,15 +3571,30 @@ define(
 )
 
 define(
-	"funkysnakes/client/systems/render",
+	"spell/shared/util/mathConstants",
+	function(
+	) {
+		"use strict"
+
+
+		return {
+			PI2: Math.PI * 2
+		}
+	}
+)
+
+define(
+	"funkysnakes/client/systems/shieldRenderer",
 	[
 		"funkysnakes/shared/config/constants",
+		"spell/shared/util/mathConstants",
 
 		"glmatrix/vec3",
 		"underscore"
 	],
 	function(
 		constants,
+		mathConstants,
 
 		vec3,
 		_
@@ -3542,79 +3604,187 @@ define(
 
 		function render(
 			timeInMs,
+			textures,
+			context,
+			shieldEntities
+		) {
+			var maxShieldLifetime = constants.shieldLifetime
+			var timeInS = timeInMs / 1000
+			var scaleMagnitude = 0.04
+			var scaleFrequency = mathConstants.PI2 * 1.5
+
+			_.each( shieldEntities, function( entity ) {
+				var dynamicScaleFactor = 1 - scaleMagnitude + Math.cos( timeInS * scaleFrequency ) * scaleMagnitude
+				var dynamicAlphaFactor = 1.0
+
+				if( entity.shield.state === "activated" ) {
+					var ageInSeconds = maxShieldLifetime - entity.shield.lifetime
+
+					// ((x/-3) + 1) + (x/3) * (cos(x * 30) + 1) / 2
+					dynamicAlphaFactor = ( ( ageInSeconds / -maxShieldLifetime ) + 1 ) + ( ageInSeconds / maxShieldLifetime ) * ( Math.cos ( ageInSeconds * 30 ) + 1 ) / 2
+				}
+
+				context.save()
+				{
+					var textureId = "effects/shield.png"
+					var shieldTexture = textures[ textureId ]
+
+					context.setGlobalAlpha( dynamicAlphaFactor )
+
+					var orientation = entity.renderData.orientation
+
+					context.translate( entity.renderData.position )
+
+					context.scale( entity.appearance.scale )
+					context.scale( [ dynamicScaleFactor, dynamicScaleFactor, 0 ] )
+					context.rotate( orientation )
+					context.translate( [ -39, -39, 0 ] )
+					context.drawTexture( shieldTexture, 0, 0 )
+				}
+				context.restore()
+			} )
+		}
+
+
+		return render
+	}
+)
+
+define(
+	"funkysnakes/client/systems/render",
+	[
+		"funkysnakes/client/systems/shieldRenderer",
+		"funkysnakes/shared/config/constants",
+
+		"glmatrix/vec3",
+		"underscore"
+	],
+	function(
+		shieldRenderer,
+		constants,
+
+		vec3,
+		_
+	) {
+		"use strict"
+
+
+		var shadowOffset = vec3.create( [ 3, 2, 0 ] )
+
+		var createEntitiesSortedByPath = function( entitiesByPass ) {
+			return _.toArray( entitiesByPass ).sort(
+				function( a, b ) {
+					var passA = a[ 0 ].renderData.pass
+					var passB = b[ 0 ].renderData.pass
+
+					return ( passA < passB ? -1 : ( passA > passB ? 1 : 0 ) )
+				}
+			)
+		}
+
+
+		function render(
+			timeInMs,
 			deltaTimeInMs,
 			textures,
 			context,
 			entitiesByPass,
 			entitiesWithText,
-			backgroundEntites
+			backgroundEntities,
+			shieldEntities
 		) {
-			var shadowOffset = vec3.create( [ 3, 2, 0 ] )
 
 
 			context.clear()
 
+			var drewShields = false
+
 
 			// draw background
-			_.each( backgroundEntites, function( entity ) {
-				context.save()
-				{
-					var texture = textures[ entity.appearance.textureId ]
-
-					context.translate( entity.position )
-					context.drawTexture( texture, 0, 0 )
-				}
-				context.restore()
-			} )
-
-
-			_.each( entitiesByPass, function( entities, pass ) {
-				// draw shadows
-				_.each( entities, function( entity ) {
-					if( !entity.hasOwnProperty( "shadowCaster" ) ) return
-
-
-					var shadowTexture = textures[ entity.shadowCaster.textureId ]
-
-					context.save()
-					{
-						context.setGlobalAlpha( 0.85 )
-
-						var position = vec3.create( [ 0, 0, 0 ] )
-						vec3.add( entity.renderData.position, shadowOffset, position )
-
-						context.translate( position )
-
-						context.rotate( entity.renderData.orientation )
-
-						context.translate( entity.appearance.offset )
-
-						context.drawTexture( shadowTexture, 0, 0 )
-					}
-					context.restore()
-				} )
-
-				// draw textures
-				_.each( entities, function( entity ) {
+			_.each(
+				backgroundEntities,
+				function( entity ) {
 					context.save()
 					{
 						var texture = textures[ entity.appearance.textureId ]
 
-						if( texture === undefined ) throw "The textureId '" + entity.appearance.textureId + "' could not be resolved."
-
-
-						var orientation = entity.renderData.orientation
-
-						context.translate( entity.renderData.position )
-
-						context.scale( entity.appearance.scale )
-						context.rotate( orientation )
-						context.translate( entity.appearance.offset )
+						context.translate( entity.position )
 						context.drawTexture( texture, 0, 0 )
 					}
 					context.restore()
-				} )
-			} )
+				}
+			)
+
+
+			_.each(
+				createEntitiesSortedByPath( entitiesByPass ),
+				function( entities ) {
+					// draw shadows
+					_.each(
+						entities, function( entity ) {
+							if( !entity.hasOwnProperty( "shadowCaster" ) ) return
+
+
+							var shadowTexture = textures[ entity.shadowCaster.textureId ]
+
+							context.save()
+							{
+								context.setGlobalAlpha( 0.85 )
+
+								var position = vec3.create( [ 0, 0, 0 ] )
+								vec3.add( entity.renderData.position, shadowOffset, position )
+
+								context.translate( position )
+
+								context.rotate( entity.renderData.orientation )
+
+								context.translate( entity.appearance.offset )
+
+								context.drawTexture( shadowTexture, 0, 0 )
+							}
+							context.restore()
+						}
+					)
+
+					// HACK: until animated appearances are supported shield rendering has to happen right before the "widget pass"
+					if( !drewShields &&
+						entities.length > 0 &&
+						entities[ 0 ].renderData.pass === 100 ) {
+
+						shieldRenderer( timeInMs, textures, context, shieldEntities )
+						drewShields = true
+					}
+
+					// draw textures
+					_.each(
+						entities,
+						function( entity ) {
+							context.save()
+							{
+								var texture = textures[ entity.appearance.textureId ]
+
+								if( texture === undefined ) throw "The textureId '" + entity.appearance.textureId + "' could not be resolved."
+
+
+								var orientation = entity.renderData.orientation
+
+								context.translate( entity.renderData.position )
+
+								context.scale( entity.appearance.scale )
+								context.rotate( orientation )
+								context.translate( entity.appearance.offset )
+
+								if( entity.appearance.opacity !== 1.0 ) {
+									context.setGlobalAlpha( entity.appearance.opacity )
+								}
+
+								context.drawTexture( texture, 0, 0 )
+							}
+							context.restore()
+						}
+					)
+				}
+			)
 		}
 
 
@@ -3677,7 +3847,7 @@ define(
 					[ {
 						scale     : [ scaleFactor, scaleFactor, 0 ],
 						textureId : "environment/" + type + index + ".png",
-						pass      : 2,
+						pass      : pass,
 						speed     : tmp,
 						position  : position
 					} ]
@@ -3938,6 +4108,47 @@ define(
 )
 
 define(
+	"funkysnakes/client/systems/fadeOut",
+	[
+		"glmatrix/vec3",
+		"underscore"
+	],
+	function(
+		vec3,
+		_
+	) {
+		"use strict"
+
+
+		function fadeOut(
+			timeInMs,
+			deltaTimeInMs,
+			entities,
+			fadeOutEntities
+		) {
+			_.each(
+				fadeOutEntities,
+				function( entity ) {
+					entity.fadeOut.age += deltaTimeInMs
+
+					if( entity.fadeOut.age < entity.fadeOut.beginAfter ) return
+
+					var delta = ( entity.fadeOut.age - entity.fadeOut.beginAfter ) / entity.fadeOut.duration
+
+					if( delta > 1.0 ) {
+						entities.remove( entity )
+					}
+
+					entity.appearance.opacity = 1.0 - delta
+				}
+			)
+		}
+
+		return fadeOut
+	}
+)
+
+define(
 	"funkysnakes/client/systems/interpolateNetworkData",
 	[
 		"funkysnakes/shared/config/constants",
@@ -4042,86 +4253,6 @@ define(
 				}
 			} )
 		}
-	}
-)
-
-define(
-	"spell/shared/util/mathConstants",
-	function(
-	) {
-		"use strict"
-
-
-		return {
-			PI2: Math.PI * 2
-		}
-	}
-)
-
-define(
-	"funkysnakes/client/systems/shieldRenderer",
-	[
-		"funkysnakes/shared/config/constants",
-		"spell/shared/util/mathConstants",
-
-		"glmatrix/vec3",
-		"underscore"
-	],
-	function(
-		constants,
-		mathConstants,
-
-		vec3,
-		_
-	) {
-		"use strict"
-
-
-		function render(
-			timeInMs,
-			textures,
-			context,
-			shieldEntities
-		) {
-			var maxShieldLifetime = constants.shieldLifetime
-			var timeInS = timeInMs / 1000
-			var scaleMagnitude = 0.04
-			var scaleFrequency = mathConstants.PI2 * 1.5
-
-			_.each( shieldEntities, function( entity ) {
-				var dynamicScaleFactor = 1 - scaleMagnitude + Math.cos( timeInS * scaleFrequency ) * scaleMagnitude
-				var dynamicAlphaFactor = 1.0
-
-				if( entity.shield.state === "activated" ) {
-					var ageInSeconds = maxShieldLifetime - entity.shield.lifetime
-
-					// ((x/-3) + 1) + (x/3) * (cos(x * 30) + 1) / 2
-					dynamicAlphaFactor = ( ( ageInSeconds / -maxShieldLifetime ) + 1 ) + ( ageInSeconds / maxShieldLifetime ) * ( Math.cos ( ageInSeconds * 30 ) + 1 ) / 2
-				}
-
-				context.save()
-				{
-					var textureId = "effects/shield.png"
-					var shieldTexture = textures[ textureId ]
-
-					context.setGlobalAlpha( dynamicAlphaFactor )
-
-					var orientation = entity.renderData.orientation
-
-					context.translate( entity.renderData.position )
-
-					context.scale( entity.appearance.scale )
-					context.scale( [ dynamicScaleFactor, dynamicScaleFactor, 0 ] )
-					context.rotate( orientation )
-					context.translate( [ -39, -39, 0 ] )
-					context.drawTexture( shieldTexture, 0, 0 )
-				}
-				context.restore()
-			} )
-		}
-
-
-		return render
 	}
 )
 
@@ -5093,9 +5224,9 @@ define(
 		"funkysnakes/client/systems/animateClouds",
 		"funkysnakes/client/systems/applyPowerupEffects",
 		"funkysnakes/client/systems/computeRenderFrameStats",
+		"funkysnakes/client/systems/fadeOut",
 		"funkysnakes/client/systems/interpolateNetworkData",
 		"funkysnakes/client/systems/render",
-		"funkysnakes/client/systems/shieldRenderer",
 		"funkysnakes/client/systems/debugRenderer",
 		"funkysnakes/client/systems/renderStats",
 		"funkysnakes/client/systems/sendInput",
@@ -5116,16 +5247,18 @@ define(
 		"spell/shared/util/entities/datastructures/multiMap",
 		"spell/shared/util/entities/datastructures/singleton",
 		"spell/shared/util/entities/datastructures/sortedArray",
-		"spell/shared/util/zones/ZoneEntityManager"
+		"spell/shared/util/zones/ZoneEntityManager",
+
+		"underscore"
 	],
 	function(
 		createClouds,
 		animateClouds,
 		applyPowerupEffects,
 		computeRenderFrameStats,
+		fadeOut,
 		interpolateNetworkData,
 		render,
-		shieldRenderer,
 		debugRenderer,
 		renderStats,
 		sendInput,
@@ -5146,7 +5279,9 @@ define(
 		multiMap,
 		singleton,
 		sortedArray,
-		ZoneEntityManager
+		ZoneEntityManager,
+
+		_
 	) {
 		"use strict"
 
@@ -5250,6 +5385,12 @@ define(
 			applyPowerupEffects(
 				entities.executeQuery( queryIds[ "applyPowerupEffects" ][ 0 ] ).elements
 			)
+			fadeOut(
+				timeInMs,
+				deltaTimeInMs,
+				entities,
+				entities.executeQuery( queryIds[ "fadeOut" ][ 0 ] ).elements
+			)
 			render(
 				timeInMs,
 				deltaTimeInMs,
@@ -5257,12 +5398,7 @@ define(
 				renderingContext,
 				entities.executeQuery( queryIds[ "render" ][ 0 ] ).multiMap,
 				entities.executeQuery( queryIds[ "render" ][ 1 ] ).elements,
-				entities.executeQuery( queryIds[ "render" ][ 2 ] ).elements
-			)
-			shieldRenderer(
-				timeInMs,
-				textures,
-				renderingContext,
+				entities.executeQuery( queryIds[ "render" ][ 2 ] ).elements,
 				entities.executeQuery( queryIds[ "shieldRenderer" ][ 0 ] ).elements
 			)
 //			debugRenderer(
@@ -5336,6 +5472,19 @@ define(
 				addPlatformLogo( entityManager, globals.configurationManager.platform )
 
 
+				entityManager.createEntity(
+					"widgetThatFadesOut",
+					[ {
+						position  : [ 256, 256, 0 ],
+						textureId : 'help_controls.png',
+						fadeOut   : {
+							beginAfter : 2500,
+							duration   : 500
+						}
+					} ]
+				)
+
+
 				entityManager.createEntity( "arena" )
 
 
@@ -5343,18 +5492,11 @@ define(
 					return entity.synchronizationSlave.id
 				} )
 
-				var animationIdMap = entityMap( function( entity ) {
-					return entity.animation.id
-				} )
-
-				var passIdMultiMap = multiMap( function( entity ) {
-					if ( entity.hasOwnProperty( "appearance" ) ) {
+				var passIdMultiMap = multiMap(
+					function( entity ) {
 						return entity.renderData.pass
 					}
-					else {
-						return undefined
-					}
-				} )
+				)
 
 				this.queryIds = {
 					processLocalInput: [
@@ -5389,6 +5531,9 @@ define(
 					],
 					clouds: [
 						entities.prepareQuery( [ "cloud" ] )
+					],
+					fadeOut: [
+						entities.prepareQuery( [ "fadeOut" ] )
 					],
 					render: [
 						entities.prepareQuery( [ "position", "appearance", "renderData" ], passIdMultiMap ),
@@ -7137,6 +7282,7 @@ define(
 			'images/web/logo.png',
 			'images/html5_logo_64x64.png',
 			'images/flash_logo_64x64.png',
+			'images/help_controls.png',
 			'images/environment/cloud_dark_02.png',
 			'images/environment/cloud_dark_07.png',
 			'images/environment/cloud_light_05.png',
