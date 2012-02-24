@@ -53,7 +53,7 @@ package Spielmeister.Spell.Platform {
 //			trace( "updateDebugData - not yet implemented" )
 		}
 
-		public function createInputEvents() : Object {
+		public function createInputEvents( screenSizeConfig : Object ) : Object {
 			return Input.createInputEvents( stage )
 		}
 

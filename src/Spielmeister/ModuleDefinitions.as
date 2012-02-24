@@ -2471,18 +2471,6 @@ package Spielmeister {
 		private function loadModuleDefinitionsJavascript() : void {
 
 define(
-	"funkysnakes/client/components/animated",
-	function() {
-		"use strict"
-
-
-		return function( args ) {
-			this.animationId = args.animationId
-		}
-	}
-)
-
-define(
 	"funkysnakes/client/components/appearance",
 	function() {
 		"use strict"
@@ -2536,13 +2524,11 @@ define(
 define(
 	"funkysnakes/client/entities/arena",
 	[
-		"funkysnakes/client/components/animated",
 		"funkysnakes/client/components/appearance",
 		"funkysnakes/client/components/renderData",
 		"funkysnakes/shared/components/position"
 	],
 	function(
-		animated,
 		appearance,
 		renderData,
 		position
@@ -2551,61 +2537,9 @@ define(
 
 
 		return function() {
-			this.animated   = new animated( { animationId: "arenaHoverAnimation" } )
 			this.appearance = new appearance( { textureId: "environment/arena.png" } )
 			this.position   = new position( [ 5, 40, 0 ] )
 			this.renderData = new renderData( { pass: 3 } )
-		}
-	}
-)
-
-define(
-	"funkysnakes/client/components/animation",
-	function() {
-		"use strict"
-
-
-		return function( args ) {
-			this.id                = args.id
-			this.positionOffset    = [ 0, 0 ]
-			this.orientationOffset = 0
-		}
-	}
-)
-
-define(
-	"funkysnakes/client/components/hoverAnimation",
-	function() {
-		"use strict"
-
-
-		return function( args ) {
-			this.amplitude  = args.amplitude
-			this.frequency  = args.frequency
-			this.offsetInMs = args.offsetInMs || 0
-		}
-	}
-)
-
-define(
-	"funkysnakes/client/entities/arenaHoverAnimation",
-	[
-		"funkysnakes/client/components/animation",
-		"funkysnakes/client/components/hoverAnimation"
-	],
-	function(
-		animation,
-		hoverAnimation
-	) {
-		"use strict"
-
-
-		return function() {
-			this.hoverAnimation = new hoverAnimation( {
-				amplitude: 5,
-				frequency: 0.001
-			} )
-			this.animation = new animation( { id: "arenaHoverAnimation" } )
 		}
 	}
 )
@@ -2920,7 +2854,6 @@ define(
 define(
 	"funkysnakes/client/entities/head",
 	[
-		"funkysnakes/client/components/animated",
 		"funkysnakes/client/components/appearance",
 		"funkysnakes/client/components/networkInterpolation",
 		"funkysnakes/client/components/powerupEffects",
@@ -2934,7 +2867,6 @@ define(
 		"spell/shared/components/input/inputReceiver"
 	],
 	function(
-		animated,
 		appearance,
 		networkInterpolation,
 		powerupEffects,
@@ -2967,7 +2899,6 @@ define(
 			} )
 
 			this.activePowerups       = new activePowerups()
-			this.animated             = new animated( { animationId: "arenaHoverAnimation" } )
 			this.inputReceiver        = new inputReceiver( "player", [ "left", "right" ] )
 			this.networkInterpolation = new networkInterpolation()
 			this.orientation          = new orientation( args.angle )
@@ -2981,7 +2912,6 @@ define(
 define(
 	"funkysnakes/client/entities/invincibilityPowerup",
 	[
-		"funkysnakes/client/components/animated",
 		"funkysnakes/client/components/appearance",
 		"funkysnakes/client/components/networkInterpolation",
 		"funkysnakes/client/components/renderData",
@@ -2991,7 +2921,6 @@ define(
 		"spell/client/components/network/synchronizationSlave"
 	],
 	function(
-		animated,
 		appearance,
 		networkInterpolation,
 		renderData,
@@ -3013,7 +2942,6 @@ define(
 				textureId: "shadows/invincible.png"
 			} )
 
-			this.animated             = new animated( { animationId: "arenaHoverAnimation" } )
 			this.networkInterpolation = new networkInterpolation()
 			this.position             = new position( args.position )
 			this.renderData           = new renderData( { pass: 5 } )
@@ -3025,7 +2953,6 @@ define(
 define(
 	"funkysnakes/client/entities/shieldPowerup",
 	[
-		"funkysnakes/client/components/animated",
 		"funkysnakes/client/components/appearance",
 		"funkysnakes/client/components/networkInterpolation",
 		"funkysnakes/client/components/renderData",
@@ -3034,7 +2961,6 @@ define(
 		"spell/client/components/network/synchronizationSlave"
 	],
 	function(
-		animated,
 		appearance,
 		networkInterpolation,
 		renderData,
@@ -3051,7 +2977,6 @@ define(
 				offset    : [ -24, -24 ]
 			} )
 
-			this.animated             = new animated( { animationId: "arenaHoverAnimation" } )
 			this.networkInterpolation = new networkInterpolation()
 			this.position             = new position( args.position )
 			this.renderData           = new renderData( { pass: 5 } )
@@ -3282,7 +3207,6 @@ define(
 define(
 	"funkysnakes/client/entities/speedPowerup",
 	[
-		"funkysnakes/client/components/animated",
 		"funkysnakes/client/components/appearance",
 		"funkysnakes/client/components/networkInterpolation",
 		"funkysnakes/client/components/renderData",
@@ -3295,7 +3219,6 @@ define(
 		"spell/client/components/network/synchronizationSlave"
 	],
 	function(
-		animated,
 		appearance,
 		networkInterpolation,
 		renderData,
@@ -3322,7 +3245,6 @@ define(
 		}
 
 		return function( args ) {
-			this.animated             = new animated( { animationId: "arenaHoverAnimation" } )
 			this.networkInterpolation = new networkInterpolation()
 			this.position             = new position( args.position )
 			this.renderData           = new renderData( { pass: 5 } )
@@ -3514,7 +3436,6 @@ define(
 	"funkysnakes/client/entities",
 	[
 		"funkysnakes/client/entities/arena",
-		"funkysnakes/client/entities/arenaHoverAnimation",
 		"funkysnakes/client/entities/cloud",
 		"funkysnakes/client/entities/statData",
 		"funkysnakes/client/entities/gameStarter",
@@ -3531,7 +3452,6 @@ define(
 	],
 	function(
 		arena,
-		arenaHoverAnimation,
 		cloud,
 		statData,
 		gameStarter,
@@ -3551,7 +3471,6 @@ define(
 
 		return {
 			"arena"               : arena,
-			"arenaHoverAnimation" : arenaHoverAnimation,
 			"cloud"               : cloud,
 			"statData"            : statData,
 			"gameStarter"         : gameStarter,
@@ -3714,7 +3633,6 @@ define(
 					context.restore()
 				}
 			)
-
 
 			_.each(
 				createEntitiesSortedByPath( entitiesByPass ),
@@ -5248,6 +5166,7 @@ define(
 		"spell/shared/util/entities/datastructures/singleton",
 		"spell/shared/util/entities/datastructures/sortedArray",
 		"spell/shared/util/zones/ZoneEntityManager",
+		"spell/shared/util/platform/PlatformKit",
 
 		"underscore"
 	],
@@ -5280,6 +5199,7 @@ define(
 		singleton,
 		sortedArray,
 		ZoneEntityManager,
+		PlatformKit,
 
 		_
 	) {
@@ -5438,10 +5358,11 @@ define(
 				var entityManager = this.entityManager
 				var eventManager  = globals.eventManager
 
+				// WORKAROUND: in order to prevent blocking of input event handling through the browser while in the lobby zone, input handlers are registered not until here
+				globals.inputEvents = PlatformKit.createInputEvents( globals.configurationManager.screenSize )
+
 
 				entityManager.createEntity( "player", [ "player", players[ 0 ].leftKey, players[ 0 ].rightKey, players[ 0 ].useKey ] )
-
-				entityManager.createEntity( "arenaHoverAnimation" )
 
 				entityManager.createEntity(
 					"background",
@@ -5707,17 +5628,6 @@ define(
 			var queryIds      = this.queryIds
 
 			var connection  = globals.connection
-			var inputEvents = globals.inputEvents
-
-			processLocalInput(
-				timeInMs,
-				inputEvents,
-				entities.executeQuery( queryIds[ "processLocalInput" ][ 0 ] ).elements,
-				entities.executeQuery( queryIds[ "processLocalInput" ][ 1 ] ).elements
-			)
-			processInputEvents(
-				entities.executeQuery( queryIds[ "processInputEvents" ][ 0 ] ).elements
-			)
 
 			receiveGameData(
 				entities.executeQuery( queryIds[ "receiveGameData" ][ 0 ] ).entityMap,
@@ -5756,17 +5666,6 @@ define(
 				} )
 
 				this.queryIds = {
-					processLocalInput: [
-						entities.prepareQuery( [ "inputDefinition" ] ),
-						entities.prepareQuery( [ "inputReceiver"   ] )
-					],
-					processInputEvents: [
-						entities.prepareQuery( [ "inputReceiver" ] )
-					],
-					render: [
-						entities.prepareQuery( [ "position", "image" ] ),
-						entities.prepareQuery( [ "position", "text" ]  )
-					],
 					receiveGameData: [
 						entities.prepareQuery( [ "game" ], gameNameMap )
 					],
@@ -7069,6 +6968,19 @@ define(
 				throw 'Resource "' + resourceName + '" from resource bundle "' + resourceBundleName + '" is undefined or empty on loading completed.'
 			}
 
+			// making sure the loaded resources were not already returned earlier
+			_.each(
+				loadedResources,
+				_.bind(
+					function( loadedResource, loadedResourceName ) {
+						if( !_.has( this.resources, loadedResourceName ) ) return
+
+						throw 'Error: sub-resource "' + loadedResourceName + '" from resource "' + resourceName + '" already exists.'
+					},
+					this
+				)
+			)
+
 			// add newly loaded resources to cache
 			_.extend( this.resources, loadedResources )
 
@@ -7185,21 +7097,18 @@ define(
 	[
 		"spell/shared/util/ConfigurationManager",
 		'spell/shared/util/EventManager',
-		'spell/shared/util/ResourceLoader',
-		"spell/shared/util/platform/PlatformKit"
+		'spell/shared/util/ResourceLoader'
 	],
 	function(
 		ConfigurationManager,
 		EventManager,
-		ResourceLoader,
-		PlatformKit
+		ResourceLoader
 	) {
 		"use strict"
 
 
 		// return spell entry point
 		return function( gameModule, clientMain ) {
-			var inputEvents          = PlatformKit.createInputEvents()
 			var configurationManager = new ConfigurationManager()
 			var eventManager         = new EventManager()
 			var resourceLoader       = new ResourceLoader( eventManager, configurationManager.resourceServer )
@@ -7207,7 +7116,6 @@ define(
 			var globals = {
 				configurationManager : configurationManager,
 				eventManager         : eventManager,
-				inputEvents          : inputEvents,
 				resourceLoader       : resourceLoader
 			}
 
@@ -7314,20 +7222,20 @@ define(
 			'images/shadows/vehicle.png',
 			'images/tile_cloud.png',
 			'images/tile_cloud2.png',
+			'images/vehicles/ship_player1.png',
+			'images/vehicles/ship_player1_speed.png',
 			'images/vehicles/ship_player1_invincible.png',
+			'images/vehicles/ship_player2.png',
+			'images/vehicles/ship_player2_speed.png',
 			'images/vehicles/ship_player2_invincible.png',
-			'images/vehicles/ship_player4.png',
+			'images/vehicles/ship_player3.png',
 			'images/vehicles/ship_player3_speed.png',
 			'images/vehicles/ship_player3_invincible.png',
+			'images/vehicles/ship_player4.png',
 			'images/vehicles/ship_player4_speed.png',
 			'images/vehicles/ship_player4_invincible.png',
-			'images/vehicles/ship_player1.png',
-			'images/vehicles/ship_player2_speed.png',
-			'images/vehicles/ship_player1_speed.png',
-			'images/vehicles/ship_player3.png',
-			'images/vehicles/ship_player2.png',
-			'images/effects/shield.png',
-			'sounds/sets/set1.json'
+			'images/effects/shield.png'//,
+//			'sounds/sets/set1.json'
 		]
 
 
