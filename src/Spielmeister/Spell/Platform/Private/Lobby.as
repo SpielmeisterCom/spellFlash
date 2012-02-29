@@ -137,7 +137,7 @@ package Spielmeister.Spell.Platform.Private {
 			existingGamesLabel.text = 'Existing games:'
 
 			gamesList = new List()
-			gamesList.height = 330
+			gamesList.height = 250
 			gamesList.width = 300
 			gamesList.setStyle( 'verticalScrollPolicy', ScrollPolicy.ON )
 			gamesList.dataProvider = new ArrayCollection()

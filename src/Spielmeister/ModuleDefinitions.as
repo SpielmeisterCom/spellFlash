@@ -6553,7 +6553,7 @@ define(
 		 */
 		var validOptions = {
 			screenSize : {
-				validValues : [ '800x600', '1024x768' ],
+				validValues : [ '640x480', '800x600', '1024x768' ],
 				extractor   : extractScreenSize
 			},
 			gameServer : {
@@ -7215,6 +7215,25 @@ define(
 						globals.configurationManager.screenSize.height,
 						globals.configurationManager.renderingBackEnd
 					)
+
+					/**
+					 * WORKAROUND: In order to support the reduced color buffer resolution of less than 1024x768 pixels a global scale transformation is applied.
+					 */
+					var scaleFactor = 1.0
+
+					if( globals.configurationManager.screenSize.width === 800 &&
+						globals.configurationManager.screenSize.height === 600 ) {
+
+						scaleFactor = 800 / 1024
+
+					} else if( globals.configurationManager.screenSize.width === 640 &&
+								globals.configurationManager.screenSize.height === 480 ) {
+						scaleFactor = 640 / 1024
+					}
+
+					renderingContext.scale( [ scaleFactor, scaleFactor, 1.0 ] )
+					renderingContext.save()
+
 
 					var renderingContextConfig = renderingContext.getConfiguration()
 					Logger.debug( 'created rendering context: type=' + renderingContextConfig.type + '; size=' + renderingContextConfig.width + 'x' + renderingContextConfig.height )
