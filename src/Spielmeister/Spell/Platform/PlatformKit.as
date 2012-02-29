@@ -6,6 +6,8 @@ package Spielmeister.Spell.Platform {
 	import Spielmeister.Spell.Platform.Private.Lobby
 	import Spielmeister.Spell.Platform.Private.Socket.WebSocketAdapter
 
+	import com.adobe.serialization.json.JSON
+
 	import flash.display.*
 	import flash.events.Event
 	import flash.events.TimerEvent
@@ -151,6 +153,10 @@ package Spielmeister.Spell.Platform {
 
 		public function getPlatformInfo() : String {
 			return 'flash'
+		}
+
+		public function getJsonCoder() : Object {
+			return JSON
 		}
 
 		private function createHost( loaderUrl : String ) : String {

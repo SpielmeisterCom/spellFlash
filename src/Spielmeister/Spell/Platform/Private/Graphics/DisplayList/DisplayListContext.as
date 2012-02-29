@@ -84,7 +84,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			target.color[ 2 ] = source.color[ 2 ]
 			target.color[ 3 ] = source.color[ 3 ]
 
-			target.modelViewMatrix.copyFrom( source.modelViewMatrix )
+			target.modelViewMatrix = source.modelViewMatrix.clone()
 		}
 
 

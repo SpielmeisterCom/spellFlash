@@ -17,7 +17,6 @@ package Spielmeister.Spell.Platform.Private {
 	import spark.components.*
 	import spark.events.*
 	import spark.layouts.HorizontalLayout
-	import spark.utils.DataItem
 
 
 	public class Lobby {
@@ -231,7 +230,7 @@ package Spielmeister.Spell.Platform.Private {
 							index           : gamesList.dataProvider.length // the index in the spark component list
 						}
 
-						var dataItem : DataItem = new DataItem()
+						var dataItem : Object = {}
 						dataItem.label  = label
 
 						gamesList.dataProvider.addItem( dataItem )
