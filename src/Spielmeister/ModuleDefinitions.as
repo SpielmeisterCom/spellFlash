@@ -3433,6 +3433,29 @@ define(
 )
 
 define(
+	"funkysnakes/client/entities/effect",
+	[
+		"spell/shared/components/sound/soundEmitter",
+		"spell/client/components/network/synchronizationSlave"
+	],
+	function(
+		soundEmitter,
+		synchronizationSlave
+	) {
+		"use strict"
+
+
+		return function( args ) {
+			this.soundEmitter = new soundEmitter( {
+				soundId: args.soundId
+			} )
+
+			this.synchronizationSlave = new synchronizationSlave( { id: args.networkId } )
+		}
+	}
+)
+
+define(
 	"funkysnakes/client/entities",
 	[
 		"funkysnakes/client/entities/arena",
@@ -3448,7 +3471,8 @@ define(
 		"funkysnakes/client/entities/background",
 		"funkysnakes/client/entities/widget",
 		"funkysnakes/client/entities/widgetThatFadesOut",
-		"funkysnakes/shared/entities/lobby/game"
+		"funkysnakes/shared/entities/lobby/game",
+		"funkysnakes/client/entities/effect"
 	],
 	function(
 		arena,
@@ -3464,7 +3488,8 @@ define(
 		background,
 		widget,
 		widgetThatFadesOut,
-		game
+		game,
+		effect
 	) {
 		"use strict"
 
@@ -3484,7 +3509,8 @@ define(
 			"widget"              : widget,
 			"widgetThatFadesOut"  : widgetThatFadesOut,
 
-			"lobby/game"          : game
+			"lobby/game"          : game,
+			"effect"              : effect
 		}
 	}
 )
@@ -7139,14 +7165,17 @@ define(
 			'images/vehicles/ship_player4.png',
 			'images/vehicles/ship_player4_speed.png',
 			'images/vehicles/ship_player4_invincible.png',
-			'images/effects/shield.png'//,
-//			'sounds/sets/set1.json'
+			'images/effects/shield.png',
+			'sounds/sets/set1.json'
 		]
 
 
 		Logger.setLogLevel( Logger.LOG_LEVEL_DEBUG )
 
 		var main = function( globals ) {
+			Logger.debug( 'client started' )
+
+
 			var configurationManager = globals.configurationManager
 			var resourceLoader       = globals.resourceLoader
 			var eventManager         = globals.eventManager
