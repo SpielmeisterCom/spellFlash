@@ -637,7 +637,13 @@ package com.worlize.websocket
 				logger(text);
 			}
 
-			socket.writeMultiByte(text, 'us-ascii');
+			var byteArray : ByteArray = new ByteArray()
+
+			for( var i : int = 0; i < text.length; i++ ) {
+				byteArray.writeByte( text.charCodeAt( i ) )
+			}
+
+			socket.writeBytes( byteArray, 0, byteArray.length );
 
 			handshakeTimer.stop();
 			handshakeTimer.reset();
