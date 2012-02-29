@@ -5,6 +5,9 @@ package Spielmeister.Spell.Platform.Private.Socket {
 	import com.worlize.websocket.WebSocketEvent
 	import com.worlize.websocket.WebSocketMessage
 
+	import flash.events.IOErrorEvent
+	import flash.events.SecurityErrorEvent
+
 
 	public class WebSocketAdapter {
 		private var socket : WebSocket
@@ -36,6 +39,20 @@ package Spielmeister.Spell.Platform.Private.Socket {
 				WebSocketErrorEvent.CONNECTION_FAIL,
 				function( event : WebSocketErrorEvent ) : void {
 //					trace( 'Error on socket: ' + event.text )
+				}
+			)
+
+			socket.addEventListener(
+				SecurityErrorEvent.SECURITY_ERROR,
+				function( event : SecurityErrorEvent ) : void {
+//					trace( 'Security error on socket: ' + event.text )
+				}
+			)
+
+			socket.addEventListener(
+				WebSocketErrorEvent.IO_ERROR,
+				function( event : WebSocketErrorEvent ) : void {
+//					trace( 'IO error on socket: ' + event.text )
 				}
 			)
 

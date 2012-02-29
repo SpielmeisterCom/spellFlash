@@ -12,7 +12,11 @@ package Spielmeister.Spell.Platform {
 	import flash.events.Event
 	import flash.events.TimerEvent
 	import flash.system.Security
+	import flash.text.TextField
+	import flash.text.TextFieldAutoSize
 	import flash.utils.Timer
+
+	import mx.controls.Text
 	import mx.core.IChildList
 
 
@@ -25,6 +29,8 @@ package Spielmeister.Spell.Platform {
 		private var urlParameters : Object
 		private var renderingFactory : RenderingFactoryImpl
 		private var registeredNextFrame : Boolean = false
+		private var debugConsole : TextField
+		private var debugConsoleContent : String = ""
 
 
 		public function PlatformKit( stage : Stage, root : DisplayObject, container : IChildList, loaderUrl : String, urlParameters : Object ) {
@@ -36,7 +42,16 @@ package Spielmeister.Spell.Platform {
 			this.urlParameters    = urlParameters
 			this.renderingFactory = new RenderingFactoryImpl( container )
 
+			this.debugConsole     = new TextField()
+			this.debugConsole.autoSize = TextFieldAutoSize.LEFT
+			this.stage.addChild( debugConsole )
+
 			this.stage.quality = StageQuality.MEDIUM
+		}
+
+		private function logDebug( message: String ) : void {
+			debugConsoleContent += ( !debugConsoleContent ? "" : "\n" ) + message
+			debugConsole.text = debugConsoleContent
 		}
 
 		public function init() : void {
@@ -65,8 +80,11 @@ package Spielmeister.Spell.Platform {
 
 		public function log( message : String ) : void {
 			var now : Date = new Date()
+			var formattedMessage : String = "[" + now.toDateString() + " " + now.toLocaleTimeString() + "] " +  message
 
-			trace( "[" + now.toDateString() + " " + now.toLocaleTimeString() + "] " +  message )
+			trace( formattedMessage )
+
+//			logDebug( formattedMessage )
 		}
 
 		public function createSocket( host : String ) : Object {
