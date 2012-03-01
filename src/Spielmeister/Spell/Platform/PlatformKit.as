@@ -46,7 +46,8 @@ package Spielmeister.Spell.Platform {
 			this.debugConsole.autoSize = TextFieldAutoSize.LEFT
 			this.stage.addChild( debugConsole )
 
-			this.stage.quality = StageQuality.MEDIUM
+			this.stage.quality   = StageQuality.MEDIUM
+			this.stage.frameRate = 30
 		}
 
 		private function logDebug( message: String ) : void {
