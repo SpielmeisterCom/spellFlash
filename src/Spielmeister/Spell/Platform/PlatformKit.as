@@ -11,12 +11,13 @@ package Spielmeister.Spell.Platform {
 	import flash.display.*
 	import flash.events.Event
 	import flash.events.TimerEvent
+	import flash.system.Capabilities
 	import flash.system.Security
+	import flash.system.TouchscreenType
 	import flash.text.TextField
 	import flash.text.TextFieldAutoSize
 	import flash.utils.Timer
 
-	import mx.controls.Text
 	import mx.core.IChildList
 
 
@@ -69,10 +70,6 @@ package Spielmeister.Spell.Platform {
 
 		public function updateDebugData( localTimeInMs : int ) : void {
 //			trace( "updateDebugData - not yet implemented" )
-		}
-
-		public function createInputEvents( screenSizeConfig : Object ) : Object {
-			return Input.createInputEvents( stage )
 		}
 
 		public function get RenderingFactory() : RenderingFactoryImpl {
@@ -176,6 +173,16 @@ package Spielmeister.Spell.Platform {
 
 		public function getJsonCoder() : Object {
 			return JSON
+		}
+
+		public function createInput( screenSizeConfig : Object ) : Input {
+			return new Input( stage, screenSizeConfig )
+		}
+
+		public function get features() : Object {
+			return {
+				touch : ( Capabilities.touchscreenType != TouchscreenType.NONE )
+			}
 		}
 
 		private function createHost( loaderUrl : String ) : String {
