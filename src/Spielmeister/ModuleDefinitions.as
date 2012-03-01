@@ -2150,6 +2150,10 @@ package Spielmeister {
 						return value;
 					}
 
+					var isInInterval = function( value, lowerBound, upperBound ) {
+						return ( value >= lowerBound && value <= upperBound )
+					}
+
 					/**
 					 * Creates a random number generator.
 					 *
@@ -2185,8 +2189,9 @@ package Spielmeister {
 
 
 					return {
-						clamp: clamp,
-						createRandomNumberGenerator: createRandomNumberGenerator
+						clamp : clamp,
+						isInInterval : isInInterval,
+						createRandomNumberGenerator : createRandomNumberGenerator
 					}
 				}
 			)
@@ -5191,10 +5196,7 @@ define(
 		"spell/shared/util/entities/datastructures/multiMap",
 		"spell/shared/util/entities/datastructures/singleton",
 		"spell/shared/util/entities/datastructures/sortedArray",
-		"spell/shared/util/zones/ZoneEntityManager",
-		"spell/shared/util/platform/PlatformKit",
-
-		"underscore"
+		"spell/shared/util/zones/ZoneEntityManager"
 	],
 	function(
 		createClouds,
@@ -5224,10 +5226,7 @@ define(
 		multiMap,
 		singleton,
 		sortedArray,
-		ZoneEntityManager,
-		PlatformKit,
-
-		_
+		ZoneEntityManager
 	) {
 		"use strict"
 
@@ -5370,7 +5369,6 @@ define(
 			)
 		}
 
-
 		return {
 			onCreate: function( globals ) {
 				this.update = updateZone
@@ -5383,9 +5381,9 @@ define(
 				var entities      = this.entities
 				var entityManager = this.entityManager
 				var eventManager  = globals.eventManager
+				var inputManager  = globals.inputManager
 
-				// WORKAROUND: in order to prevent blocking of input event handling through the browser while in the lobby zone, input handlers are registered not until here
-				globals.inputEvents = PlatformKit.createInputEvents( globals.configurationManager.screenSize )
+				inputManager.init()
 
 
 				entityManager.createEntity( "player", [ "player", players[ 0 ].leftKey, players[ 0 ].rightKey, players[ 0 ].useKey ] )
@@ -5527,6 +5525,9 @@ define(
 
 			onDestroy: function( globals ) {
 				var eventManager = globals.eventManager
+				var inputManager = globals.inputManager
+
+				inputManager.cleanUp()
 
 				eventManager.unsubscribe( [ "renderUpdate" ], this.renderUpdate )
 				eventManager.unsubscribe( [ "logicUpdate", "20" ], this.logicUpdate )
@@ -6813,6 +6814,141 @@ define(
 )
 
 define(
+	"spell/shared/util/InputManager",
+	[
+		"spell/shared/util/input/keyCodes",
+		"spell/shared/util/math",
+		"spell/shared/util/platform/PlatformKit",
+
+		"underscore"
+	],
+	function(
+		keyCodes,
+		math,
+		PlatformKit,
+
+		_
+	) {
+		"use strict"
+
+
+		/**
+		 * private
+		 */
+
+		var nextSequenceNumber = 0
+
+
+		/**
+		 * public
+		 */
+
+		var inputEvents = []
+		var virtualKeys = null
+
+
+		var getVirtualKey = function( virtualKeys, position ) {
+			return _.find(
+				virtualKeys,
+				function( virtualKey ) {
+					var x, y, borderLeft, borderRight, borderTop, borderBottom
+
+					x = position[ 0 ]
+					y = position[ 1 ]
+
+					borderLeft   = virtualKey.position[ 0 ]
+					borderRight  = virtualKey.position[ 0 ] + virtualKey.size[ 0 ]
+					borderTop    = virtualKey.position[ 1 ]
+					borderBottom = virtualKey.position[ 1 ] + virtualKey.size[ 1 ]
+
+					return ( math.isInInterval( x, borderLeft, borderRight ) &&
+							 math.isInInterval( y, borderTop, borderBottom ) )
+				}
+			)
+		}
+
+		var mouseHandler = function( event ) {
+			var virtualKey = getVirtualKey( virtualKeys, event.position )
+
+			if( !virtualKey ) return true
+
+
+			var internalEvent = {
+				type           : ( event.type === 'mousedown' ? 'keydown' : 'keyup' ),
+				keyCode        : virtualKey.keyCode,
+				sequenceNumber : nextSequenceNumber++
+			}
+
+			inputEvents.push( internalEvent )
+		}
+
+		var keyHandler = function( event ) {
+			inputEvents.push( {
+				type           : event.type,
+				keyCode        : event.keyCode,
+				sequenceNumber : nextSequenceNumber++
+			} )
+		}
+
+
+		var InputManager = function( screenSizeConfig ) {
+			this.nativeInput = PlatformKit.createInput( screenSizeConfig )
+
+			var keyWidth, keyHeight, keyPadding, keyPositionY
+			keyWidth     = Math.floor( screenSizeConfig.width / 30 ) * 10
+			keyHeight    = screenSizeConfig.height
+			keyPadding   = ( screenSizeConfig.width - ( keyWidth * 3 ) ) / 2
+			keyPositionY = 0
+
+
+			virtualKeys = [
+				{
+					keyCode  : keyCodes[ 'left arrow' ],
+					position : [ 0, keyPositionY, 0 ],
+					size     : [ keyWidth, keyHeight, 0 ]
+				},
+				{
+					keyCode  : keyCodes[ 'space' ],
+					position : [ keyWidth + keyPadding, keyPositionY, 0 ],
+					size     : [ keyWidth, keyHeight, 0 ]
+				},
+				{
+					keyCode  : keyCodes[ 'right arrow' ],
+					position : [ ( keyWidth + keyPadding ) * 2, keyPositionY, 0 ],
+					size     : [ keyWidth, keyHeight, 0 ]
+				}
+			]
+		}
+
+		InputManager.prototype = {
+			init : function() {
+				if( PlatformKit.features.touch ) {
+					this.nativeInput.setInputEventListener( 'mousedown', mouseHandler )
+					this.nativeInput.setInputEventListener( 'mouseup', mouseHandler )
+				}
+
+				this.nativeInput.setInputEventListener( 'keydown', keyHandler )
+				this.nativeInput.setInputEventListener( 'keyup', keyHandler )
+			},
+			cleanUp : function() {
+				if( PlatformKit.features.touch ) {
+					this.nativeInput.removeInputEventListener( 'mousedown' )
+					this.nativeInput.removeInputEventListener( 'mouseup' )
+				}
+
+				this.nativeInput.removeInputEventListener( 'keydown' )
+				this.nativeInput.removeInputEventListener( 'keyup' )
+			},
+			getInputEvents : function() {
+				return inputEvents
+			}
+		}
+
+		return InputManager
+	}
+)
+
+define(
 	'spell/shared/util/ResourceLoader',
 	[
 		'spell/shared/util/platform/PlatformKit',
@@ -7028,11 +7164,13 @@ define(
 	[
 		"spell/shared/util/ConfigurationManager",
 		'spell/shared/util/EventManager',
+		'spell/shared/util/InputManager',
 		'spell/shared/util/ResourceLoader'
 	],
 	function(
 		ConfigurationManager,
 		EventManager,
+		InputManager,
 		ResourceLoader
 	) {
 		"use strict"
@@ -7042,11 +7180,14 @@ define(
 		return function( gameModule, clientMain ) {
 			var configurationManager = new ConfigurationManager()
 			var eventManager         = new EventManager()
+			var inputManager         = new InputManager( configurationManager.screenSize )
 			var resourceLoader       = new ResourceLoader( eventManager, configurationManager.resourceServer )
 
 			var globals = {
 				configurationManager : configurationManager,
 				eventManager         : eventManager,
+				inputManager         : inputManager,
+				inputEvents          : inputManager.getInputEvents(),
 				resourceLoader       : resourceLoader
 			}
 
@@ -7165,8 +7306,8 @@ define(
 			'images/vehicles/ship_player4.png',
 			'images/vehicles/ship_player4_speed.png',
 			'images/vehicles/ship_player4_invincible.png',
-			'images/effects/shield.png',
-			'sounds/sets/set1.json'
+			'images/effects/shield.png'//,
+//			'sounds/sets/set1.json'
 		]
 
 
