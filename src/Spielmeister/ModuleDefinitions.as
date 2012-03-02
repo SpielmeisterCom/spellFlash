@@ -2504,7 +2504,9 @@ define(
 			/**
 			 * The render pass the entity is rendered in. Lower number means earlier rendering in the render process.
 			 */
-			this.pass        = ( args.pass !== undefined ? args.pass : 0 )
+			this.pass = ( args.pass !== undefined ? args.pass : 0 )
+
+			this.opacity = ( args.opacity !== undefined ? args.opacity : 1.0 )
 		}
 	}
 )
@@ -3361,7 +3363,7 @@ define(
 )
 
 define(
-	"funkysnakes/client/components/fadeOut",
+	"funkysnakes/client/components/fade",
 	function() {
 		"use strict"
 
@@ -3370,21 +3372,23 @@ define(
 			this.beginAfter = args.beginAfter
 			this.duration   = args.duration
 			this.age        = 0
+			this.start      = ( args.start !== undefined ? args.start : 1.0 )
+			this.end        = ( args.end !== undefined ? args.end : 0.0 )
 		}
 	}
 )
 
 define(
-	"funkysnakes/client/entities/widgetThatFadesOut",
+	"funkysnakes/client/entities/widgetThatFades",
 	[
 		"funkysnakes/client/components/appearance",
-		"funkysnakes/client/components/fadeOut",
+		"funkysnakes/client/components/fade",
 		"funkysnakes/shared/components/position",
 		"funkysnakes/client/components/renderData"
 	],
 	function(
 		appearance,
-		fadeOut,
+		fade,
 		position,
 		renderData
 	) {
@@ -3397,9 +3401,14 @@ define(
 				textureId : args.textureId
 			} )
 
-			this.position   = new position( args.position || [ 0, 0, 0 ] )
-			this.renderData = new renderData( { pass: 100 } ) // "100" means render it in the last pass
-			this.fadeOut    = new fadeOut( args.fadeOut )
+			this.position = new position( args.position || [ 0, 0, 0 ] )
+
+			this.renderData = new renderData( {
+				pass    : 100, // "100" means render it in the last pass
+				opacity : ( args.opacity !== undefined ? args.opacity : 1.0 )
+			} )
+
+			this.fade = new fade( args.fade )
 		}
 	}
 )
@@ -3475,7 +3484,7 @@ define(
 		"funkysnakes/client/entities/speedPowerup",
 		"funkysnakes/client/entities/background",
 		"funkysnakes/client/entities/widget",
-		"funkysnakes/client/entities/widgetThatFadesOut",
+		"funkysnakes/client/entities/widgetThatFades",
 		"funkysnakes/shared/entities/lobby/game",
 		"funkysnakes/client/entities/effect"
 	],
@@ -3492,7 +3501,7 @@ define(
 		speedPowerup,
 		background,
 		widget,
-		widgetThatFadesOut,
+		widgetThatFades,
 		game,
 		effect
 	) {
@@ -3512,7 +3521,7 @@ define(
 			"speedPowerup"        : speedPowerup,
 			"background"          : background,
 			"widget"              : widget,
-			"widgetThatFadesOut"  : widgetThatFadesOut,
+			"widgetThatFades"  : widgetThatFades,
 
 			"lobby/game"          : game,
 			"effect"              : effect
@@ -3723,8 +3732,10 @@ define(
 								context.rotate( orientation )
 								context.translate( entity.appearance.offset )
 
-								if( entity.appearance.opacity !== 1.0 ) {
-									context.setGlobalAlpha( entity.appearance.opacity )
+								if( entity.appearance.opacity !== 1.0 ||
+									entity.renderData.opacity !== 1.0 ) {
+
+									context.setGlobalAlpha( entity.appearance.opacity * entity.renderData.opacity )
 								}
 
 								context.drawTexture( texture, 0, 0 )
@@ -4057,7 +4068,7 @@ define(
 )
 
 define(
-	"funkysnakes/client/systems/fadeOut",
+	"funkysnakes/client/systems/fade",
 	[
 		"glmatrix/vec3",
 		"underscore"
@@ -4069,31 +4080,35 @@ define(
 		"use strict"
 
 
-		function fadeOut(
+		function fade(
 			timeInMs,
 			deltaTimeInMs,
-			entities,
-			fadeOutEntities
+			entityManager,
+			fadeEntities
 		) {
 			_.each(
-				fadeOutEntities,
+				fadeEntities,
 				function( entity ) {
-					entity.fadeOut.age += deltaTimeInMs
+					var fade = entity.fade
+					fade.age += deltaTimeInMs
 
-					if( entity.fadeOut.age < entity.fadeOut.beginAfter ) return
+					if( fade.age < fade.beginAfter ) return
 
-					var delta = ( entity.fadeOut.age - entity.fadeOut.beginAfter ) / entity.fadeOut.duration
+					var delta = ( fade.age - fade.beginAfter ) / fade.duration
 
 					if( delta > 1.0 ) {
-						entities.remove( entity )
+						entity.renderData.opacity = fade.end
+						entityManager.removeComponent( entity, 'fade' )
+
+						return
 					}
 
-					entity.appearance.opacity = 1.0 - delta
+					entity.renderData.opacity = fade.start + delta * ( fade.end - fade.start )
 				}
 			)
 		}
 
-		return fadeOut
+		return fade
 	}
 )
 
@@ -5173,7 +5188,7 @@ define(
 		"funkysnakes/client/systems/animateClouds",
 		"funkysnakes/client/systems/applyPowerupEffects",
 		"funkysnakes/client/systems/computeRenderFrameStats",
-		"funkysnakes/client/systems/fadeOut",
+		"funkysnakes/client/systems/fade",
 		"funkysnakes/client/systems/interpolateNetworkData",
 		"funkysnakes/client/systems/render",
 		"funkysnakes/client/systems/debugRenderer",
@@ -5196,14 +5211,15 @@ define(
 		"spell/shared/util/entities/datastructures/multiMap",
 		"spell/shared/util/entities/datastructures/singleton",
 		"spell/shared/util/entities/datastructures/sortedArray",
-		"spell/shared/util/zones/ZoneEntityManager"
+		"spell/shared/util/zones/ZoneEntityManager",
+		"spell/shared/util/platform/PlatformKit"
 	],
 	function(
 		createClouds,
 		animateClouds,
 		applyPowerupEffects,
 		computeRenderFrameStats,
-		fadeOut,
+		fade,
 		interpolateNetworkData,
 		render,
 		debugRenderer,
@@ -5226,7 +5242,8 @@ define(
 		multiMap,
 		singleton,
 		sortedArray,
-		ZoneEntityManager
+		ZoneEntityManager,
+		PlatformKit
 	) {
 		"use strict"
 
@@ -5248,6 +5265,56 @@ define(
 				[ {
 					position  : [ 5, 10, 0 ],
 					textureId : textureId
+				} ]
+			)
+		}
+
+		function addVirtualKeys( entityManager ) {
+			var marginBottom = 25
+			var positionY = 768 - 64 - marginBottom
+
+			entityManager.createEntity(
+				"widgetThatFades",
+				[ {
+					position  : [ 138, positionY, 0 ],
+					textureId : 'arrow_left.png',
+					opacity : 0.0,
+					fade : {
+						beginAfter : 3000,
+						duration   : 250,
+						start      : 0.0,
+						end        : 1.0
+					}
+				} ]
+			)
+
+			entityManager.createEntity(
+				"widgetThatFades",
+				[ {
+					position  : [ 384, positionY, 0 ],
+					textureId : 'space.png',
+					opacity : 0.0,
+					fade : {
+						beginAfter : 3000,
+						duration   : 250,
+						start      : 0.0,
+						end        : 1.0
+					}
+				} ]
+			)
+
+			entityManager.createEntity(
+				"widgetThatFades",
+				[ {
+					position  : [ 822, positionY, 0 ],
+					textureId : 'arrow_right.png',
+					opacity : 0.0,
+					fade : {
+						beginAfter : 3000,
+						duration   : 250,
+						start      : 0.0,
+						end        : 1.0
+					}
 				} ]
 			)
 		}
@@ -5330,11 +5397,11 @@ define(
 			applyPowerupEffects(
 				entities.executeQuery( queryIds[ "applyPowerupEffects" ][ 0 ] ).elements
 			)
-			fadeOut(
+			fade(
 				timeInMs,
 				deltaTimeInMs,
-				entities,
-				entities.executeQuery( queryIds[ "fadeOut" ][ 0 ] ).elements
+				entityManager,
+				entities.executeQuery( queryIds[ "fade" ][ 0 ] ).elements
 			)
 			render(
 				timeInMs,
@@ -5418,16 +5485,22 @@ define(
 
 
 				entityManager.createEntity(
-					"widgetThatFadesOut",
+					"widgetThatFades",
 					[ {
 						position  : [ 256, 256, 0 ],
 						textureId : 'help_controls.png',
-						fadeOut   : {
+						fade : {
 							beginAfter : 2500,
-							duration   : 500
+							duration   : 500,
+							start      : 1.0,
+							end        : 0.0
 						}
 					} ]
 				)
+
+				if( PlatformKit.features.touch ) {
+					addVirtualKeys( entityManager, true )
+				}
 
 
 				entityManager.createEntity( "arena" )
@@ -5477,8 +5550,8 @@ define(
 					clouds: [
 						entities.prepareQuery( [ "cloud" ] )
 					],
-					fadeOut: [
-						entities.prepareQuery( [ "fadeOut" ] )
+					fade: [
+						entities.prepareQuery( [ "fade" ] )
 					],
 					render: [
 						entities.prepareQuery( [ "position", "appearance", "renderData" ], passIdMultiMap ),
@@ -7306,8 +7379,11 @@ define(
 			'images/vehicles/ship_player4.png',
 			'images/vehicles/ship_player4_speed.png',
 			'images/vehicles/ship_player4_invincible.png',
-			'images/effects/shield.png'//,
-//			'sounds/sets/set1.json'
+			'images/effects/shield.png',
+			'images/arrow_left.png',
+			'images/arrow_right.png',
+			'images/space.png',
+			'sounds/sets/set1.json'
 		]
 
 
