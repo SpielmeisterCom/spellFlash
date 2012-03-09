@@ -54,7 +54,18 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		}
 
 
-		private function createState( opacity : Number, fillStyleColor : Array, transformationMatrix : Matrix3D ) : Object {
+		private static function createColorValue( vec : Array ) : uint {
+			var color : uint = 0
+
+			for( var i : int = 0; i < 3; i++ ) {
+				color += uint( clampToUnit( vec[ i ] ) * 255 ) << ( ( 2 - i ) * 8 )
+			}
+
+			return color
+		}
+
+
+		private static function createState( opacity : Number, fillStyleColor : uint, transformationMatrix : Matrix3D ) : Object {
 			return {
 				opacity         : opacity,
 				color           : fillStyleColor,
@@ -63,27 +74,22 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		}
 
 
-		private function createDefaultState() : Object {
+		private static function createDefaultState() : Object {
 			var opacity : Number         = 1.0
 			var fillStyleColor : Array   = [ 1.0, 1.0, 1.0, 1.0 ]
 			var modelViewMatrix : Matrix3D = new Matrix3D()
 
 			return createState(
 				opacity,
-				fillStyleColor,
+				createColorValue( fillStyleColor ),
 				modelViewMatrix
 			)
 		}
 
 
-		private function copyState( source : Object, target : Object ) : void {
-			target.opacity = source.opacity
-
-			target.color[ 0 ] = source.color[ 0 ]
-			target.color[ 1 ] = source.color[ 1 ]
-			target.color[ 2 ] = source.color[ 2 ]
-			target.color[ 3 ] = source.color[ 3 ]
-
+		private static function copyState( source : Object, target : Object ) : void {
+			target.opacity         = source.opacity
+			target.color           = source.color
 			target.modelViewMatrix = source.modelViewMatrix.clone()
 		}
 
@@ -107,7 +113,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 
 		public function setFillStyleColor( vec : Array ) : void {
-			trace( "setFillStyleColor - not yet implemented" )
+			stateStack[ currentStateIndex ].color = createColorValue( vec )
 		}
 
 
@@ -117,9 +123,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 
 		public function setClearColor( vec : Array ) : void {
-			for( var i : int = 0; i < 3; i++ ) {
-				clearColor += uint( clampToUnit( vec[ i ] ) * 255 ) << ( ( 2 - i ) * 8 )
-			}
+			clearColor = createColorValue( vec )
 		}
 
 
@@ -145,6 +149,27 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 		public function rotate( u : Number ) : void {
 			stateStack[ currentStateIndex ].modelViewMatrix.prependRotation( u / Math.PI * 180, Vector3D.Z_AXIS )
+		}
+
+
+		public function fillRect( x : Number, y : Number, width : Number, height : Number ) : void {
+			tmpShape.graphics.clear()
+			tmpShape.graphics.beginFill( stateStack[ currentStateIndex ].color )
+			tmpShape.graphics.drawRect( x, y, width, height )
+			tmpShape.graphics.endFill()
+
+			tmpMatrix.a  = stateStack[ currentStateIndex ].modelViewMatrix.rawData[ 0 ]
+			tmpMatrix.b  = stateStack[ currentStateIndex ].modelViewMatrix.rawData[ 1 ]
+			tmpMatrix.c  = stateStack[ currentStateIndex ].modelViewMatrix.rawData[ 4 ]
+			tmpMatrix.d  = stateStack[ currentStateIndex ].modelViewMatrix.rawData[ 5 ]
+			tmpMatrix.tx = stateStack[ currentStateIndex ].modelViewMatrix.rawData[ 12 ]
+			tmpMatrix.ty = stateStack[ currentStateIndex ].modelViewMatrix.rawData[ 13 ]
+
+			colorBuffer.bitmapData.draw(
+				tmpShape,
+				tmpMatrix,
+				null
+			)
 		}
 
 
