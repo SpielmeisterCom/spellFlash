@@ -276,7 +276,7 @@ package Spielmeister.Spell.Platform.Private {
 
 			removedIndices.sort()
 
-			for( var i in knownGames ) {
+			for( i in knownGames ) {
 				knownGame = knownGames[ i ]
 
 				// the number of removed indices that are smaller than the current DataItem index
