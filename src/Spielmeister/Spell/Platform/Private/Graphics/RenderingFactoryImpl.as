@@ -18,7 +18,7 @@ import mx.core.IChildList
 			this.container = container
 		}
 
-		public function createContext2d( width : uint, height : uint, requestedBackEnd : uint = BACK_END_DISPLAY_LIST, id : String = null ) : DisplayListContext {
+		public function createContext2d( eventManager : Object, width : uint, height : uint, requestedBackEnd : uint = BACK_END_DISPLAY_LIST, id : String = null ) : DisplayListContext {
 			return new DisplayListContext( container, width, height )
 		}
 	}
