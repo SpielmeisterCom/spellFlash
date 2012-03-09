@@ -193,7 +193,7 @@ package Spielmeister {
 					 *    distribution.
 					 */
 
-
+					"use strict";
 
 					// Type declarations
 					// account for CommonJS environments
@@ -592,26 +592,9 @@ package Spielmeister {
 						return vec;
 					};
 
-					/*
-					 * vec3.reflect
-					 * Reflects a vector on a normal
-					 *
-					 * Params:
-					 * vec - vec3, vector to reflect
-					 * normal - vec3, the normal to reflect by
-					 *
-					 * Returns:
-					 * vec
-					 */
-					vec3.reflect = function(vec, normal) {
-						var tmp = vec3.create(normal);
-						vec3.normalize(tmp);
-						var normal_dot_vec = vec3.dot(tmp, vec);
-						vec3.scale(tmp, -2 * normal_dot_vec);
-						vec3.add(vec, tmp);
-
-						return vec;
-					};
+					vec3.reset = function(vec) {
+						vec[0] = vec[1] = vec[2] = 0
+					}
 
 					/*
 					 * mat3
@@ -2605,38 +2588,6 @@ define(
 )
 
 define(
-	"funkysnakes/client/components/statData",
-	function() {
-		"use strict"
-
-
-		return function() {
-			this.lastStatisticsUpdateTimeInMs = 0
-
-			this.lastTimeInMs = 0
-			this.fpsValues    = []
-		}
-	}
-)
-
-define(
-	"funkysnakes/client/entities/statData",
-	[
-		"funkysnakes/client/components/statData"
-	],
-	function(
-		statData
-	) {
-		"use strict"
-
-
-		return function() {
-			this.statData = new statData()
-		}
-	}
-)
-
-define(
 	"spell/shared/components/input/inputDefinition",
 	function() {
 		"use strict"
@@ -2738,6 +2689,23 @@ define(
 )
 
 define(
+	"funkysnakes/shared/components/head",
+	function() {
+		"use strict"
+
+
+		return function( clientId ) {
+			this.clientId   = clientId
+
+			this.bonusCountdowns = []
+			this.speedBonus      = 0
+
+			this.invincibilityCountdown = 0
+		}
+	}
+)
+
+define(
 	"funkysnakes/shared/components/activePowerups",
 	function(){
 		"use strict"
@@ -2755,6 +2723,42 @@ define(
 
 		return function( angle ) {
 			this.angle = angle
+		}
+	}
+)
+
+define(
+	"funkysnakes/shared/components/body",
+	function() {
+		"use strict"
+
+
+		return function( id ) {
+			this.id = id
+			this.pastPositions = []
+			this.distanceCoveredSinceLastSavedPosition = 0
+		}
+	}
+)
+
+define(
+	"funkysnakes/shared/components/active",
+	function() {
+		"use strict"
+
+
+		return function() {}
+	}
+)
+
+define(
+	"funkysnakes/shared/components/amountTailElements",
+	function() {
+		"use strict"
+
+
+		return function( amount ) {
+			this.value = amount || 0
 		}
 	}
 )
@@ -2866,9 +2870,13 @@ define(
 		"funkysnakes/client/components/powerupEffects",
 		"funkysnakes/client/components/renderData",
 		"funkysnakes/client/components/shadowCaster",
+		"funkysnakes/shared/components/head",
 		"funkysnakes/shared/components/activePowerups",
 		"funkysnakes/shared/components/orientation",
 		"funkysnakes/shared/components/position",
+		"funkysnakes/shared/components/body",
+		"funkysnakes/shared/components/active",
+		'funkysnakes/shared/components/amountTailElements',
 
 		"spell/client/components/network/synchronizationSlave",
 		"spell/shared/components/input/inputReceiver"
@@ -2879,9 +2887,13 @@ define(
 		powerupEffects,
 		renderData,
 		shadowCaster,
+		head,
 		activePowerups,
 		orientation,
 		position,
+		body,
+		active,
+		amountTailElements,
 
 		synchronizationSlave,
 		inputReceiver
@@ -2912,6 +2924,10 @@ define(
 			this.position             = new position( [ args.x, args.y, 0 ] )
 			this.renderData           = new renderData( { pass: 5 } )
 			this.synchronizationSlave = new synchronizationSlave( { id: args.networkId } )
+			this.body                 = new body( args.clientId )
+			this.head                 = new head( args.clientId )
+			this.active               = new active()
+			this.amountTailElements   = new amountTailElements()
 		}
 	}
 )
@@ -3103,7 +3119,7 @@ define(
 			speedPerSecond    : 130,
 			speedPowerupBonus : 50,
 
-			interpolationDelay: 120,
+			interpolationDelay: 100,
 
 			// tail
 			pastPositionsDistance: 10,
@@ -3474,7 +3490,6 @@ define(
 	[
 		"funkysnakes/client/entities/arena",
 		"funkysnakes/client/entities/cloud",
-		"funkysnakes/client/entities/statData",
 		"funkysnakes/client/entities/gameStarter",
 		"funkysnakes/client/entities/head",
 		"funkysnakes/client/entities/invincibilityPowerup",
@@ -3491,7 +3506,6 @@ define(
 	function(
 		arena,
 		cloud,
-		statData,
 		gameStarter,
 		head,
 		invincibilityPowerup,
@@ -3511,7 +3525,6 @@ define(
 		return {
 			"arena"               : arena,
 			"cloud"               : cloud,
-			"statData"            : statData,
 			"gameStarter"         : gameStarter,
 			"head"                : head,
 			"invincibilityPowerup": invincibilityPowerup,
@@ -3628,18 +3641,26 @@ define(
 		"use strict"
 
 
-		var shadowOffset = vec3.create( [ 3, 2, 0 ] )
 
 		var createEntitiesSortedByPath = function( entitiesByPass ) {
+			var passA, passB
+
 			return _.toArray( entitiesByPass ).sort(
 				function( a, b ) {
-					var passA = a[ 0 ].renderData.pass
-					var passB = b[ 0 ].renderData.pass
+					passA = a[ 0 ].renderData.pass
+					passB = b[ 0 ].renderData.pass
 
 					return ( passA < passB ? -1 : ( passA > passB ? 1 : 0 ) )
 				}
 			)
 		}
+
+		var texture, shadowTexture, drewShields, shadowOffset, position
+		texture       = null
+		shadowTexture = null
+		drewShields   = false
+		shadowOffset  = vec3.create( [ 3, 2, 0 ] )
+		position      = vec3.create( [ 0, 0, 0 ] )
 
 
 		function render(
@@ -3648,15 +3669,12 @@ define(
 			textures,
 			context,
 			entitiesByPass,
-			entitiesWithText,
 			backgroundEntities,
 			shieldEntities
 		) {
-
-
 			context.clear()
 
-			var drewShields = false
+			drewShields   = false
 
 
 			// draw background
@@ -3665,7 +3683,7 @@ define(
 				function( entity ) {
 					context.save()
 					{
-						var texture = textures[ entity.appearance.textureId ]
+						texture = textures[ entity.appearance.textureId ]
 
 						context.translate( entity.position )
 						context.drawTexture( texture, 0, 0 )
@@ -3683,13 +3701,13 @@ define(
 							if( !entity.hasOwnProperty( "shadowCaster" ) ) return
 
 
-							var shadowTexture = textures[ entity.shadowCaster.textureId ]
+							shadowTexture = textures[ entity.shadowCaster.textureId ]
 
 							context.save()
 							{
 								context.setGlobalAlpha( 0.85 )
 
-								var position = vec3.create( [ 0, 0, 0 ] )
+								vec3.reset( position )
 								vec3.add( entity.renderData.position, shadowOffset, position )
 
 								context.translate( position )
@@ -3719,17 +3737,15 @@ define(
 						function( entity ) {
 							context.save()
 							{
-								var texture = textures[ entity.appearance.textureId ]
+								texture = textures[ entity.appearance.textureId ]
 
 								if( texture === undefined ) throw "The textureId '" + entity.appearance.textureId + "' could not be resolved."
 
 
-								var orientation = entity.renderData.orientation
-
 								context.translate( entity.renderData.position )
 
 								context.scale( entity.appearance.scale )
-								context.rotate( orientation )
+								context.rotate( entity.renderData.orientation )
 								context.translate( entity.appearance.offset )
 
 								if( entity.appearance.opacity !== 1.0 ||
@@ -3913,161 +3929,6 @@ define(
 )
 
 define(
-	"funkysnakes/shared/util/stats",
-	function() {
-		"use strict"
-
-
-		var nextColor = 0
-		var colors = [
-			"aqua",
-			"black",
-			"blue",
-			"fuchsia",
-			"gray",
-			"grey",
-			"green",
-			"lime",
-			"maroon",
-			"navy",
-			"olive",
-			"purple",
-			"red",
-			"silver",
-			"teal",
-			"white",
-			"yellow"
-		]
-
-		var maxNumberOfValues = 100
-
-
-		return {
-			initStats: function() {
-				return {
-					maxNumberOfValues: maxNumberOfValues,
-					stats            : {}
-				}
-			},
-
-			createStat: function( stats, statName, unit ) {
-				if ( !stats.stats.hasOwnProperty( statName ) ) {
-					stats.stats[ statName ] = {
-						color: colors[ nextColor ]
-					}
-
-					nextColor += 1
-					if ( nextColor === colors.length ) {
-						nextColor = 0
-					}
-				}
-
-				var stat = stats.stats[ statName ]
-				stat.values = []
-				stat.unit   = unit
-			},
-
-			updateStat: function( stats, statName, newValue ) {
-				var stat = stats.stats[ statName ]
-				stat.values.push( newValue )
-
-				while ( stat.values.length > maxNumberOfValues ) {
-					stat.values.shift()
-				}
-			}
-		}
-	}
-)
-
-define(
-	"funkysnakes/client/systems/computeRenderFrameStats",
-	[
-		"funkysnakes/shared/util/stats",
-
-		"underscore"
-	],
-	function(
-		stats,
-
-		_
-	) {
-		"use strict"
-
-
-		var updatePeriod = 300
-
-
-		function avg( values ) {
-			var total = _.reduce( values, function( a, b ) {
-				return a + b
-			} )
-
-			return total / values.length
-		}
-
-
-		function computeFps(
-			timeSinceLastFrame,
-			data
-		) {
-			var fpsValue = 1000 / timeSinceLastFrame
-			data.fpsValues.push( fpsValue )
-		}
-
-
-		function updateStatistics(
-			timeInMs,
-			statistics,
-			data,
-			connection
-		) {
-			var deltaTimeInMs = timeInMs - data.lastStatisticsUpdateTimeInMs
-			if ( deltaTimeInMs > updatePeriod ) {
-				var avgFpsValue = Math.round( avg( data.fpsValues ) )
-				stats.updateStat( statistics, "frame rate", avgFpsValue )
-				data.fpsValues.length = 0
-
-
-				stats.updateStat( statistics, "sent"    , connection.stats.charsSent     * Math.round( ( 1000 / deltaTimeInMs ) ) )
-				stats.updateStat( statistics, "received", connection.stats.charsReceived * Math.round( ( 1000 / deltaTimeInMs ) ) )
-
-				stats.updateStat( statistics, "entityUpdateFraction", Math.round( connection.stats.messageCharsReceived[ "entityUpdate" ] / connection.stats.charsReceived * 100 ) )
-				connection.stats.messageCharsReceived = {}
-
-				connection.stats.charsSent     = 0
-				connection.stats.charsReceived = 0
-
-
-				data.lastStatisticsUpdateTimeInMs = timeInMs
-			}
-		}
-
-
-		return function(
-			timeInMs,
-			statistics,
-			entityManager,
-			statData,
-			connection
-		) {
-			if ( statData === null ) {
-				entityManager.createEntity( "statData" )
-				stats.createStat( statistics, "frame rate", "fps" )
-			}
-			else {
-				var data = statData.statData
-
-				var timeSinceLastFrame = timeInMs - data.lastTimeInMs
-				data.lastTimeInMs      = timeInMs
-
-				computeFps( timeSinceLastFrame, data )
-				updateStatistics( timeInMs, statistics, data, connection )
-			}
-		}
-	}
-)
-
-define(
 	"funkysnakes/client/systems/fade",
 	[
 		"glmatrix/vec3",
@@ -4118,6 +3979,7 @@ define(
 		"funkysnakes/shared/config/constants",
 
 		"spell/shared/util/network/snapshots",
+		"spell/shared/util/math",
 
 		"glmatrix/vec3",
 		"underscore"
@@ -4126,6 +3988,7 @@ define(
 		constants,
 
 		snapshots,
+		math,
 
 		vec3,
 		_
@@ -4150,7 +4013,7 @@ define(
 				if( current !== undefined &&
 					next !== undefined ) {
 
-					var alpha = ( renderTime - current.time ) / ( next.time - current.time )
+					var alpha = math.clamp( ( renderTime - current.time ) / ( next.time - current.time ), 0.0, 1.0 )
 
 					if ( current.data.entity.hasOwnProperty( "position" ) ) {
 						var beforePosition = current.data.entity[ "position" ]
@@ -4199,6 +4062,11 @@ define(
 						entityManager.removeComponent( entity, "shield" )
 					}
 
+					// amountTailElements
+					if( current.data.entity.hasOwnProperty( "amountTailElements" ) ) {
+						entity.amountTailElements.value = current.data.entity.amountTailElements.value
+					}
+
 					entity.activePowerups = current.data.entity[ "activePowerups" ]
 
 				} else if( current !== undefined ) {
@@ -4210,6 +4078,17 @@ define(
 					entityManager.addComponent( entity, "position", [ next.data.entity[ "position" ] ] )
 					entity.orientation = next.data.entity[ "orientation" ]
 					entity.activePowerups = next.data.entity[ "activePowerups" ]
+
+					// tailElement
+					if( next.data.entity.hasOwnProperty( "tailElement" ) &&
+						!entity.hasOwnProperty( "tailElement" ) ) {
+
+						entityManager.addComponent(
+							entity,
+							"tailElement",
+							[ next.data.entity.tailElement ]
+						)
+					}
 
 				} else {
 					// Remove position, effectively removing the entity from the world.
@@ -4238,30 +4117,44 @@ define(
 
 
 		var magicPink = color.createRgb( 1, 0, 1 )
+		var green     = color.createRgb( 0, 1, 0 )
 
 
 		function render(
 			timeInMs,
-			images,
-			display,
+			deltaTimeInMs,
+			renderingContext,
 			entities
 		) {
-			var context = display.context
-
 			_.each( entities, function( entity ) {
-				context.fillStyle = magicPink
-//				context.strokeStyle = magicPink
+				renderingContext.setFillStyleColor( magicPink )
 
-				var pastPositions = entity.synchronizationSlave.snapshots[0].data.entity.body.pastPositions
+				// client
+				var pastPositions = entity.body.pastPositions
 
 				_.each( pastPositions, function( position ) {
-					context.save()
+					renderingContext.save()
 					{
-						context.translate( position )
-						context.fillRect( -2, -2, 4, 4 )
+						renderingContext.translate( position )
+						renderingContext.fillRect( -2, -2, 4, 4 )
 					}
-					context.restore()
+					renderingContext.restore()
 				} )
+
+
+//				// server
+//				renderingContext.setFillStyleColor( green )
+//
+//				var pastPositions = entity.synchronizationSlave.snapshots[ 1 ].data.entity.body.pastPositions
+//
+//				_.each( pastPositions, function( position ) {
+//					renderingContext.save()
+//					{
+//						renderingContext.translate( position )
+//						renderingContext.fillRect( -2, -2, 4, 4 )
+//					}
+//					renderingContext.restore()
+//				} )
 
 
 //				if( entity.collisionCircle === undefined ) return
@@ -4286,88 +4179,373 @@ define(
 )
 
 define(
-	"funkysnakes/client/systems/renderStats",
+	"funkysnakes/client/systems/renderPerformanceGraph",
 	[
+		"funkysnakes/shared/config/constants",
+		"spell/shared/util/math",
+
 		"underscore"
 	],
 	function(
+		constants,
+		math,
+
 		_
 	) {
 		"use strict"
 
 
-		var statNameStartX = 10
-		var statNameStartY = 15
+		/**
+		 * private
+		 */
 
-		var statNameWidth  = 30
-		var statNameHeight = 18
+		var sizeX, sizeY, maxFps, valueWidth, startTime, displayPeriodInS
+		sizeX            = 1024
+		sizeY            = 50
+		maxFps           = 100
+		valueWidth       = 2
+		displayPeriodInS = 5
 
-		var graphStartX = 120
-		var graphStartY = 90
-		var graphEndX   = 390
-		var graphEndY   = 10
 
+		var drawGraph = function( renderingContext, config ) {
+			renderingContext.save()
+			{
+				renderingContext.translate( config.position )
 
-		function max( values ) {
-			var maxValue = values[ 0 ]
+				renderingContext.setFillStyleColor( [ 0.0, 0.0, 0.0 ] )
+				renderingContext.fillRect( 0, 0, config.size[ 0 ], config.size[ 1 ] )
 
-			_.each( values, function( value ) {
-				if ( value > maxValue ) {
-					maxValue = value
-				}
-			} )
+				// draw series
+				_.each(
+					config.series,
+					function( series ) {
+						renderingContext.setFillStyleColor( series.color )
+						drawBuffer( renderingContext, series.values, config.maxValue, config.size[ 1 ] )
+					}
+				)
 
-			return maxValue
+				// draw tick lines
+				_.each(
+					config.tickLines,
+					function( tickLine ) {
+						drawTickLine( renderingContext, config.maxValue, config.size[ 0 ], config.size[ 1 ], tickLine.color, tickLine.y )
+					}
+				)
+
+//				drawSecondMarkers( renderingContext, config.size[ 0 ], config.size[ 1 ], displayPeriodInS )
+			}
+			renderingContext.restore()
 		}
 
 
-		return function(
-			display,
-			stats
+		var drawBuffer = function( renderingContext, buffer, maxValue, sizeY ) {
+			var positionX, positionY, valueHeight
+			positionX = 0
+			positionY = sizeY
+
+			_.each(
+				buffer,
+				function( value ) {
+					positionX   += valueWidth
+					valueHeight = Math.round( math.clamp( value / maxValue * sizeY, 0, sizeY ) )
+
+					renderingContext.fillRect(
+						positionX,
+						positionY - valueHeight,
+						valueWidth,
+						valueHeight
+					)
+				}
+			)
+		}
+
+
+		var drawTickLine = function( renderingContext, maxValue, sizeX, sizeY, color, y ) {
+			var positionY = Math.floor( ( 1 - y / maxValue ) * sizeY )
+
+			renderingContext.setFillStyleColor( color )
+			renderingContext.fillRect( 0, positionY, sizeX, 1 )
+		}
+
+
+//		var drawSecondMarkers = function( renderingContext, sizeX, sizeY, displayPeriodInS ) {
+//			var numberOfMarks = Math.max( Math.floor( displayPeriodInS ) - 1, 0 )
+//
+//			if( numberOfMarks === 0 ) return
+//
+//			for( var i = 1; i <= numberOfMarks; i++ ) {
+//				var positionX = Math.round( sizeX / ( numberOfMarks + 1 ) * i )
+//
+//				renderingContext.setFillStyleColor( [ 0.5, 0.5, 0.5 ] )
+//				renderingContext.fillRect( positionX, 0, 1, sizeY )
+//			}
+//		}
+
+
+		/**
+		 * public
+		 */
+
+		var render = function(
+			timeInMs,
+			deltaTimeInMs,
+			seriesValues,
+			renderingContext
 		) {
-			var context = display.context
+//			// draw FPS graph
+//			drawGraph(
+//				renderingContext,
+//				{
+//					position  : [ 0, 0 ],
+//					size      : [ sizeX, sizeY ],
+//					maxValue  : maxFps,
+//					tickLines : [
+//						{
+//							y : 30,
+//							color : [ 0.5, 0.5, 0.5 ]
+//						},
+//						{
+//							y : 60,
+//							color : [ 1.0, 0.5, 0.5 ]
+//						}
+//					],
+//					series : [
+//						{
+//							name   : 'FPS',
+//							color  : [ 0.25, 0.35, 0.75 ],
+//							values : seriesValues.fps.values
+//						}
+//					]
+//				}
+//			)
+//
+//			// total time spent rendering graph
+//			drawGraph(
+//				renderingContext,
+//				{
+//					position  : [ 0, sizeY + 2 ],
+//					size      : [ sizeX, sizeY ],
+//					maxValue  : 40,
+//					tickLines : [
+//						{
+//							y : 10,
+//							color : [ 0.5, 0.5, 0.5 ]
+//						},
+//						{
+//							y : 20,
+//							color : [ 0.66, 0.66, 0.66 ]
+//						},
+//						{
+//							y : 30,
+//							color : [ 0.5, 0.5, 0.5 ]
+//						}
+//					],
+//					series : [
+//						{
+//							name   : 'total time spent',
+//							color  : [ 0.72, 0.44, 0.32 ],
+//							values : seriesValues.totalTimeSpent.values
+//						},
+//						{
+//							name   : 'time spent rendering',
+//							color  : [ 0.25, 0.72, 0.32 ],
+//							values : seriesValues.timeSpentRendering.values
+//						}
+//					]
+//				}
+//			)
 
-			context.fillStyle = "grey"
-			context.fillRect( 0, 0, display.width, display.height )
+//			// draw ping graph
+//			drawGraph(
+//				renderingContext,
+//				{
+//					position  : [ 0, constants.ySize - sizeY ],
+//					size      : [ sizeX, sizeY ],
+//					maxValue  : 150,
+//					tickLines : [
+//						{
+//							y : 50,
+//							color : [ 0.5, 0.5, 0.5 ]
+//						},
+//						{
+//							y : 100,
+//							color : [ 0.5, 0.5, 0.5 ]
+//						}
+//					],
+//					series : [
+//						{
+//							name   : 'Ping',
+//							color  : [ 0.25, 0.35, 0.75 ],
+//							values : seriesValues.ping.values
+//						}
+//					]
+//				}
+//			)
 
-			context.font = "12px Arial"
 
-			var posX = statNameStartX
-			var posY = statNameStartY
+//			// draw relative clock speed (of local clock) graph
+//			drawGraph(
+//				renderingContext,
+//				{
+//					position  : [ 0, constants.ySize - sizeY ],
+//					size      : [ sizeX, sizeY ],
+//					maxValue  : 2,
+//					tickLines : [
+//						{
+//							y : 1,
+//							color : [ 0.5, 0.5, 0.5 ]
+//						}
+//					],
+//					series : [
+//						{
+//							name   : 'relativeClockSpeed',
+//							color  : [ 0.25, 0.35, 0.75 ],
+//							values : seriesValues.relativeClockSpeed.values
+//						}
+//					]
+//				}
+//			)
 
-			_.each( stats.stats, function( stat, statName ) {
-				var latestValue = stat.values[ stat.values.length - 1 ]
 
-				var statText = statName+ ": " +latestValue+ " " +stat.unit
+//			// draw localTime % 2000 graph
+//			drawGraph(
+//				renderingContext,
+//				{
+//					position  : [ 0, constants.ySize - ( sizeY + 2 ) ],
+//					size      : [ sizeX, sizeY ],
+//					maxValue  : 2000,
+//					tickLines : [
+//						{
+//							y : 1000,
+//							color : [ 0.5, 0.5, 0.5 ]
+//						}
+//					],
+//					series : [
+//						{
+//							name   : 'localTime',
+//							color  : [ 0.25, 0.85, 0.75 ],
+//							values : seriesValues.localTime.values
+//						}
+//					]
+//				}
+//			)
+//
+//
+//			// draw remoteTime % 2000 graph
+//			drawGraph(
+//				renderingContext,
+//				{
+//					position  : [ 0, constants.ySize - ( sizeY + 2 ) * 2 ],
+//					size      : [ sizeX, sizeY ],
+//					maxValue  : 2000,
+//					tickLines : [
+//						{
+//							y : 1000,
+//							color : [ 0.5, 0.5, 0.5 ]
+//						}
+//					],
+//					series : [
+//						{
+//							name   : 'remoteTime',
+//							color  : [ 0.91, 0.32, 0.17 ],
+//							values : seriesValues.remoteTime.values
+//						},
+//						{
+//							name   : 'newRemoteTimeTransfered',
+//							color  : [ 1.0, 0.0, 0.0 ],
+//							values : seriesValues.newRemoteTimeTransfered.values
+//						}
+//					]
+//				}
+//			)
 
-				context.fillStyle = stat.color
-				context.fillText( statText, posX, posY )
 
-				posY += statNameHeight
-				if ( posY + statNameHeight > display.height ) {
-					posX += statNameWidth
-					posY  = statNameStartY
-				}
+			// draw received % 10000 graph
+			drawGraph(
+					renderingContext,
+					{
+						position  : [ 0, constants.ySize - sizeY ],
+						size      : [ sizeX, sizeY ],
+						maxValue  : 5000,
+						tickLines : [
+							{
+								y : 1250,
+								color : [ 0.5, 0.5, 0.5 ]
+							},
+							{
+								y : 2500,
+								color : [ 0.5, 0.5, 0.5 ]
+							},
+							{
+								y : 3750,
+								color : [ 0.5, 0.5, 0.5 ]
+							}
+						],
+						series : [
+							{
+								name   : 'charsSent',
+								color  : [ 0.0, 1.0, 0.0 ],
+								values : seriesValues.charsSent.values
+							},
+							{
+								name   : 'charsReceived',
+								color  : [ 1.0, 0.0, 0.0 ],
+								values : seriesValues.charsReceived.values
+							}
+						]
+					}
+			)
 
 
-				var maxValue = max( stat.values )
-
-				var xStep = ( graphEndX - graphStartX ) / stats.maxNumberOfValues
-				var yStep = ( graphEndY - graphStartY ) / maxValue
-
-				var x = graphStartX
-				var y = graphStartY
-
-				context.strokeStyle = stat.color
-
-				context.beginPath()
-				_.each( stat.values, function( value ) {
-					context.lineTo( x, y + yStep * value )
-					x += xStep
-				} )
-				context.stroke()
-			} )
+//			// draw relativeClockSkew graph
+//			drawGraph(
+//				renderingContext,
+//				{
+//					position  : [ 0, constants.ySize - ( sizeY + 2 ) * 4 ],
+//					size      : [ sizeX, sizeY ],
+//					maxValue  : 2,
+//					tickLines : [
+//						{
+//							y : 1,
+//							color : [ 0.5, 0.5, 0.5 ]
+//						}
+//					],
+//					series : [
+//						{
+//							name   : 'relativeClockSkew',
+//							color  : [ 0.91, 0.32, 0.17 ],
+//							values : seriesValues.relativeClockSkew.values
+//						}
+//					]
+//				}
+//			)
+//
+//
+//			// draw deltaLocalRemoteTime graph
+//			drawGraph(
+//				renderingContext,
+//				{
+//					position  : [ 0, constants.ySize - ( sizeY + 2 ) * 3 ],
+//					size      : [ sizeX, sizeY ],
+//					maxValue  : 500,
+//					tickLines : [
+//						{
+//							y : 250,
+//							color : [ 0.5, 0.5, 0.5 ]
+//						}
+//					],
+//					series : [
+//						{
+//							name   : 'deltaLocalRemoteTime',
+//							color  : [ 0.7, 0.35, 0.75 ],
+//							values : seriesValues.deltaLocalRemoteTime.values
+//						}
+//					]
+//				}
+//			)
 		}
+
+		return render
 	}
 )
 
@@ -4498,6 +4676,133 @@ define(
 		) {
 			_.each( entities, function( entity ) {
 				entity.orientation.angle += entity.angularFrequency.radPerS * deltaTimeInS
+			} )
+		}
+	}
+)
+
+define(
+	"funkysnakes/shared/util/speedOf",
+	[
+		"funkysnakes/shared/config/constants",
+		"spell/shared/util/math"
+	],
+	function(
+		constants,
+		math
+	) {
+		"use strict"
+
+
+		return function( head ) {
+			return math.clamp(
+				constants.speedPerSecond + head.head.speedBonus - ( head.amountTailElements.value * 3 ),
+				constants.minSpeedPerSecond,
+				constants.maxSpeedPerSecond
+			)
+		}
+	}
+)
+
+define(
+	"funkysnakes/shared/systems/moveTailElements",
+	[
+		"funkysnakes/shared/config/constants",
+		"funkysnakes/shared/util/speedOf",
+
+		"glmatrix/vec3",
+
+		"underscore"
+	],
+	function(
+		constants,
+		speedOf,
+
+		vec3,
+
+		_
+	) {
+		"use strict"
+
+
+		var pastPositionsDistance = constants.pastPositionsDistance
+		var tailElementDistance   = constants.tailElementDistance
+		var distanceTailToShip    = constants.distanceTailToShip
+
+
+		var updatePastPositions = function( head, dtInSeconds ) {
+			head.body.distanceCoveredSinceLastSavedPosition += speedOf( head ) * dtInSeconds
+
+			if( head.body.distanceCoveredSinceLastSavedPosition <= pastPositionsDistance ) return
+
+
+			head.body.distanceCoveredSinceLastSavedPosition = 0
+
+			head.body.pastPositions.unshift( vec3.create( head.position ) )
+
+			var numberOfRequiredPastPositions =
+				Math.ceil( ( ( head.amountTailElements.value + 1 ) * tailElementDistance + distanceTailToShip ) / pastPositionsDistance )
+
+			while( head.body.pastPositions.length > numberOfRequiredPastPositions ) {
+				head.body.pastPositions.pop()
+			}
+		}
+
+		var updateTailElementPositions = function( tailElements, positionOfHead, pastPositions ) {
+			var tailElementLength = _.size( tailElements )
+			if( tailElementLength === 0 || pastPositions.length < 2 ) return
+
+
+			var distanceToNextSearchedPosition = distanceTailToShip // absolute distance from the beginning of the tail
+			var distanceCoveredInTail = 0 // absolute distance from the beginning of the tail
+			var i = 0;
+			var currentTailElementIndex = 0
+			var currentPosition = positionOfHead
+			var nextPosition = pastPositions[ i ]
+
+
+			while(
+				( i < pastPositions.length - 1 ) &&
+				( currentTailElementIndex < tailElementLength )
+			) {
+				var delta = vec3.create()
+				vec3.subtract( nextPosition, currentPosition, delta )
+
+				var distanceBetweenPositions = vec3.length( delta )
+				distanceCoveredInTail += distanceBetweenPositions
+
+				// if this is false the searched position is even further back in the tail
+				if( distanceCoveredInTail > distanceToNextSearchedPosition ) {
+					// relative position between the two past positions
+					var u = ( distanceCoveredInTail - distanceToNextSearchedPosition ) / distanceBetweenPositions
+					var tailElement = tailElements[ currentTailElementIndex ]
+
+					vec3.lerp(
+						nextPosition,
+						currentPosition,
+						u,
+						tailElement.position
+					)
+
+					distanceToNextSearchedPosition += tailElementDistance
+					currentTailElementIndex++
+				}
+
+				i++
+				currentPosition = pastPositions[ i ]
+				nextPosition = pastPositions[ i + 1 ]
+			}
+		}
+
+
+		return function(
+			dtInSeconds,
+			heads,
+			tailElements
+		) {
+			_.each( heads, function( head ) {
+				updatePastPositions( head, dtInSeconds )
+				updateTailElementPositions( tailElements[ head.body.id ], head.position, head.body.pastPositions )
 			} )
 		}
 	}
@@ -5187,12 +5492,11 @@ define(
 		"funkysnakes/client/util/createClouds",
 		"funkysnakes/client/systems/animateClouds",
 		"funkysnakes/client/systems/applyPowerupEffects",
-		"funkysnakes/client/systems/computeRenderFrameStats",
 		"funkysnakes/client/systems/fade",
 		"funkysnakes/client/systems/interpolateNetworkData",
 		"funkysnakes/client/systems/render",
 		"funkysnakes/client/systems/debugRenderer",
-		"funkysnakes/client/systems/renderStats",
+		"funkysnakes/client/systems/renderPerformanceGraph",
 		"funkysnakes/client/systems/sendInput",
 		"funkysnakes/client/systems/updateHoverAnimations",
 		"funkysnakes/client/systems/updateRenderData",
@@ -5200,6 +5504,7 @@ define(
 		"funkysnakes/shared/config/constants",
 		"funkysnakes/shared/config/players",
 		"funkysnakes/shared/systems/integrateOrientation",
+		"funkysnakes/shared/systems/moveTailElements",
 
         "spell/client/systems/sound/processSound",
 		"spell/client/systems/input/processLocalInput",
@@ -5212,18 +5517,18 @@ define(
 		"spell/shared/util/entities/datastructures/singleton",
 		"spell/shared/util/entities/datastructures/sortedArray",
 		"spell/shared/util/zones/ZoneEntityManager",
-		"spell/shared/util/platform/PlatformKit"
+		"spell/shared/util/platform/PlatformKit",
+		"spell/shared/util/platform/Types"
 	],
 	function(
 		createClouds,
 		animateClouds,
 		applyPowerupEffects,
-		computeRenderFrameStats,
 		fade,
 		interpolateNetworkData,
 		render,
 		debugRenderer,
-		renderStats,
+		renderPerformanceGraph,
 		sendInput,
 		updateHoverAnimations,
 		updateRenderData,
@@ -5231,6 +5536,7 @@ define(
 		constants,
 		players,
 		integrateOrientation,
+		moveTailElements,
 
 		processSound,
 		processLocalInput,
@@ -5243,7 +5549,8 @@ define(
 		singleton,
 		sortedArray,
 		ZoneEntityManager,
-		PlatformKit
+		PlatformKit,
+		Types
 	) {
 		"use strict"
 
@@ -5319,6 +5626,12 @@ define(
 			)
 		}
 
+
+		var timeStampInMs, newTimeStampInMs, timeSpentInMs
+		timeStampInMs = 0
+		newTimeStampInMs = 0
+		timeSpentInMs = 0
+
 		function updateZone(
 			timeInMs,
 			dtInS,
@@ -5341,12 +5654,14 @@ define(
 			var entityManager = this.entityManager
 			var queryIds      = this.queryIds
 
-			var connection       = globals.connection
-			var renderingContext = globals.renderingContext
-			var textures         = globals.textures
-			var inputEvents      = globals.inputEvents
-			var stats            = globals.stats
-			var sounds           = globals.sounds
+			var connection        = globals.connection
+			var renderingContext  = globals.renderingContext
+			var textures          = globals.textures
+			var inputEvents       = globals.inputEvents
+			var statisticsManager = globals.statisticsManager
+			var sounds            = globals.sounds
+
+			statisticsManager.startTick()
 
 			processLocalInput(
 				timeInMs,
@@ -5370,6 +5685,11 @@ define(
 				timeInMs,
 				entities.executeQuery( queryIds[ "interpolateNetworkData" ][ 0 ] ).elements,
 				entityManager
+			)
+			moveTailElements(
+				deltaTimeInMs / 1000,
+				entities.executeQuery( queryIds[ "moveTailElements" ][ 0 ] ).elements,
+				entities.executeQuery( queryIds[ "moveTailElements" ][ 1 ] ).multiMap
 			)
 			updateScoreDisplays(
 				entities.executeQuery( queryIds[ "updateScoreDisplays" ][ 0 ] ).elements,
@@ -5403,6 +5723,13 @@ define(
 				entityManager,
 				entities.executeQuery( queryIds[ "fade" ][ 0 ] ).elements
 			)
+			processSound(
+				sounds,
+				entities.executeQuery( queryIds[ "soundEmitters" ][ 0 ] ).elements
+			)
+
+			var timeA = Types.Time.getCurrentInMs()
+
 			render(
 				timeInMs,
 				deltaTimeInMs,
@@ -5410,30 +5737,33 @@ define(
 				renderingContext,
 				entities.executeQuery( queryIds[ "render" ][ 0 ] ).multiMap,
 				entities.executeQuery( queryIds[ "render" ][ 1 ] ).elements,
-				entities.executeQuery( queryIds[ "render" ][ 2 ] ).elements,
 				entities.executeQuery( queryIds[ "shieldRenderer" ][ 0 ] ).elements
 			)
+
+			statisticsManager.updateSeries( 'timeSpentRendering', Types.Time.getCurrentInMs() - timeA )
+
 //			debugRenderer(
 //				timeInMs,
-//				textures,
+//				deltaTimeInMs,
 //				renderingContext,
 //				entities.executeQuery( queryIds[ "debugRenderer" ][ 0 ] ).elements
 //			)
-//			renderStats(
-//				renderingContext,
-//				stats
+
+
+			newTimeStampInMs = timeInMs
+			timeSpentInMs = newTimeStampInMs - timeStampInMs
+			timeStampInMs = newTimeStampInMs
+
+			statisticsManager.updateSeries( 'fps', 1000 / timeSpentInMs )
+			statisticsManager.updateSeries( 'totalTimeSpent', timeSpentInMs )
+
+
+//			renderPerformanceGraph(
+//				timeInMs,
+//				deltaTimeInMs,
+//				statisticsManager.getValues(),
+//				renderingContext
 //			)
-			computeRenderFrameStats(
-				timeInMs,
-				stats,
-				entityManager,
-				entities.executeQuery( queryIds[ "computeRenderFrameStats" ][ 0 ] ).singleton,
-				connection
-			)
-			processSound(
-				sounds,
-				entities.executeQuery( queryIds[ "soundEmitters" ][ 0 ] ).elements
-			)
 		}
 
 		return {
@@ -5516,6 +5846,15 @@ define(
 					}
 				)
 
+				var bodyIdMultiMap = multiMap( function( entity ) {
+					if ( entity.hasOwnProperty( "tailElement" ) ) {
+						return entity.tailElement.bodyId
+					}
+					else {
+						return undefined
+					}
+				} )
+
 				this.queryIds = {
 					processLocalInput: [
 						entities.prepareQuery( [ "inputDefinition" ] ),
@@ -5544,6 +5883,10 @@ define(
 					integrateOrientation: [
 						entities.prepareQuery( [ "angularFrequency", "orientation" ] )
 					],
+					moveTailElements: [
+						entities.prepareQuery( [ "head", "active" ]                 ),
+						entities.prepareQuery( [ "tailElement"    ], bodyIdMultiMap )
+					],
 					updateRenderData: [
 						entities.prepareQuery( [ "position", "renderData" ] )
 					],
@@ -5555,18 +5898,14 @@ define(
 					],
 					render: [
 						entities.prepareQuery( [ "position", "appearance", "renderData" ], passIdMultiMap ),
-						entities.prepareQuery( [ "position", "text" ] ),
 						entities.prepareQuery( [ "background" ] )
 					],
 					shieldRenderer: [
 						entities.prepareQuery( [ "shield" ] )
 					],
 //					debugRenderer: [
-//						entities.prepareQuery( [ "debugMarker" ] )
+//						entities.prepareQuery( [ "head", "active" ] )
 //					],
-					computeRenderFrameStats: [
-						entities.prepareQuery( [ "statData" ], singleton )
-					],
 					applyPowerupEffects: [
 						entities.prepareQuery( [ "appearance", "powerupEffects" ] )
 					],
@@ -5577,19 +5916,11 @@ define(
 
 
 				this.renderUpdate = function( timeInMs, deltaTimeInMs ) {
-					thisZone.render(
-						timeInMs,
-						deltaTimeInMs,
-						globals
-					)
+					thisZone.render( timeInMs, deltaTimeInMs, globals )
 				}
 
 				this.logicUpdate = function( timeInMs, deltaTimeInS ) {
-					thisZone.update(
-						timeInMs,
-						deltaTimeInS,
-						globals
-					)
+					thisZone.update( timeInMs, deltaTimeInS, globals )
 				}
 
 				eventManager.subscribe( [ "renderUpdate" ], this.renderUpdate )
@@ -5800,14 +6131,125 @@ define(
 )
 
 define(
+	"spell/shared/util/Timer",
+	[
+		"spell/shared/util/platform/Types",
+
+		"underscore"
+	],
+	function(
+		Types,
+
+		_
+	) {
+		"use strict"
+
+
+		/**
+		 * private
+		 */
+
+		var newRemoteTimPending = false
+
+//		var checkTimeWarp = function( newRemoteTime, updatedRemoteTime ) {
+//			if( updatedRemoteTime > newRemoteTime ) return
+//
+//			var tmp = newRemoteTime - updatedRemoteTime
+//			console.log( 'WARNING: clock reset into past by ' + tmp + ' ms' )
+//		}
+
+
+		/**
+		 * public
+		 */
+
+		function Timer( eventManager, statisticsManager, initialTime ) {
+			this.newRemoteTime        = initialTime
+			this.localTime            = initialTime
+			this.previousLocalTime    = initialTime
+			this.remoteTime           = initialTime
+			this.deltaLocalRemoteTime = 0
+			this.statisticsManager    = statisticsManager
+
+			eventManager.subscribe(
+				[ "clockSyncUpdate" ],
+				_.bind(
+					function( updatedRemoteTime ) {
+//						checkTimeWarp( newRemoteTime, updatedRemoteTime )
+
+						this.newRemoteTime = updatedRemoteTime
+						this.newRemoteTimPending = true
+					},
+					this
+				)
+			)
+
+			// setting up statistics
+			statisticsManager.addSeries( 'remoteTime', '' )
+			statisticsManager.addSeries( 'localTime', '' )
+			statisticsManager.addSeries( 'deltaLocalRemoteTime', '' )
+			statisticsManager.addSeries( 'relativeClockSkew', '' )
+			statisticsManager.addSeries( 'newRemoteTimeTransfered', '' )
+		}
+
+		Timer.prototype = {
+			update : function() {
+				// TODO: think about incorporating the new value "softly" instead of directly replacing the old one
+				if( this.newRemoteTimPending ) {
+					this.remoteTime          = this.newRemoteTime
+					this.newRemoteTimPending = false
+				}
+
+				// measuring time
+				this.elapsedTime          = Types.Time.getCurrentInMs() - this.previousLocalTime
+				this.localTime            += this.elapsedTime
+				this.remoteTime           += this.elapsedTime
+				this.previousLocalTime    = this.localTime
+				this.deltaLocalRemoteTime = this.localTime - this.remoteTime
+
+				// relative clock skew
+				var factor = 1000000000
+				this.relativeClockSkew = ( ( this.localTime / this.remoteTime * factor ) - factor ) * 2 + 1
+
+				// updating statistics
+				this.statisticsManager.updateSeries( 'remoteTime', this.remoteTime % 2000 )
+				this.statisticsManager.updateSeries( 'localTime', this.localTime % 2000 )
+				this.statisticsManager.updateSeries( 'deltaLocalRemoteTime', this.deltaLocalRemoteTime + 250 )
+				this.statisticsManager.updateSeries( 'relativeClockSkew', this.relativeClockSkew )
+			},
+			getLocalTime : function() {
+				return this.localTime
+			},
+			getElapsedTime : function() {
+				return this.elapsedTime
+			}
+			//,
+//			getRemoteTime : function() {
+//				return remoteTime
+//			},
+//			getDeltaLocalRemoteTime : function() {
+//				return deltaRemoteLocalTime
+//			},
+//			getRelativeClockSkew : function() {
+//				return relativeClockSkew
+//			}
+		}
+
+		return Timer
+	}
+)
+
+define(
 	"funkysnakes/shared/util/createMainLoop",
 	[
+		"spell/shared/util/Timer",
 		"spell/shared/util/platform/Types",
 		"spell/shared/util/platform/PlatformKit",
 
 		"underscore"
 	],
 	function(
+		Timer,
 		Types,
 		PlatformKit,
 
@@ -5816,102 +6258,88 @@ define(
 		"use strict"
 
 
-		var maxAllowedTimeDifferenceInMs = 20
+		var allowedDeltaInMs = 20
 
 
 		return function(
 			eventManager,
+			statisticsManager,
 			initialRemoteGameTimeInMs
 		) {
-			var remoteGameTimeInMs   = initialRemoteGameTimeInMs
-			var localTimeInMs        = initialRemoteGameTimeInMs
-			var previousRealTimeInMs = Types.Time.getCurrentInMs()
+			var timer         = new Timer( eventManager, statisticsManager, initialRemoteGameTimeInMs )
+			var localTimeInMs = initialRemoteGameTimeInMs
 
 
 			// Since the main loop supports arbitrary update intervals but can't publish events for every possible
 			// update interval, we need to maintain a set of all update intervals that subscribers are interested in.
 			var updateIntervals = {}
 
-			eventManager.subscribe( [ "subscribe" ], function( scope, subscriber ) {
-				if ( scope[ 0 ] === "logicUpdate" ) {
+			eventManager.subscribe(
+				[ "subscribe" ],
+				function( scope, subscriber ) {
+					if( scope[ 0 ] !== "logicUpdate" ) return
+
 					var interval = scope[ 1 ]
-					if ( !updateIntervals.hasOwnProperty( interval ) ) {
-						updateIntervals[ interval ] = {
-							accumulatedTimeInMs: 0,
-							localGameTimeInMs  : localTimeInMs
-						}
+
+					if( updateIntervals.hasOwnProperty( interval ) ) return
+
+					updateIntervals[ interval ] = {
+						accumulatedTimeInMs : 0,
+						localTimeInMs       : localTimeInMs
 					}
 				}
-			} )
+			)
 
-
-			eventManager.subscribe( [ "clockSyncUpdate" ], function( timeOfUpdate, updatedGameTimeInMs ) {
-				var ageOfUpdate = Types.Time.getCurrentInMs() - timeOfUpdate
-				remoteGameTimeInMs = updatedGameTimeInMs + ageOfUpdate
-			} )
-
-			var timeSpeedFactor = 1.0
+			var clockSpeedFactor, elapsedTimeInMs
+			clockSpeedFactor = 1.0
 
 			var mainLoop = function() {
-				PlatformKit.callNextFrame( mainLoop )
+				timer.update()
+				localTimeInMs   = timer.getLocalTime()
+				elapsedTimeInMs = timer.getElapsedTime()
 
+				_.each(
+					updateIntervals,
+					function( updateInterval, deltaTimeInMsAsString ) {
+						var deltaTimeInMs = parseInt( deltaTimeInMsAsString )
 
-				var currentRealTimeInMs = Types.Time.getCurrentInMs()
+						updateInterval.accumulatedTimeInMs += elapsedTimeInMs * clockSpeedFactor
 
-				var passedTimeInMs = currentRealTimeInMs - previousRealTimeInMs
+						while( updateInterval.accumulatedTimeInMs > deltaTimeInMs ) {
+							// Only simulate, if not too much time has accumulated to prevent CPU overload. This can happen, if
+							// the browser tab has been in the background for a while and requestAnimationFrame is used.
+							if( updateInterval.accumulatedTimeInMs <= 5 * deltaTimeInMs ) {
+								eventManager.publish(
+									[ "logicUpdate", deltaTimeInMsAsString ],
+									[ updateInterval.localTimeInMs, deltaTimeInMs / 1000 ]
+								)
+							}
 
-				previousRealTimeInMs  = currentRealTimeInMs
-				remoteGameTimeInMs   += passedTimeInMs
-				localTimeInMs        += passedTimeInMs * timeSpeedFactor
-
-				_.each( updateIntervals, function( updateInterval, deltaTimeInMsAsString ) {
-					var deltaTimeInMs = parseInt( deltaTimeInMsAsString )
-
-					updateInterval.accumulatedTimeInMs += passedTimeInMs * timeSpeedFactor
-
-					while ( updateInterval.accumulatedTimeInMs > deltaTimeInMs ) {
-						// Only simulate, if not too much time has accumulated to prevent CPU overload. This can happen, if
-						// the browser tab has been in the background for a while and requestAnimationFrame is used.
-						if ( updateInterval.accumulatedTimeInMs <= 5 * deltaTimeInMs ) {
-							eventManager.publish(
-								[ "logicUpdate", deltaTimeInMsAsString ],
-								[
-									updateInterval.localGameTimeInMs,
-									deltaTimeInMs / 1000
-								]
-							)
+							updateInterval.accumulatedTimeInMs -= deltaTimeInMs
+							updateInterval.localTimeInMs   += deltaTimeInMs
 						}
-
-						updateInterval.accumulatedTimeInMs -= deltaTimeInMs
-						updateInterval.localGameTimeInMs   += deltaTimeInMs
 					}
-				} )
-
-
-				eventManager.publish(
-					[ "renderUpdate" ],
-					[
-						localTimeInMs,
-						passedTimeInMs
-					]
 				)
 
 
-				var localGameTimeDifferenceInMs = remoteGameTimeInMs - localTimeInMs
-				if ( Math.abs( localGameTimeDifferenceInMs ) > maxAllowedTimeDifferenceInMs ) {
-					if ( localGameTimeDifferenceInMs > 0 ) {
-						timeSpeedFactor = 2
-					}
-					else {
-						timeSpeedFactor = 0.5
-					}
-				}
-				else {
-					timeSpeedFactor = 1.0
-				}
+				eventManager.publish( [ "renderUpdate" ], [ localTimeInMs, elapsedTimeInMs ] )
 
 
-				PlatformKit.updateDebugData( localTimeInMs )
+//				var localGameTimeDeltaInMs = remoteTimeInMs - localTimeInMs
+//
+//				if( Math.abs( localGameTimeDeltaInMs ) > allowedDeltaInMs ) {
+//					if( localGameTimeDeltaInMs > 0 ) {
+//						clockSpeedFactor = 1.25
+//
+//					} else {
+//						clockSpeedFactor = 0.25
+//					}
+//
+//				} else {
+//					clockSpeedFactor = 1.0
+//				}
+
+				PlatformKit.callNextFrame( mainLoop )
 			}
 
 			return mainLoop
@@ -5945,6 +6373,19 @@ define(
 		return function( args ) {
 			this.state = args.state
 			this.lifetime = args.lifetime || constants.shieldLifetime // in seconds
+		}
+	}
+)
+
+define(
+	"funkysnakes/shared/components/tailElement",
+	function() {
+		"use strict"
+
+
+		return function( args ) {
+			this.bodyId         = args.bodyId
+			this.positionInTail = args.positionInTail
 		}
 	}
 )
@@ -6241,7 +6682,7 @@ define(
 		"use strict"
 
 
-		var HIGH_SYNC_FREQUENCY = 5
+		var HIGH_SYNC_FREQUENCY = 4
 		var MEDIUM_SYNC_FREQUENCY = 2
 		var LOW_SYNC_FREQUENCY = 1
 
@@ -6263,7 +6704,11 @@ define(
 		var initialSynchronization = true
 
 
-		function initializeClockSync( eventManager, connection ) {
+		function initializeClockSync( eventManager, statisticsManager, connection ) {
+			statisticsManager.addSeries( 'ping', 'ms' )
+			statisticsManager.addSeries( 'currentTime', 'ms' )
+			statisticsManager.addSeries( 'sendTimeInMs', 'ms' )
+
 			var currentUpdateNumber = 1
 			var oneWayLatenciesInMs = new CircularBuffer( numberOfOneWayLatencyMeasurements )
 
@@ -6273,9 +6718,14 @@ define(
 				var roundTripLatencyInMs       = currentTimeInMs - sendTimeInMs
 				var estimatedOneWayLatencyInMs = roundTripLatencyInMs / 2
 
+				statisticsManager.updateSeries( "ping", roundTripLatencyInMs )
+				statisticsManager.updateSeries( "currentTime", currentTimeInMs % 2000 )
+				statisticsManager.updateSeries( "sendTimeInMs", sendTimeInMs % 2000 )
+
 
 				oneWayLatenciesInMs.push( estimatedOneWayLatencyInMs )
 				var computedServerTimeInMs = computeServerTimeInMs( oneWayLatenciesInMs.toArray(), messageData.serverTime )
+
 
 				if( currentUpdateNumber === minNumberOfClockSyncRoundTrips ) {
 					eventManager.publish(
@@ -6290,7 +6740,7 @@ define(
 				} else {
 					eventManager.publish(
 						[ "clockSyncUpdate" ],
-						[ Types.Time.getCurrentInMs(), computedServerTimeInMs ]
+						[ computedServerTimeInMs ]
 					)
 				}
 
@@ -6304,6 +6754,9 @@ define(
 						clientTime: Types.Time.getCurrentInMs()
 					}
 				)
+
+				// TODO: figure out how to perform continuous clock synchronization that is not harmful
+				if( !initialSynchronization ) return
 
 				PlatformKit.registerTimer( sendClockSyncMessage, 1000 / synchronizationFrequency )
 			}
@@ -6365,7 +6818,6 @@ define(
 
 			synchronizationFrequency = computeSynchronizationFrequency( standardDeviationInMs )
 
-
 			var significantOneWayLatenciesInMs = _.filter(
 				oneWayLatenciesInMs,
 				function( latencyInMs ) {
@@ -6409,22 +6861,19 @@ define(
 define(
 	"spell/client/util/network/createServerConnection",
 	[
-		"funkysnakes/shared/util/stats",
 		"spell/shared/util/platform/PlatformKit",
 		"spell/shared/util/Logger"
 	],
 	function(
-		stats,
 		PlatformKit,
 		Logger
 	) {
 		"use strict"
 
 
-		return function( host, protocol, eventManager, statistics ) {
-			stats.createStat( statistics, "sent",                 "chars/s" )
-			stats.createStat( statistics, "received",             "chars/s" )
-			stats.createStat( statistics, "entityUpdateFraction", "%" )
+		return function( eventManager, statisticsManager, host, protocol ) {
+			statisticsManager.addSeries( "charsSent", "chars/s" )
+			statisticsManager.addSeries( "charsReceived", "chars/s" )
 
 			var socket = PlatformKit.createSocket( host )
 
@@ -6433,13 +6882,10 @@ define(
 				socket   : socket,
 				messages : {},
 				handlers : {},
-				stats    : {
-					charsSent            : 0,
-					charsReceived        : 0,
-					messageCharsReceived : {}
-				},
-				send     : function( messageType, messageData ) {
+				send : function( messageType, messageData ) {
 					var message = connection.protocol.encode( messageType, messageData )
+
+					statisticsManager.updateSeries( "charsSent", message.length )
 
 					try {
 						socket.send( message )
@@ -6454,8 +6900,6 @@ define(
 							500
 						)
 					}
-
-					stats.charsSent += message.length
 				}
 			}
 
@@ -6463,11 +6907,7 @@ define(
 				function( messageData ) {
 					var message = protocol.decode( messageData )
 
-					connection.stats.charsReceived += messageData.length
-					if ( !connection.stats.messageCharsReceived.hasOwnProperty( message.type ) ) {
-						connection.stats.messageCharsReceived[ message.type ] = 0
-					}
-					connection.stats.messageCharsReceived[ message.type ] += messageData.length
+					statisticsManager.updateSeries( "charsReceived", messageData.length )
 
 					eventManager.publish(
 						[ "messageReceived", message.type ],
@@ -7233,18 +7673,113 @@ define(
 )
 
 define(
+	"spell/shared/util/StatisticsManager",
+	[
+		"underscore"
+	],
+	function(
+		_
+	) {
+		"use strict"
+
+
+		/**
+		 * private
+		 */
+
+		var numberOfValues = 512
+
+		var createBuffer = function( bufferSize ) {
+			var buffer = []
+
+			while( bufferSize > 0 ) {
+				buffer.push( 0 )
+				bufferSize--
+			}
+
+			return buffer
+		}
+
+		var createSeries = function( id, name, unit ) {
+			return {
+				values : createBuffer( numberOfValues ),
+				name   : name,
+				unit   : unit
+			}
+		}
+
+
+		/**
+		 * public
+		 */
+
+		var StatisticsManager = function() {
+			this.series = {}
+		}
+
+		StatisticsManager.prototype = {
+			init : function() {
+				this.addSeries( 'fps', 'frames per second', 'fps' )
+				this.addSeries( 'totalTimeSpent', 'total time spent', 'ms' )
+				this.addSeries( 'timeSpentRendering', 'time spent rendering', 'ms' )
+			},
+			/**
+			 * call this method to signal the beginning of a new measurement period
+			 */
+			startTick: function() {
+				_.each(
+					this.series,
+					function( iter ) {
+						iter.values.push( 0 )
+						iter.values.shift()
+					}
+				)
+			},
+			addSeries : function( id, name, unit ) {
+				if( !id ) return
+
+				if( _.has( this.series, id ) ) throw 'Series with id "' + id + '" already exists'
+
+				this.series[ id ] = createSeries( id, name, unit )
+			},
+			updateSeries : function( id, value ) {
+				if( !id ) return
+
+				var series = this.series[ id ]
+
+				if( !series ) return
+
+				series.values[ numberOfValues - 1 ] += value
+			},
+			getValues : function() {
+				return this.series
+			},
+			getSeriesValues : function( id ) {
+				return this.series[ id ]
+			}
+		}
+
+		return StatisticsManager
+	}
+)
+
+define(
 	"spell/client/main",
 	[
 		"spell/shared/util/ConfigurationManager",
 		'spell/shared/util/EventManager',
 		'spell/shared/util/InputManager',
-		'spell/shared/util/ResourceLoader'
+		'spell/shared/util/ResourceLoader',
+		'spell/shared/util/StatisticsManager',
+        'spell/shared/util/platform/PlatformKit'
 	],
 	function(
 		ConfigurationManager,
 		EventManager,
 		InputManager,
-		ResourceLoader
+		ResourceLoader,
+		StatisticsManager,
+        PlatformKit
 	) {
 		"use strict"
 
@@ -7255,13 +7790,18 @@ define(
 			var eventManager         = new EventManager()
 			var inputManager         = new InputManager( configurationManager.screenSize )
 			var resourceLoader       = new ResourceLoader( eventManager, configurationManager.resourceServer )
+			var statisticsManager    = new StatisticsManager()
+
+			statisticsManager.init()
+            PlatformKit.initializeViewport( eventManager )
 
 			var globals = {
 				configurationManager : configurationManager,
 				eventManager         : eventManager,
 				inputManager         : inputManager,
 				inputEvents          : inputManager.getInputEvents(),
-				resourceLoader       : resourceLoader
+				resourceLoader       : resourceLoader,
+				statisticsManager    : statisticsManager
 			}
 
 			clientMain( globals )
@@ -7282,8 +7822,9 @@ define(
 		'funkysnakes/shared/components/orientation',
 		'funkysnakes/shared/components/collisionCircle',
 		'funkysnakes/shared/components/shield',
+		'funkysnakes/shared/components/tailElement',
+		'funkysnakes/shared/components/amountTailElements',
 		'funkysnakes/shared/util/networkProtocol',
-		'funkysnakes/shared/util/stats',
 
 		'spell/client/components/network/markedForDestruction',
 		'spell/shared/util/entities/Entities',
@@ -7309,8 +7850,9 @@ define(
 		orientation,
 		collisionCircle,
 		shield,
+		tailElement,
+		amountTailElements,
 		networkProtocol,
-		stats,
 
 		markedForDestruction,
 		Entities,
@@ -7396,6 +7938,7 @@ define(
 			var configurationManager = globals.configurationManager
 			var resourceLoader       = globals.resourceLoader
 			var eventManager         = globals.eventManager
+			var statisticsManager    = globals.statisticsManager
 
 
 			resourceLoader.addResourceBundle( 'bundle1', resourceUris )
@@ -7411,23 +7954,25 @@ define(
 						'position'            : position,
 						'orientation'         : orientation,
 						'collisionCircle'     : collisionCircle,
-						'shield'              : shield
+						'shield'              : shield,
+						'tailElement'         : tailElement,
+						'amountTailElements'  : amountTailElements
 					}
 
 					var entityManager = new EntityManager( entities, componentConstructors )
-					var statistics = stats.initStats()
 
 
 					Logger.debug( 'connecting to game-server "' + configurationManager.gameServer.host + '"' )
 
 					var connection = createServerConnection(
-						configurationManager.gameServer.host,
-						networkProtocol,
 						eventManager,
-						statistics
+						statisticsManager,
+						configurationManager.gameServer.host,
+						networkProtocol
 					)
 
 					var renderingContext = PlatformKit.RenderingFactory.createContext2d(
+                        globals.eventManager,
 						globals.configurationManager.screenSize.width,
 						globals.configurationManager.screenSize.height,
 						globals.configurationManager.renderingBackEnd
@@ -7481,7 +8026,6 @@ define(
 							entityManager    : entityManager,
 							eventManager     : eventManager,
 							textures         : textures,
-							stats            : statistics,
 							sounds           : resources
 						}
 					)
@@ -7513,15 +8057,16 @@ define(
 					eventManager.subscribe( [ 'clockSyncEstablished' ], function( remoteGameTimeInMs ) {
 						var mainLoop = createMainLoop(
 							eventManager,
+							statisticsManager,
 							remoteGameTimeInMs
 						)
 
 						zoneManager.createZone( 'lobby' )
 
-						mainLoop()
+						PlatformKit.callNextFrame( mainLoop )
 					} )
 
-					network.initializeClockSync( eventManager, connection )
+					network.initializeClockSync( eventManager, statisticsManager, connection )
 				}
 			)
 
