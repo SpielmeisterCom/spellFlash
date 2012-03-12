@@ -3769,18 +3769,56 @@ define(
 )
 
 define(
+	'spell/shared/util/random/XorShift32',
+	function() {
+		'use strict'
+
+
+		var XorShift32 = function( seed ) {
+			this.x = seed
+		}
+
+		XorShift32.prototype = {
+			next : function() {
+				var a = this.x,
+					b = a
+
+				a <<= 13
+				b ^= a
+
+				a >>= 17
+				b ^= a
+
+				a <<= 5
+				b ^= a
+
+
+				this.x = b
+
+				return ( b + 2147483648 ) * ( 1 / 4294967296 )
+			},
+			nextBetween : function( min, max ) {
+				return ( min + this.next() * ( max - min ) )
+			}
+		}
+
+		return XorShift32
+	}
+)
+
+define(
 	"funkysnakes/client/util/createClouds",
 	[
 		"funkysnakes/shared/config/constants",
 
-		"spell/shared/util/math",
+		"spell/shared/util/random/XorShift32",
 
 		"glmatrix/vec3"
 	],
 	function(
 		constants,
 
-		math,
+		XorShift32,
 
 		vec3
 	) {
@@ -3795,9 +3833,9 @@ define(
 			}
 
 
-			var rng = math.createRandomNumberGenerator( 1 )
+			var prng = new XorShift32( 437840 )
 			var scaleFactor = 1.0
-			var tmp = [ 0, 0, 0 ] // temporary
+			var tmp = [ 0, 0, 0 ]
 
 
 			var fromX  = ( -constants.maxCloudTextureSize ) * scaleFactor
@@ -3808,13 +3846,13 @@ define(
 
 			for( var i = 0; i < numberOfClouds; i++) {
 				var position = [
-					rng.next( fromX, untilX ),
-					rng.next( fromY, untilY ),
+					prng.nextBetween( fromX, untilX ),
+					prng.nextBetween( fromY, untilY ),
 					0
 				]
 
 				vec3.set( baseSpeed, tmp )
-				vec3.scale( tmp, rng.next( 0.75, 1.0 ) * scaleFactor )
+				vec3.scale( tmp, prng.nextBetween( 0.75, 1.0 ) * scaleFactor )
 
 				var index = "_0" + ( 1 + ( i % 6 ) )
 
@@ -4001,9 +4039,9 @@ define(
 			entitiesToInterpolate,
 			entityManager
 		) {
-			_.each( entitiesToInterpolate, function( entity ) {
-				var renderTime = timeInMilliseconds - constants.interpolationDelay
+			var renderTime = timeInMilliseconds - constants.interpolationDelay
 
+			_.each( entitiesToInterpolate, function( entity ) {
 				var entitySnapshots = entity.synchronizationSlave.snapshots
 
 				snapshots.forwardTo( entitySnapshots, renderTime )
@@ -4068,6 +4106,17 @@ define(
 					}
 
 					entity.activePowerups = current.data.entity[ "activePowerups" ]
+
+//					// tailElement
+//					if( next.data.entity.hasOwnProperty( "tailElement" ) &&
+//						!entity.hasOwnProperty( "tailElement" ) ) {
+//
+//						entityManager.addComponent(
+//							entity,
+//							"tailElement",
+//							[ next.data.entity.tailElement ]
+//						)
+//					}
 
 				} else if( current !== undefined ) {
 					entityManager.addComponent( entity, "position", [ current.data.entity[ "position" ] ] )
@@ -4383,7 +4432,7 @@ define(
 //			)
 
 
-//			// draw relative clock speed (of local clock) graph
+//			// draw relativeClockSkew graph
 //			drawGraph(
 //				renderingContext,
 //				{
@@ -4400,7 +4449,7 @@ define(
 //						{
 //							name   : 'relativeClockSpeed',
 //							color  : [ 0.25, 0.35, 0.75 ],
-//							values : seriesValues.relativeClockSpeed.values
+//							values : seriesValues.relativeClockSkew.values
 //						}
 //					]
 //				}
@@ -4411,7 +4460,7 @@ define(
 //			drawGraph(
 //				renderingContext,
 //				{
-//					position  : [ 0, constants.ySize - ( sizeY + 2 ) ],
+//					position  : [ 0, constants.ySize - ( sizeY + 2 ) * 3 ],
 //					size      : [ sizeX, sizeY ],
 //					maxValue  : 2000,
 //					tickLines : [
@@ -6149,8 +6198,6 @@ define(
 		 * private
 		 */
 
-		var newRemoteTimPending = false
-
 //		var checkTimeWarp = function( newRemoteTime, updatedRemoteTime ) {
 //			if( updatedRemoteTime > newRemoteTime ) return
 //
@@ -6165,9 +6212,11 @@ define(
 
 		function Timer( eventManager, statisticsManager, initialTime ) {
 			this.newRemoteTime        = initialTime
-			this.localTime            = initialTime
-			this.previousLocalTime    = initialTime
 			this.remoteTime           = initialTime
+			this.newRemoteTimPending  = false
+			this.localTime            = initialTime
+			this.previousSystemTime   = Types.Time.getCurrentInMs()
+			this.elapsedTime          = 0
 			this.deltaLocalRemoteTime = 0
 			this.statisticsManager    = statisticsManager
 
@@ -6201,10 +6250,12 @@ define(
 				}
 
 				// measuring time
-				this.elapsedTime          = Types.Time.getCurrentInMs() - this.previousLocalTime
+				var systemTime            = Types.Time.getCurrentInMs()
+				this.elapsedTime          = Math.max( systemTime - this.previousSystemTime, 0 ) // it must never be smaller than 0
+				this.previousSystemTime   = systemTime
+
 				this.localTime            += this.elapsedTime
 				this.remoteTime           += this.elapsedTime
-				this.previousLocalTime    = this.localTime
 				this.deltaLocalRemoteTime = this.localTime - this.remoteTime
 
 				// relative clock skew
@@ -6222,11 +6273,10 @@ define(
 			},
 			getElapsedTime : function() {
 				return this.elapsedTime
-			}
-			//,
-//			getRemoteTime : function() {
-//				return remoteTime
-//			},
+			},
+			getRemoteTime : function() {
+				return this.remoteTime
+			}//,
 //			getDeltaLocalRemoteTime : function() {
 //				return deltaRemoteLocalTime
 //			},
@@ -6325,7 +6375,7 @@ define(
 				eventManager.publish( [ "renderUpdate" ], [ localTimeInMs, elapsedTimeInMs ] )
 
 
-//				var localGameTimeDeltaInMs = remoteTimeInMs - localTimeInMs
+//				var localGameTimeDeltaInMs = timer.getRemoteTime() - localTimeInMs
 //
 //				if( Math.abs( localGameTimeDeltaInMs ) > allowedDeltaInMs ) {
 //					if( localGameTimeDeltaInMs > 0 ) {
@@ -6738,25 +6788,25 @@ define(
 					Logger.debug( 'clock synchronization established' )
 
 				} else {
-					eventManager.publish(
-						[ "clockSyncUpdate" ],
-						[ computedServerTimeInMs ]
-					)
+//					eventManager.publish(
+//						[ "clockSyncUpdate" ],
+//						[ computedServerTimeInMs ]
+//					)
 				}
 
-				currentUpdateNumber += 1
+				currentUpdateNumber++
 			}
 
 			var sendClockSyncMessage = function() {
+				// TODO: figure out how to perform continuous clock synchronization that is not harmful
+				if( !initialSynchronization ) return
+
 				connection.send(
 					"clockSync",
 					{
 						clientTime: Types.Time.getCurrentInMs()
 					}
 				)
-
-				// TODO: figure out how to perform continuous clock synchronization that is not harmful
-				if( !initialSynchronization ) return
 
 				PlatformKit.registerTimer( sendClockSyncMessage, 1000 / synchronizationFrequency )
 			}
