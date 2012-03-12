@@ -43,7 +43,8 @@ package Spielmeister.Spell.Platform {
 			this.urlParameters    = urlParameters
 			this.renderingFactory = new RenderingFactoryImpl( container )
 
-			this.debugConsole     = new TextField()
+			// debug "console"
+			this.debugConsole = new TextField()
 			this.debugConsole.autoSize = TextFieldAutoSize.LEFT
 			this.stage.addChild( debugConsole )
 
