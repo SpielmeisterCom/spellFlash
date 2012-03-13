@@ -7516,12 +7516,14 @@ define(
 	[
 		'spell/shared/util/platform/PlatformKit',
 		'spell/shared/util/Events',
+		'spell/shared/util/Logger',
 
 		'underscore'
 	],
 	function(
 		PlatformKit,
 		Events,
+		Logger,
 
 		_
 	) {
@@ -7591,14 +7593,7 @@ define(
 			}
 		}
 
-		var resourceLoadingCompletedCallback = function( resourceBundleName, resourceName, loadedResources ) {
-			if( loadedResources === undefined ||
-				_.size( loadedResources ) === 0 ) {
-
-				throw 'Resource "' + resourceName + '" from resource bundle "' + resourceBundleName + '" is undefined or empty on loading completed.'
-			}
-
-			// making sure the loaded resources were not already returned earlier
+		var checkResourceAlreadyLoaded = function( loadedResources, resourceName ) {
 			_.each(
 				loadedResources,
 				_.bind(
@@ -7610,14 +7605,31 @@ define(
 					this
 				)
 			)
+		}
+
+		var resourceLoadingCompletedCallback = function( resourceBundleName, resourceName, loadedResources ) {
+			if( loadedResources === undefined ||
+				_.size( loadedResources ) === 0 ) {
+
+				throw 'Resource "' + resourceName + '" from resource bundle "' + resourceBundleName + '" is undefined or empty on loading completed.'
+			}
+
+			// making sure the loaded resources were not already returned earlier
+			checkResourceAlreadyLoaded.call( this, loadedResources, resourceName )
 
 			// add newly loaded resources to cache
 			_.extend( this.resources, loadedResources )
 
-			_.bind( updateProgress, this, this.resourceBundles[ resourceBundleName ] )()
+			updateProgress.call( this, this.resourceBundles[ resourceBundleName ] )
 		}
 
-		var createLoader = function( eventManager, host, resourceBundleName, resourceName, resourceLoadingCompletedCallback ) {
+		var resourceLoadingTimedOutCallback = function( resourceBundleName, resourceName ) {
+			Logger.debug( 'Loading "' + resourceName + '" failed with a timeout. In case the execution environment is safari this message can be ignored.' )
+
+			updateProgress.call( this, this.resourceBundles[ resourceBundleName ] )
+		}
+
+		var createLoader = function( eventManager, host, resourceBundleName, resourceName, loadingCompletedCallback, loadingTimedOutCallback ) {
 			var extension = _.last( resourceName.split( '.' ) )
 			var loaderFactory = extensionToLoaderFactory[ extension ]
 
@@ -7630,7 +7642,8 @@ define(
 				host,
 				resourceBundleName,
 				resourceName,
-				_.bind( resourceLoadingCompletedCallback, null, resourceBundleName, resourceName )
+				loadingCompletedCallback,
+				loadingTimedOutCallback
 			)
 
 			return loader
@@ -7652,7 +7665,8 @@ define(
 							this.host,
 							resourceBundle.name,
 							resourceName,
-							_.bind( resourceLoadingCompletedCallback, this )
+							_.bind( resourceLoadingCompletedCallback, this, resourceBundle.name, resourceName ),
+							_.bind( resourceLoadingTimedOutCallback, this, resourceBundle.name, resourceName )
 						)
 
 						if( loader !== undefined ) {
@@ -7706,7 +7720,7 @@ define(
 							if( resourceBundle.state !== STATE_WAITING_FOR_PROCESSING ) return
 
 							resourceBundle.state = STATE_PROCESSING
-							_.bind( startLoadingResourceBundle, this, resourceBundle )()
+							startLoadingResourceBundle.call( this, resourceBundle )
 						},
 						this
 					)

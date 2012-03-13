@@ -104,33 +104,54 @@ package Spielmeister.Spell.Platform {
 			myTimer.addEventListener( TimerEvent.TIMER_COMPLETE, callback )
 		}
 
-		public function createImageLoader( eventManager : Object, host : String, resourceBundleName : String, resourceUri : String, callback : Function ) : ImageLoader {
+		public function createImageLoader(
+			eventManager : Object,
+			host : String,
+			resourceBundleName : String,
+			resourceUri : String,
+			loadingCompletedCallback : Function,
+			timedOutCallback : Function
+		) : ImageLoader {
 			return new ImageLoader(
 				eventManager,
 				host,
 				resourceBundleName,
 				resourceUri,
-				callback
+				loadingCompletedCallback
 			)
 		}
 
-		public function createSoundLoader( eventManager : Object, host : String, resourceBundleName : String, resourceUri : String, callback : Function ) : SoundLoader {
+		public function createSoundLoader(
+			eventManager : Object,
+			host : String,
+			resourceBundleName : String,
+			resourceUri : String,
+			loadingCompletedCallback : Function,
+			timedOutCallback : Function
+		) : SoundLoader {
 			return new SoundLoader(
 				eventManager,
 				host,
 				resourceBundleName,
 				resourceUri,
-				callback
+				loadingCompletedCallback
 			)
 		}
 
-		public function createTextLoader( eventManager : Object, host : String, resourceBundleName : String, resourceUri : String, callback : Function ) : TextLoader {
+		public function createTextLoader(
+			eventManager : Object,
+			host : String,
+			resourceBundleName : String,
+			resourceUri : String,
+			loadingCompletedCallback : Function,
+			timedOutCallback : Function
+		) : TextLoader {
 			return new TextLoader(
 				eventManager,
 				host,
 				resourceBundleName,
 				resourceUri,
-				callback
+				loadingCompletedCallback
 			)
 		}
 
