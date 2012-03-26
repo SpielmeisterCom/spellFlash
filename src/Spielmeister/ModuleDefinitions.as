@@ -2282,7 +2282,8 @@ package Spielmeister {
 						// ResourceLoader
 						"RESOURCE_PROGRESS",
 						"RESOURCE_LOADING_COMPLETED",
-						"RESOURCE_ERROR"
+						"RESOURCE_ERROR",
+			            "SCREEN_RESIZED"
 					]
 
 					return _.reduce(
@@ -2452,6 +2453,239 @@ package Spielmeister {
 					return soundEmitter
 				}
 			)
+
+			define(
+				"funkysnakes/shared/config/constants",
+				function() {
+					return {
+						// viewport dimensions in logical units
+						xSize: 1024,
+						ySize: 768,
+
+						// screen size
+						minWidth : 640,
+						minHeight : 480,
+						maxWidth : 1024,
+						maxHeight : 768,
+
+						// playing field border
+						left  : 82,
+						right : 942,
+						top   : 668,
+						bottom: 100,
+
+						// ship
+						minSpeedPerSecond : 80,
+						maxSpeedPerSecond : 390,
+						speedPerSecond    : 130,
+						speedPowerupBonus : 50,
+
+						interpolationDelay: 100,
+
+						// tail
+						pastPositionsDistance: 10,
+						tailElementDistance  : 30,
+						distanceTailToShip   : 35,
+
+						// shield
+						shieldLifetime: 2.0, // in seconds
+
+						// misc
+						maxCloudTextureSize: 512
+					}
+				}
+			)
+
+			define(
+				'spell/client/renderingCoordinateTestMain',
+				[
+					'spell/shared/util/ConfigurationManager',
+					'spell/shared/util/EventManager',
+					'spell/shared/util/ResourceLoader',
+					'spell/shared/util/Events',
+					'spell/shared/util/Logger',
+					'spell/shared/util/platform/PlatformKit',
+
+					'glmatrix/mat4',
+					'glmatrix/vec3'
+				],
+				function(
+					ConfigurationManager,
+					EventManager,
+					ResourceLoader,
+					Events,
+					Logger,
+					PlatformKit,
+
+					mat4,
+					vec3
+				) {
+					'use strict'
+
+
+					Logger.setLogLevel( Logger.LOG_LEVEL_DEBUG )
+
+
+					var bufferWidth          = 320
+					var bufferHeight         = 240
+
+					var eventManager         = new EventManager()
+					var configurationManager = new ConfigurationManager( eventManager )
+					var resourceLoader       = new ResourceLoader( eventManager, configurationManager.resourceServer )
+
+					var resourceUris = [
+						'images/4.2.04_256.png'
+					]
+
+					var texture = undefined
+
+					var context = PlatformKit.RenderingFactory.createContext2d(
+						eventManager,
+						bufferWidth,
+						bufferHeight,
+						PlatformKit.RenderingFactory.BACK_END_DISPLAY_LIST,
+						'display0'
+					)
+
+					var drawTestPattern1 = function( x, y, width, height ) {
+						var halfWidth = width / 2,
+							halfHeight = height / 2
+
+						context.save()
+						{
+							context.setFillStyleColor( [ 1.0, 0.0, 0.2 ] )
+							context.fillRect( x, y + halfHeight, halfWidth, halfHeight )
+
+							context.setFillStyleColor( [ 0.8, 0.0, 0.8 ] )
+							context.fillRect( x + halfWidth, y, halfWidth, halfHeight )
+
+							context.setFillStyleColor( [ 0.5, 0.72, 0.61 ] )
+							context.fillRect( x + halfWidth * 1.5, y, halfWidth / 2, halfHeight / 2 )
+
+			//				context.setFillStyleColor( [ 0.0, 0.0, 0.82 ] )
+			//				context.fillRect( x, y, width, height )
+						}
+						context.restore()
+					}
+
+					var drawTestPattern2 = function( x, y, width, height ) {
+						context.drawTexture( texture, x, y, width, height )
+					}
+
+					var createMatrix = function() {
+						var matrix = mat4.create()
+						mat4.identity( matrix )
+
+						return matrix
+					}
+
+
+					/**
+					 * Setting up the transformation related components
+					 */
+
+					// matrices
+					var worldToView = createMatrix()
+
+					// view coordinates to normalized device coordinates
+					var aspectRatio  = bufferWidth / bufferHeight,
+						cameraWidth  = 3,
+						cameraHeight = cameraWidth / aspectRatio
+
+					mat4.ortho(
+						-cameraWidth / 2,
+						cameraWidth / 2,
+						-cameraHeight / 2,
+						cameraHeight / 2,
+						0,
+						1000,
+						worldToView
+					)
+
+					mat4.translate( worldToView, [ 0, 0, 0 ] ) // camera is located at (0/0/0); WATCH OUT: apply inverse translation
+
+
+					var drawScreenCoordinates = function() {
+						context.setClearColor( [ 0.0, 0.0, 0.0 ] )
+						context.clear()
+
+						drawTestPattern1( 0, 0, bufferWidth, bufferHeight )
+//						drawTestPattern2( 10, 10, bufferWidth, bufferHeight )
+					}
+
+					var drawViewCoordinates = function() {
+						context.setClearColor( [ 0.0, 0.0, 0.0 ] )
+						context.clear()
+
+						context.setViewMatrix( worldToView )
+
+						drawTestPattern1( 0, 0, 1, 1 )
+//						drawTestPattern2( 0, 0, 1, 1 )
+					}
+
+					var drawWorldCoordinates = function() {
+						context.setClearColor( [ 0.0, 0.0, 0.0 ] )
+						context.clear()
+
+						context.setViewMatrix( worldToView )
+
+						// object to world space transformation go here - object is located at (-1|-1) in world space
+						context.translate( [ -1.0, -1.0, 0 ] )
+
+						drawTestPattern1( 0, 0, 1, 1 )
+//						drawTestPattern2( 0, 0, 1, 1 )
+					}
+
+					var drawModelCoordinates = function() {
+						context.setClearColor( [ 0.0, 0.0, 0.0 ] )
+						context.clear()
+
+						context.setViewMatrix( worldToView )
+
+						// object to world space transformation go here - object is located at (-1|-1) in world space
+						context.translate( [ -1.0, -1.0, 0 ] )
+
+						// "appearance" transformations go here - pattern is rotated in object space
+						context.rotate( Math.PI / 30 )
+
+//						drawTestPattern1( 0, 0, 1, 1 )
+						drawTestPattern2( 0, 0, 1, 1 )
+					}
+
+
+					var runTest = function() {
+						/**
+						 * The expected result in all test cases is that the color buffer is covered completely with the test pattern.
+						 *
+						 * http://www.songho.ca/opengl/gl_transform.html
+						 */
+
+//						drawScreenCoordinates()
+
+//						drawViewCoordinates()
+
+//						drawWorldCoordinates()
+
+						drawModelCoordinates()
+					}
+
+					eventManager.subscribe(
+						[ Events.RESOURCE_LOADING_COMPLETED, 'bundle1' ],
+						function( event ) {
+							Logger.info( 'loading completed' )
+
+							texture = context.createTexture( resourceLoader.getResources()[ resourceUris[ 0 ] ] )
+
+							Logger.info( 'running test' )
+							runTest()
+						}
+					)
+
+					resourceLoader.addResourceBundle( "bundle1", resourceUris )
+					resourceLoader.start()
+				}
+			)
+
 		}
 
 
@@ -2528,7 +2762,7 @@ define(
 
 		return function() {
 			this.appearance = new appearance( { textureId: "environment/arena.png" } )
-			this.position   = new position( [ 5, 40, 0 ] )
+			this.position   = new position( [ 5, 18, 0 ] )
 			this.renderData = new renderData( { pass: 3 } )
 		}
 	}
@@ -2904,7 +3138,7 @@ define(
 		return function( args ) {
 			this.appearance = new appearance( {
 				textureId : args.headTextureId,
-				offset    : [ -29, -32 ]
+				offset    : [ -29, -28 ]
 			} )
 
 			this.shadowCaster = new shadowCaster( {
@@ -3100,42 +3334,6 @@ define(
 )
 
 define(
-	"funkysnakes/shared/config/constants",
-	function() {
-		return {
-			// canvas size
-			xSize: 1024,
-			ySize: 768,
-
-			// playing field border
-			left  : 75,
-			right : 955,
-			top   : 105,
-			bottom: 695,
-
-			// ship
-			minSpeedPerSecond : 80,
-			maxSpeedPerSecond : 390,
-			speedPerSecond    : 130,
-			speedPowerupBonus : 50,
-
-			interpolationDelay: 100,
-
-			// tail
-			pastPositionsDistance: 10,
-			tailElementDistance  : 30,
-			distanceTailToShip   : 35,
-
-			// shield
-			shieldLifetime: 2.0, // in seconds
-
-			// misc
-			maxCloudTextureSize: 512
-		}
-	}
-)
-
-define(
 	"funkysnakes/shared/config/players",
 	[
 		"funkysnakes/shared/config/constants",
@@ -3166,7 +3364,7 @@ define(
 				scoreDisplayPosition: [ 5, 20, 0 ],
 
 				startX          : constants.xSize / 4,
-				startY          : constants.ySize / 4,
+				startY          : constants.ySize / 4 * 3,
 				startOrientation: Math.PI / 2
 			},
 
@@ -3184,7 +3382,7 @@ define(
 				scoreDisplayPosition: [ 155, 20, 0 ],
 
 				startX          : constants.xSize / 4 * 3,
-				startY          : constants.ySize / 4 * 3,
+				startY          : constants.ySize / 4,
 				startOrientation: -Math.PI / 2
 			},
 
@@ -3202,7 +3400,7 @@ define(
 				scoreDisplayPosition: [ 305, 20, 0 ],
 
 				startX          : constants.xSize / 4,
-				startY          : constants.ySize / 4 * 3,
+				startY          : constants.ySize / 4,
 				startOrientation: 0
 			},
 
@@ -3220,7 +3418,7 @@ define(
 				scoreDisplayPosition: [ 455, 20, 0 ],
 
 				startX          : constants.xSize / 4 * 3,
-				startY          : constants.ySize / 4,
+				startY          : constants.ySize / 4 * 3,
 				startOrientation: Math.PI
 			}
 		]
@@ -3305,28 +3503,17 @@ define(
 )
 
 define(
-	"funkysnakes/client/components/background",
-	function() {
-		"use strict"
-
-
-		return function( args ) {
-		}
-	}
-)
-
-define(
 	"funkysnakes/client/entities/background",
 	[
 		"funkysnakes/shared/components/position",
 		"funkysnakes/client/components/appearance",
-		"funkysnakes/client/components/background",
+		"funkysnakes/client/components/renderData",
 		"spell/shared/components/sound/soundEmitter"
 	],
 	function(
 		position,
 		appearance,
-		background,
+		renderData,
 		soundEmitter
 	) {
 		"use strict"
@@ -3339,14 +3526,14 @@ define(
 				textureId: args.textureId
 			} )
 
+			this.renderData = new renderData( { pass: 1 } )
+
 			this.soundEmitter = new soundEmitter( {
-				soundId:'music/rain',
+				soundId:'music/music',
 				volume: 0.5,
 				onComplete: soundEmitter.ON_COMPLETE_LOOP,
 				background: true
 			} )
-
-			this.background = new background()
 		}
 	}
 )
@@ -3539,232 +3726,6 @@ define(
 			"lobby/game"          : game,
 			"effect"              : effect
 		}
-	}
-)
-
-define(
-	"spell/shared/util/mathConstants",
-	function(
-	) {
-		"use strict"
-
-
-		return {
-			PI2: Math.PI * 2
-		}
-	}
-)
-
-define(
-	"funkysnakes/client/systems/shieldRenderer",
-	[
-		"funkysnakes/shared/config/constants",
-		"spell/shared/util/mathConstants",
-
-		"glmatrix/vec3",
-		"underscore"
-	],
-	function(
-		constants,
-		mathConstants,
-
-		vec3,
-		_
-	) {
-		"use strict"
-
-
-		function render(
-			timeInMs,
-			textures,
-			context,
-			shieldEntities
-		) {
-			var maxShieldLifetime = constants.shieldLifetime
-			var timeInS = timeInMs / 1000
-			var scaleMagnitude = 0.04
-			var scaleFrequency = mathConstants.PI2 * 1.5
-
-			_.each( shieldEntities, function( entity ) {
-				var dynamicScaleFactor = 1 - scaleMagnitude + Math.cos( timeInS * scaleFrequency ) * scaleMagnitude
-				var dynamicAlphaFactor = 1.0
-
-				if( entity.shield.state === "activated" ) {
-					var ageInSeconds = maxShieldLifetime - entity.shield.lifetime
-
-					// ((x/-3) + 1) + (x/3) * (cos(x * 30) + 1) / 2
-					dynamicAlphaFactor = ( ( ageInSeconds / -maxShieldLifetime ) + 1 ) + ( ageInSeconds / maxShieldLifetime ) * ( Math.cos ( ageInSeconds * 30 ) + 1 ) / 2
-				}
-
-				context.save()
-				{
-					var textureId = "effects/shield.png"
-					var shieldTexture = textures[ textureId ]
-
-					context.setGlobalAlpha( dynamicAlphaFactor )
-
-					var orientation = entity.renderData.orientation
-
-					context.translate( entity.renderData.position )
-
-					context.scale( entity.appearance.scale )
-					context.scale( [ dynamicScaleFactor, dynamicScaleFactor, 0 ] )
-					context.rotate( orientation )
-					context.translate( [ -39, -39, 0 ] )
-					context.drawTexture( shieldTexture, 0, 0 )
-				}
-				context.restore()
-			} )
-		}
-
-
-		return render
-	}
-)
-
-define(
-	"funkysnakes/client/systems/render",
-	[
-		"funkysnakes/client/systems/shieldRenderer",
-		"funkysnakes/shared/config/constants",
-
-		"glmatrix/vec3",
-		"underscore"
-	],
-	function(
-		shieldRenderer,
-		constants,
-
-		vec3,
-		_
-	) {
-		"use strict"
-
-
-
-		var createEntitiesSortedByPath = function( entitiesByPass ) {
-			var passA, passB
-
-			return _.toArray( entitiesByPass ).sort(
-				function( a, b ) {
-					passA = a[ 0 ].renderData.pass
-					passB = b[ 0 ].renderData.pass
-
-					return ( passA < passB ? -1 : ( passA > passB ? 1 : 0 ) )
-				}
-			)
-		}
-
-		var texture, shadowTexture, drewShields, shadowOffset, position
-		texture       = null
-		shadowTexture = null
-		drewShields   = false
-		shadowOffset  = vec3.create( [ 3, 2, 0 ] )
-		position      = vec3.create( [ 0, 0, 0 ] )
-
-
-		function render(
-			timeInMs,
-			deltaTimeInMs,
-			textures,
-			context,
-			entitiesByPass,
-			backgroundEntities,
-			shieldEntities
-		) {
-			context.clear()
-
-			drewShields   = false
-
-
-			// draw background
-			_.each(
-				backgroundEntities,
-				function( entity ) {
-					context.save()
-					{
-						texture = textures[ entity.appearance.textureId ]
-
-						context.translate( entity.position )
-						context.drawTexture( texture, 0, 0 )
-					}
-					context.restore()
-				}
-			)
-
-			_.each(
-				createEntitiesSortedByPath( entitiesByPass ),
-				function( entities ) {
-					// draw shadows
-					_.each(
-						entities, function( entity ) {
-							if( !entity.hasOwnProperty( "shadowCaster" ) ) return
-
-
-							shadowTexture = textures[ entity.shadowCaster.textureId ]
-
-							context.save()
-							{
-								context.setGlobalAlpha( 0.85 )
-
-								vec3.reset( position )
-								vec3.add( entity.renderData.position, shadowOffset, position )
-
-								context.translate( position )
-
-								context.rotate( entity.renderData.orientation )
-
-								context.translate( entity.appearance.offset )
-
-								context.drawTexture( shadowTexture, 0, 0 )
-							}
-							context.restore()
-						}
-					)
-
-					// HACK: until animated appearances are supported shield rendering has to happen right before the "widget pass"
-					if( !drewShields &&
-						entities.length > 0 &&
-						entities[ 0 ].renderData.pass === 100 ) {
-
-						shieldRenderer( timeInMs, textures, context, shieldEntities )
-						drewShields = true
-					}
-
-					// draw textures
-					_.each(
-						entities,
-						function( entity ) {
-							context.save()
-							{
-								texture = textures[ entity.appearance.textureId ]
-
-								if( texture === undefined ) throw "The textureId '" + entity.appearance.textureId + "' could not be resolved."
-
-
-								context.translate( entity.renderData.position )
-
-								context.scale( entity.appearance.scale )
-								context.rotate( entity.renderData.orientation )
-								context.translate( entity.appearance.offset )
-
-								if( entity.appearance.opacity !== 1.0 ||
-									entity.renderData.opacity !== 1.0 ) {
-
-									context.setGlobalAlpha( entity.appearance.opacity * entity.renderData.opacity )
-								}
-
-								context.drawTexture( texture, 0, 0 )
-							}
-							context.restore()
-						}
-					)
-				}
-			)
-		}
-
-
-		return render
 	}
 )
 
@@ -4149,6 +4110,332 @@ define(
 )
 
 define(
+	"spell/shared/util/mathConstants",
+	function(
+	) {
+		"use strict"
+
+
+		return {
+			PI2: Math.PI * 2
+		}
+	}
+)
+
+define(
+	"funkysnakes/client/systems/shieldRenderer",
+	[
+		"funkysnakes/shared/config/constants",
+		"spell/shared/util/mathConstants",
+
+		"glmatrix/vec3",
+		"glmatrix/mat4",
+		"underscore"
+	],
+	function(
+		constants,
+		mathConstants,
+
+		vec3,
+		mat4,
+		_
+	) {
+		"use strict"
+
+
+		function render(
+			timeInMs,
+			textures,
+			context,
+			shieldEntities
+		) {
+			var maxShieldLifetime = constants.shieldLifetime
+			var timeInS = timeInMs / 1000
+			var scaleMagnitude = 0.04
+			var scaleFrequency = mathConstants.PI2 * 1.5
+
+			_.each( shieldEntities, function( entity ) {
+				var dynamicScaleFactor = 1 - scaleMagnitude + Math.cos( timeInS * scaleFrequency ) * scaleMagnitude,
+					dynamicAlphaFactor = 1.0,
+					entityRenderData   = entity.renderData
+
+
+				if( entity.shield.state === "activated" ) {
+					var ageInSeconds = maxShieldLifetime - entity.shield.lifetime
+
+					// ((x/-3) + 1) + (x/3) * (cos(x * 30) + 1) / 2
+					dynamicAlphaFactor = ( ( ageInSeconds / -maxShieldLifetime ) + 1 ) + ( ageInSeconds / maxShieldLifetime ) * ( Math.cos ( ageInSeconds * 30 ) + 1 ) / 2
+				}
+
+				context.save()
+				{
+					var textureId = "effects/shield.png"
+					var shieldTexture = textures[ textureId ]
+
+					context.setGlobalAlpha( dynamicAlphaFactor )
+
+					// object to world space transformation go here
+					context.translate( entityRenderData.position )
+					context.rotate( entityRenderData.orientation )
+
+					// "appearance" transformations go here
+					context.scale( [ shieldTexture.width * dynamicScaleFactor, shieldTexture.height * dynamicScaleFactor, 1 ] )
+					context.translate( [ -0.5, -0.5, 0 ] )
+
+					context.drawTexture( shieldTexture, 0, 0, 1, 1 )
+				}
+				context.restore()
+			} )
+		}
+
+
+		return render
+	}
+)
+
+define(
+	"funkysnakes/client/systems/Renderer",
+	[
+		"funkysnakes/client/systems/shieldRenderer",
+		"funkysnakes/shared/config/constants",
+		"spell/shared/util/Events",
+
+		"glmatrix/vec3",
+		"glmatrix/mat4",
+		"underscore"
+	],
+	function(
+		shieldRenderer,
+		constants,
+		Events,
+
+		vec3,
+		mat4,
+		_
+	) {
+		"use strict"
+
+
+		/**
+		 * private
+		 */
+
+		var createEntitiesSortedByPath = function( entitiesByPass ) {
+			var passA, passB
+
+			return _.toArray( entitiesByPass ).sort(
+				function( a, b ) {
+					passA = a[ 0 ].renderData.pass
+					passB = b[ 0 ].renderData.pass
+
+					return ( passA < passB ? -1 : ( passA > passB ? 1 : 0 ) )
+				}
+			)
+		}
+
+		var createWorldToViewMatrix = function( matrix, aspectRatio ) {
+			// world space to view space matrix
+			var cameraWidth  = 1024,
+				cameraHeight = 768
+
+			mat4.ortho(
+				0,
+				cameraWidth,
+				0,
+				cameraHeight,
+				0,
+				1000,
+				matrix
+			)
+
+			mat4.translate( matrix, [ 0, 0, 0 ] ) // camera is located at (0/0/0); WATCH OUT: apply inverse translation
+		}
+
+		var shadowOffset = vec3.create( [ 3, -2, 0 ] ),
+			position     = vec3.create( [ 0, 0, 0 ] )
+
+
+		var process = function(
+			timeInMs,
+			deltaTimeInMs,
+			entitiesByPass,
+			shieldEntities
+		) {
+			var context       = this.context,
+				textures      = this.textures,
+				texture       = undefined,
+				shadowTexture = undefined,
+				drewShields   = false
+
+			if( this.isScreenResized ) {
+				context.resizeColorBuffer( this.newScreenWidth, this.newScreenHeight )
+				context.viewport( 0, 0, this.newScreenWidth, this.newScreenHeight )
+
+				this.isScreenResized = false
+				this.newScreenWidth  = -1
+				this.newScreenHeight = -1
+			}
+
+			// clear color buffer
+			context.clear()
+
+
+			_.each(
+				createEntitiesSortedByPath( entitiesByPass ),
+				function( entities ) {
+					// draw shadows
+					_.each(
+						entities, function( entity ) {
+							if( !entity.hasOwnProperty( "shadowCaster" ) ) return
+
+							var entityRenderData = entity.renderData
+
+							shadowTexture = textures[ entity.shadowCaster.textureId ]
+
+							context.save()
+							{
+								context.setGlobalAlpha( 0.85 )
+
+								vec3.reset( position )
+								vec3.add( entityRenderData.position, shadowOffset, position )
+
+								// object to world space transformation go here
+								context.translate( position )
+								context.rotate( entityRenderData.orientation )
+
+								// "appearance" transformations go here
+								context.translate( entity.appearance.offset )
+								context.scale( [ shadowTexture.width, shadowTexture.height, 1 ] )
+
+								context.drawTexture( shadowTexture, 0, 0, 1, 1 )
+							}
+							context.restore()
+						}
+					)
+
+					// HACK: until animated appearances are supported shield rendering has to happen right before the "widget pass"
+					if( !drewShields &&
+						entities.length > 0 &&
+						entities[ 0 ].renderData.pass === 100 ) {
+
+						shieldRenderer( timeInMs, textures, context, shieldEntities )
+						drewShields = true
+					}
+
+					// draw textures
+					_.each(
+						entities,
+						function( entity ) {
+							context.save()
+							{
+								var entityRenderData  = entity.renderData,
+									entityAppearance  = entity.appearance,
+									renderDataOpacity = entityRenderData.opacity,
+									appearanceOpacity = entityAppearance.opacity
+
+								texture = textures[ entityAppearance.textureId ]
+
+								if( texture === undefined ) throw "The textureId '" + entityAppearance.textureId + "' could not be resolved."
+
+
+								if( appearanceOpacity !== 1.0 ||
+									renderDataOpacity !== 1.0 ) {
+
+									context.setGlobalAlpha( appearanceOpacity * renderDataOpacity )
+								}
+
+								// object to world space transformation go here
+								context.translate( entityRenderData.position )
+								context.rotate( entityRenderData.orientation )
+
+								// "appearance" transformations go here
+								context.translate( entityAppearance.offset )
+								context.scale( [ texture.width, texture.height, 1 ] )
+
+								context.drawTexture( texture, 0, 0, 1, 1 )
+							}
+							context.restore()
+						}
+					)
+
+//					// draw origins
+//					context.setFillStyleColor( [ 1.0, 0.0, 1.0 ] )
+//
+//					_.each(
+//						entities,
+//						function( entity ) {
+//							var entityRenderData = entity.renderData
+//
+//							context.save()
+//							{
+//								// object to world space transformation go here
+//								context.translate( entityRenderData.position )
+//								context.rotate( entityRenderData.orientation )
+//
+//								context.fillRect( -2, -2, 4, 4 )
+//							}
+//							context.restore()
+//						}
+//					)
+				}
+			)
+		}
+
+
+		/**
+		 * public
+		 */
+
+		var Renderer = function(
+			eventManager,
+			textures,
+			context
+		) {
+			this.textures        = textures
+			this.context         = context
+
+			// setting up the view space matrix
+			this.worldToView = mat4.create()
+			mat4.identity( this.worldToView )
+			createWorldToViewMatrix( this.worldToView, 4 / 3 )
+			context.setViewMatrix( this.worldToView )
+
+			// setting up the viewport
+			var viewportPositionX = 0,
+				viewportPositionY = 0,
+				viewportWidth = 1024,
+				viewportHeight = 768
+
+			context.viewport( viewportPositionX, viewportPositionY, viewportWidth, viewportHeight )
+
+
+			this.isScreenResized = false
+			this.newScreenWidth  = -1
+			this.newScreenHeight = -1
+
+			eventManager.subscribe(
+				[ Events.SCREEN_RESIZED ],
+				_.bind(
+					function( screenWidth, screenHeight ) {
+						this.isScreenResized = true
+						this.newScreenWidth  = screenWidth
+						this.newScreenHeight = screenHeight
+					},
+					this
+				)
+			)
+		}
+
+		Renderer.prototype = {
+			process : process
+		}
+
+
+		return Renderer
+	}
+)
+
+define(
 	"funkysnakes/client/systems/debugRenderer",
 	[
 		"funkysnakes/shared/config/constants",
@@ -4172,37 +4459,44 @@ define(
 		function render(
 			timeInMs,
 			deltaTimeInMs,
-			renderingContext,
+			context,
 			entities
 		) {
 			_.each( entities, function( entity ) {
-				renderingContext.setFillStyleColor( magicPink )
+				context.setFillStyleColor( magicPink )
 
-				// client
-				var pastPositions = entity.body.pastPositions
+				context.save()
+				{
+					context.translate( entity.position )
+					context.fillRect( -2, -2, 4, 4 )
+				}
+				context.restore()
 
-				_.each( pastPositions, function( position ) {
-					renderingContext.save()
-					{
-						renderingContext.translate( position )
-						renderingContext.fillRect( -2, -2, 4, 4 )
-					}
-					renderingContext.restore()
-				} )
+//				// client
+//				var pastPositions = entity.body.pastPositions
+//
+//				_.each( pastPositions, function( position ) {
+//					context.save()
+//					{
+//						context.translate( position )
+//						context.fillRect( -2, -2, 4, 4 )
+//					}
+//					context.restore()
+//				} )
 
 
 //				// server
-//				renderingContext.setFillStyleColor( green )
+//				context.setFillStyleColor( green )
 //
 //				var pastPositions = entity.synchronizationSlave.snapshots[ 1 ].data.entity.body.pastPositions
 //
 //				_.each( pastPositions, function( position ) {
-//					renderingContext.save()
+//					context.save()
 //					{
-//						renderingContext.translate( position )
-//						renderingContext.fillRect( -2, -2, 4, 4 )
+//						context.translate( position )
+//						context.fillRect( -2, -2, 4, 4 )
 //					}
-//					renderingContext.restore()
+//					context.restore()
 //				} )
 
 
@@ -5543,7 +5837,7 @@ define(
 		"funkysnakes/client/systems/applyPowerupEffects",
 		"funkysnakes/client/systems/fade",
 		"funkysnakes/client/systems/interpolateNetworkData",
-		"funkysnakes/client/systems/render",
+		"funkysnakes/client/systems/Renderer",
 		"funkysnakes/client/systems/debugRenderer",
 		"funkysnakes/client/systems/renderPerformanceGraph",
 		"funkysnakes/client/systems/sendInput",
@@ -5566,6 +5860,7 @@ define(
 		"spell/shared/util/entities/datastructures/singleton",
 		"spell/shared/util/entities/datastructures/sortedArray",
 		"spell/shared/util/zones/ZoneEntityManager",
+		"spell/shared/util/Events",
 		"spell/shared/util/platform/PlatformKit",
 		"spell/shared/util/platform/Types"
 	],
@@ -5575,7 +5870,7 @@ define(
 		applyPowerupEffects,
 		fade,
 		interpolateNetworkData,
-		render,
+		Renderer,
 		debugRenderer,
 		renderPerformanceGraph,
 		sendInput,
@@ -5598,6 +5893,7 @@ define(
 		singleton,
 		sortedArray,
 		ZoneEntityManager,
+		Events,
 		PlatformKit,
 		Types
 	) {
@@ -5619,7 +5915,7 @@ define(
 			entityManager.createEntity(
 				"widget",
 				[ {
-					position  : [ 5, 10, 0 ],
+					position  : [ 5, 694, 0 ],
 					textureId : textureId
 				} ]
 			)
@@ -5779,13 +6075,10 @@ define(
 
 			var timeA = Types.Time.getCurrentInMs()
 
-			render(
+			this.renderer.process(
 				timeInMs,
 				deltaTimeInMs,
-				textures,
-				renderingContext,
 				entities.executeQuery( queryIds[ "render" ][ 0 ] ).multiMap,
-				entities.executeQuery( queryIds[ "render" ][ 1 ] ).elements,
 				entities.executeQuery( queryIds[ "shieldRenderer" ][ 0 ] ).elements
 			)
 
@@ -5795,7 +6088,7 @@ define(
 //				timeInMs,
 //				deltaTimeInMs,
 //				renderingContext,
-//				entities.executeQuery( queryIds[ "debugRenderer" ][ 0 ] ).elements
+//				entities.executeQuery( queryIds[ "updateRenderData" ][ 0 ] ).elements
 //			)
 
 
@@ -5829,10 +6122,29 @@ define(
 				var eventManager  = globals.eventManager
 				var inputManager  = globals.inputManager
 
+				this.renderer = new Renderer( eventManager, globals.textures, globals.renderingContext  )
+
+				// WORKAROUND: manually triggering SCREEN_RESIZED event to force the renderer to reinitialize the canvas
+				eventManager.publish(
+					[ Events.SCREEN_RESIZED ],
+					[ globals.configurationManager.screenSize.width, globals.configurationManager.screenSize.height ]
+				)
+
 				inputManager.init()
 
 
-				entityManager.createEntity( "player", [ "player", players[ 0 ].leftKey, players[ 0 ].rightKey, players[ 0 ].useKey ] )
+//				addVisualReferenceObject( entityManager )
+
+
+				entityManager.createEntity(
+					"player",
+					[
+						"player",
+						players[ 0 ].leftKey,
+						players[ 0 ].rightKey,
+						players[ 0 ].useKey
+					]
+				)
 
 				entityManager.createEntity(
 					"background",
@@ -5846,7 +6158,7 @@ define(
 				createClouds(
 					entityManager,
 					35,
-					[ 16, 14, 0 ],
+					[ 16, -14, 0 ],
 					"cloud_dark",
 					1
 				)
@@ -5854,7 +6166,7 @@ define(
 				createClouds(
 					entityManager,
 					25,
-					[ 24, 18, 0 ],
+					[ 24, -18, 0 ],
 					"cloud_light",
 					2
 				)
@@ -5946,8 +6258,7 @@ define(
 						entities.prepareQuery( [ "fade" ] )
 					],
 					render: [
-						entities.prepareQuery( [ "position", "appearance", "renderData" ], passIdMultiMap ),
-						entities.prepareQuery( [ "background" ] )
+						entities.prepareQuery( [ "position", "appearance", "renderData" ], passIdMultiMap )
 					],
 					shieldRenderer: [
 						entities.prepareQuery( [ "shield" ] )
@@ -6072,7 +6383,6 @@ define(
 define(
 	"funkysnakes/client/zones/lobby",
 	[
-		"funkysnakes/client/systems/render",
 		"funkysnakes/client/systems/lobby/receiveGameData",
 		"funkysnakes/client/systems/lobby/updateGameData",
 
@@ -6084,7 +6394,6 @@ define(
 		"spell/shared/util/platform/PlatformKit"
 	],
 	function(
-		render,
 		receiveGameData,
 		updateGameData,
 
@@ -7059,11 +7368,13 @@ define(
 	"spell/shared/util/ConfigurationManager",
 	[
 		"spell/shared/util/platform/PlatformKit",
+		"spell/shared/util/Events",
 
 		"underscore"
 	],
 	function(
 		PlatformKit,
+		Events,
 
 		_
 	) {
@@ -7114,19 +7425,24 @@ define(
 		 * These are the platform agnostic options.
 		 *
 		 * gameserver/resourceServer - "internal" means "same as the server that the client was delivered from"; "*" matches any valid host/port combination, i.e. "acme.org:8080"
+		 *
+		 * The property "configurable" controls if the option can be overwriten by the environment configuration set up by the stage-0-loader.
 		 */
 		var validOptions = {
 			screenSize : {
-				validValues : [ '640x480', '800x600', '1024x768' ],
-				extractor   : extractScreenSize
+				validValues  : [ '640x480', '800x600', '1024x768' ],
+				configurable : false,
+				extractor    : extractScreenSize
 			},
 			gameServer : {
-				validValues : [ 'internal', '*' ],
-				extractor   : extractServer
+				validValues  : [ 'internal', '*' ],
+				configurable : true,
+				extractor    : extractServer
 			},
 			resourceServer : {
-				validValues : [ 'internal', '*' ],
-				extractor   : extractServer
+				validValues  : [ 'internal', '*' ],
+				configurable : true,
+				extractor    : extractServer
 			}
 		}
 
@@ -7147,7 +7463,26 @@ define(
 			_.defaults( defaultOptions, PlatformKit.configurationOptions.defaultOptions )
 			_.defaults( validOptions, PlatformKit.configurationOptions.validOptions )
 
+
 			var suppliedParameters = PlatformKit.getUrlParameters()
+
+			// filter out parameters that are not configurable
+			suppliedParameters = _.reduce(
+				suppliedParameters,
+				function( memo, value, key ) {
+					var option = validOptions[ key ]
+
+					if( option &&
+						!!option.configurable ) {
+
+						memo[ key ] = value
+					}
+
+					return memo
+				},
+				{}
+			)
+
 			_.defaults( suppliedParameters, defaultOptions )
 
 			var config = _.reduce(
@@ -7186,9 +7521,22 @@ define(
 		 * public
 		 */
 
-		return function() {
-			return createConfiguration( defaultOptions, validOptions )
+		var ConfigurationManager = function( eventManager ) {
+			_.extend( this, createConfiguration( defaultOptions, validOptions ) )
+
+			eventManager.subscribe(
+				[ Events.SCREEN_RESIZED ],
+				_.bind(
+					function( width, height ) {
+						this.screenSize.width  = width
+						this.screenSize.height = height
+					},
+					this
+				)
+			)
 		}
+
+		return ConfigurationManager
 	}
 )
 
@@ -7289,11 +7637,13 @@ define(
 	"spell/shared/util/EventManager",
 	[
 		"spell/shared/util/forestMultiMap",
+		"spell/shared/util/Events",
 
 		"underscore"
 	],
 	function(
 		forestMultiMap,
+		Events,
 
 		_
 	) {
@@ -7379,6 +7729,7 @@ define(
 define(
 	"spell/shared/util/InputManager",
 	[
+		"funkysnakes/shared/config/constants",
 		"spell/shared/util/input/keyCodes",
 		"spell/shared/util/math",
 		"spell/shared/util/platform/PlatformKit",
@@ -7386,6 +7737,7 @@ define(
 		"underscore"
 	],
 	function(
+		constants,
 		keyCodes,
 		math,
 		PlatformKit,
@@ -7431,6 +7783,10 @@ define(
 		}
 
 		var mouseHandler = function( event ) {
+			// scale screen space position to "world" position
+			event.position[ 0 ] *= constants.xSize
+			event.position[ 1 ] *= constants.ySize
+
 			var virtualKey = getVirtualKey( virtualKeys, event.position )
 
 			if( !virtualKey ) return true
@@ -7454,13 +7810,13 @@ define(
 		}
 
 
-		var InputManager = function( screenSizeConfig ) {
-			this.nativeInput = PlatformKit.createInput( screenSizeConfig )
+		var InputManager = function( eventManager ) {
+			this.nativeInput = PlatformKit.createInput( eventManager )
 
 			var keyWidth, keyHeight, keyPadding, keyPositionY
-			keyWidth     = Math.floor( screenSizeConfig.width / 30 ) * 10
-			keyHeight    = screenSizeConfig.height
-			keyPadding   = ( screenSizeConfig.width - ( keyWidth * 3 ) ) / 2
+			keyWidth     = Math.floor( constants.xSize / 30 ) * 10
+			keyHeight    = constants.ySize
+			keyPadding   = ( constants.xSize - ( keyWidth * 3 ) ) / 2
 			keyPositionY = 0
 
 
@@ -7850,20 +8206,28 @@ define(
 
 		// return spell entry point
 		return function( gameModule, clientMain ) {
-			var configurationManager = new ConfigurationManager()
 			var eventManager         = new EventManager()
-			var inputManager         = new InputManager( configurationManager.screenSize )
+			var configurationManager = new ConfigurationManager( eventManager )
+
+			var renderingContext = PlatformKit.RenderingFactory.createContext2d(
+				eventManager,
+				1024,
+				768,
+				configurationManager.renderingBackEnd
+			)
+
+			var inputManager         = new InputManager( eventManager )
 			var resourceLoader       = new ResourceLoader( eventManager, configurationManager.resourceServer )
 			var statisticsManager    = new StatisticsManager()
 
 			statisticsManager.init()
-            PlatformKit.initializeViewport( eventManager )
 
 			var globals = {
 				configurationManager : configurationManager,
 				eventManager         : eventManager,
 				inputManager         : inputManager,
 				inputEvents          : inputManager.getInputEvents(),
+				renderingContext     : renderingContext,
 				resourceLoader       : resourceLoader,
 				statisticsManager    : statisticsManager
 			}
@@ -7877,7 +8241,6 @@ define(
 	'funkysnakes/client/main',
 	[
 		'funkysnakes/client/entities',
-		'funkysnakes/client/systems/render',
 		'funkysnakes/client/zones/game',
 		'funkysnakes/client/zones/lobby',
 		'funkysnakes/shared/config/constants',
@@ -7899,13 +8262,13 @@ define(
 		'spell/shared/util/platform/PlatformKit',
 		'spell/shared/util/Events',
 		'spell/shared/util/Logger',
+		'spell/shared/util/math',
 		'spell/client/main',
 
 		'underscore'
 	],
 	function(
 		entities,
-		render,
 		game,
 		lobby,
 		constants,
@@ -7927,6 +8290,7 @@ define(
 		PlatformKit,
 		Events,
 		Logger,
+		math,
 		spellMain,
 
 		_
@@ -7995,14 +8359,41 @@ define(
 
 		Logger.setLogLevel( Logger.LOG_LEVEL_DEBUG )
 
+
+
+
+
+		// compute new color buffer dimensions when screen is resized
+		var onScreenResized = function( eventManager, width, height ) {
+			// clamping screen dimensions into allowed range
+			width  = math.clamp( width, constants.minWidth, constants.maxWidth )
+			height = math.clamp( height, constants.minHeight, constants.maxHeight )
+
+			var aspectRatio = width / height
+
+			// correcting aspect ratio
+			if( aspectRatio <= ( 4 / 3 ) ) {
+				height = Math.floor( width * 3 / 4 )
+
+			} else {
+				width = Math.floor( height * 4 / 3 )
+			}
+
+			eventManager.publish(
+				[ Events.SCREEN_RESIZED ],
+				[ width, height ]
+			)
+		}
+
 		var main = function( globals ) {
 			Logger.debug( 'client started' )
-
 
 			var configurationManager = globals.configurationManager
 			var resourceLoader       = globals.resourceLoader
 			var eventManager         = globals.eventManager
 			var statisticsManager    = globals.statisticsManager
+
+			PlatformKit.registerOnScreenResize( _.bind( onScreenResized, onScreenResized, eventManager ) )
 
 
 			resourceLoader.addResourceBundle( 'bundle1', resourceUris )
@@ -8035,33 +8426,10 @@ define(
 						networkProtocol
 					)
 
-					var renderingContext = PlatformKit.RenderingFactory.createContext2d(
-                        globals.eventManager,
-						globals.configurationManager.screenSize.width,
-						globals.configurationManager.screenSize.height,
-						globals.configurationManager.renderingBackEnd
-					)
 
-					/**
-					 * WORKAROUND: In order to support the reduced color buffer resolution of less than 1024x768 pixels a global scale transformation is applied.
-					 */
-					var scaleFactor = 1.0
-
-					if( globals.configurationManager.screenSize.width === 800 &&
-						globals.configurationManager.screenSize.height === 600 ) {
-
-						scaleFactor = 800 / 1024
-
-					} else if( globals.configurationManager.screenSize.width === 640 &&
-								globals.configurationManager.screenSize.height === 480 ) {
-						scaleFactor = 640 / 1024
-					}
-
-					renderingContext.scale( [ scaleFactor, scaleFactor, 1.0 ] )
-					renderingContext.save()
-
-
+					var renderingContext       = globals.renderingContext
 					var renderingContextConfig = renderingContext.getConfiguration()
+
 					Logger.debug( 'created rendering context: type=' + renderingContextConfig.type + '; size=' + renderingContextConfig.width + 'x' + renderingContextConfig.height )
 
 
@@ -8085,7 +8453,6 @@ define(
 					_.extend(
 						globals,
 						{
-							renderingContext : renderingContext,
 							connection       : connection,
 							entityManager    : entityManager,
 							eventManager     : eventManager,

@@ -43,13 +43,16 @@ package Spielmeister.Spell.Platform {
 			this.urlParameters    = urlParameters
 			this.renderingFactory = new RenderingFactoryImpl( container )
 
+			// initializing stage
+			this.stage.quality   = StageQuality.MEDIUM
+			this.stage.scaleMode = StageScaleMode.NO_SCALE
+			this.stage.align     = StageAlign.TOP_LEFT
+			this.stage.frameRate = 30
+
 			// debug "console"
 			this.debugConsole = new TextField()
 			this.debugConsole.autoSize = TextFieldAutoSize.LEFT
 			this.stage.addChild( debugConsole )
-
-			this.stage.quality   = StageQuality.MEDIUM
-			this.stage.frameRate = 30
 		}
 
 		private function logDebug( message: String ) : void {
@@ -207,7 +210,14 @@ package Spielmeister.Spell.Platform {
 			}
 		}
 
-		public function initializeViewport( eventManager : Object ) : void {}
+		public function registerOnScreenResize( callback : Function ) : void {
+			this.stage.addEventListener(
+				Event.RESIZE,
+				function( event : Event ) : void {
+					callback( event.target.stageWidth, event.target.stageHeight )
+				}
+			)
+		}
 
 		private function createHost( loaderUrl : String ) : String {
 			var pattern : RegExp = /^(?:http:\/\/)?([^\/]+)/
