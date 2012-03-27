@@ -8,6 +8,9 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 	import flash.display.Shape
 	import flash.geom.ColorTransform
 	import flash.geom.Matrix
+	import flash.geom.Matrix3D
+	import flash.geom.Vector3D
+
 	import mx.core.IChildList
 
 	import net.richardlord.coral.Matrix3d
@@ -147,9 +150,8 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		}
 
 
-		public function rotate( u : Number ) : void {
-//			currentState.matrix.prependRotation( u / Math.PI * 180, Vector3D.Z_AXIS )
-			currentState.matrix.rotate( u )
+		public function setClearColor( vec : Array ) : void {
+			clearColor = createColorValue( vec )
 		}
 
 
@@ -158,11 +160,6 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			currentState = stateStack.getTop()
 		}
 
-			// rotating the image so that it is not upside down
-			tmpMatrix.translate( dx, dy )
-			tmpMatrix.rotate( Math.PI )
-			tmpMatrix.scale( -1, 1 )
-			tmpMatrix.translate( 0, -dh )
 
 		public function restore() : void {
 			stateStack.popState()
@@ -184,11 +181,6 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			currentState.matrix.prependRotation( -u, Vector3d.Z_AXIS )
 		}
 
-			// rotating the image so that it is not upside down
-			tmpMatrix.translate( dx, dy )
-			tmpMatrix.rotate( Math.PI )
-			tmpMatrix.scale( -1, 1 )
-			tmpMatrix.translate( 0, -dh )
 
 		public function drawTexture( texture : Object, dx : Number, dy : Number, dw : Number, dh : Number ) : void {
 			tmpMatrix.assign( worldToScreen )
@@ -225,26 +217,6 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 				null,
 				true
 			)
-		}
-
-		public function transform( matrix : Array ) : void {
-		}
-
-		public function setTransform( matrix : Array ) : void {
-		}
-
-		public function setViewMatrix( matrix : Array ) : void {
-		}
-
-		public function viewport( dx : Number, dy : Number, dw : Number, dh : Number ) : void {
-			// TODO: respect viewport position and dimension
-			viewToScreen.scale( 1, -1 ) // mirroring y-axis
-			viewToScreen.translate( 0, -dh )
-		}
-
-		public function resizeColorBuffer ( width : Number, height : Number ) : void {
-//			context.canvas.width  = width
-//			context.canvas.height = height
 		}
 
 
