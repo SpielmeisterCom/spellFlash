@@ -5923,7 +5923,7 @@ define(
 
 		function addVirtualKeys( entityManager ) {
 			var marginBottom = 25
-			var positionY = 768 - 64 - marginBottom
+			var positionY = marginBottom
 
 			entityManager.createEntity(
 				"widgetThatFades",
