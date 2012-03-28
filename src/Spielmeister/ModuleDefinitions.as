@@ -7810,8 +7810,8 @@ define(
 		}
 
 
-		var InputManager = function( eventManager ) {
-			this.nativeInput = PlatformKit.createInput( eventManager )
+		var InputManager = function( eventManager, Events ) {
+			this.nativeInput = PlatformKit.createInput( eventManager, Events )
 
 			var keyWidth, keyHeight, keyPadding, keyPositionY
 			keyWidth     = Math.floor( constants.xSize / 30 ) * 10
@@ -8184,14 +8184,15 @@ define(
 )
 
 define(
-	"spell/client/main",
+	'spell/client/main',
 	[
-		"spell/shared/util/ConfigurationManager",
+		'spell/shared/util/ConfigurationManager',
 		'spell/shared/util/EventManager',
 		'spell/shared/util/InputManager',
 		'spell/shared/util/ResourceLoader',
 		'spell/shared/util/StatisticsManager',
-        'spell/shared/util/platform/PlatformKit'
+		'spell/shared/util/Events',
+		'spell/shared/util/platform/PlatformKit'
 	],
 	function(
 		ConfigurationManager,
@@ -8199,9 +8200,10 @@ define(
 		InputManager,
 		ResourceLoader,
 		StatisticsManager,
-        PlatformKit
+		Events,
+		PlatformKit
 	) {
-		"use strict"
+		'use strict'
 
 
 		// return spell entry point
@@ -8216,7 +8218,7 @@ define(
 				configurationManager.renderingBackEnd
 			)
 
-			var inputManager         = new InputManager( eventManager )
+			var inputManager         = new InputManager( eventManager, Events )
 			var resourceLoader       = new ResourceLoader( eventManager, configurationManager.resourceServer )
 			var statisticsManager    = new StatisticsManager()
 

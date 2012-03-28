@@ -200,8 +200,8 @@ package Spielmeister.Spell.Platform {
 			return JSON
 		}
 
-		public function createInput( screenSizeConfig : Object ) : Input {
-			return new Input( stage, screenSizeConfig )
+		public function createInput( eventManager : Object, Events : Object ) : Input {
+			return new Input( stage, eventManager, Events )
 		}
 
 		public function get features() : Object {
