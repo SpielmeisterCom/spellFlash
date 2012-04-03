@@ -222,6 +222,10 @@ package Spielmeister {
 			return keys
 		}
 
+		public function isFunction( object : Object ) : Boolean {
+			return getQualifiedClassName( object ) === 'Function'
+		}
+
 
 		public function runTests() : void {
 			trace( 'testing...' )

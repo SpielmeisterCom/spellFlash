@@ -12,12 +12,8 @@ package Spielmeister.Spell.Platform.Private {
 	public class Input {
 		private var stage : Stage
 		private var configurationManager : Object
-		private var mouseHandler : Function
-		private var keyHandler : Function
 		private var nativeEventMap : Object
 		private var _ : Underscore
-		private var screenWidth : Number
-		private var screenHeight : Number
 
 
 		public function Input( stage : Stage, configurationManager : Object ) {

@@ -6674,7 +6674,7 @@ define(
                                     onPress: _.bind(
                                         function() {
                                             setAction(
-                                                entities.executeQuery( this.queryIds[ "sendActorStateUpdate" ][ 0 ] ).singleton,
+                                                entities.executeQuery( this.queryIds[ "playerEntities" ][ 0 ] ).singleton,
                                                 "left",
                                                 true
                                             )
@@ -6684,7 +6684,7 @@ define(
                                     onAbort: _.bind(
                                         function() {
                                             setAction(
-                                                entities.executeQuery( this.queryIds[ "sendActorStateUpdate" ][ 0 ] ).singleton,
+                                                entities.executeQuery( this.queryIds[ "playerEntities" ][ 0 ] ).singleton,
                                                 "left",
                                                 false
                                             )
@@ -6694,7 +6694,7 @@ define(
                                     onClick: _.bind(
                                         function() {
                                             setAction(
-                                                entities.executeQuery( this.queryIds[ "sendActorStateUpdate" ][ 0 ] ).singleton,
+                                                entities.executeQuery( this.queryIds[ "playerEntities" ][ 0 ] ).singleton,
                                                 "left",
                                                 false
                                             )
@@ -6717,7 +6717,7 @@ define(
                                     onPress: _.bind(
                                         function() {
                                             setAction(
-                                                entities.executeQuery( this.queryIds[ "sendActorStateUpdate" ][ 0 ] ).singleton,
+                                                entities.executeQuery( this.queryIds[ "playerEntities" ][ 0 ] ).singleton,
                                                 "useItem",
                                                 true
                                             )
@@ -6727,7 +6727,7 @@ define(
                                     onAbort: _.bind(
                                         function() {
                                             setAction(
-                                                entities.executeQuery( this.queryIds[ "sendActorStateUpdate" ][ 0 ] ).singleton,
+                                                entities.executeQuery( this.queryIds[ "playerEntities" ][ 0 ] ).singleton,
                                                 "useItem",
                                                 false
                                             )
@@ -6737,7 +6737,7 @@ define(
                                     onClick: _.bind(
                                         function() {
                                             setAction(
-                                                entities.executeQuery( this.queryIds[ "sendActorStateUpdate" ][ 0 ] ).singleton,
+                                                entities.executeQuery( this.queryIds[ "playerEntities" ][ 0 ] ).singleton,
                                                 "useItem",
                                                 false
                                             )
@@ -6760,7 +6760,7 @@ define(
                                     onPress: _.bind(
                                         function() {
                                             setAction(
-                                                entities.executeQuery( this.queryIds[ "sendActorStateUpdate" ][ 0 ] ).singleton,
+                                                entities.executeQuery( this.queryIds[ "playerEntities" ][ 0 ] ).singleton,
                                                 "right",
                                                 true
                                             )
@@ -6770,7 +6770,7 @@ define(
                                     onAbort: _.bind(
                                         function() {
                                             setAction(
-                                                entities.executeQuery( this.queryIds[ "sendActorStateUpdate" ][ 0 ] ).singleton,
+                                                entities.executeQuery( this.queryIds[ "playerEntities" ][ 0 ] ).singleton,
                                                 "right",
                                                 false
                                             )
@@ -6780,7 +6780,7 @@ define(
                                     onClick: _.bind(
                                         function() {
                                             setAction(
-                                                entities.executeQuery( this.queryIds[ "sendActorStateUpdate" ][ 0 ] ).singleton,
+                                                entities.executeQuery( this.queryIds[ "playerEntities" ][ 0 ] ).singleton,
                                                 "right",
                                                 false
                                             )
