@@ -195,6 +195,33 @@ package Spielmeister {
 			return array.indexOf( item )
 		}
 
+		public function isString( object : Object ) : Object {
+			return getQualifiedClassName( object ) === 'String'
+		}
+
+		public function isEmpty( object : Object ) : Boolean {
+			if( isArray( object ) ||
+				isString( object ) ) {
+
+				return object.length === 0
+			}
+
+			for( var key in object ) {
+				if( has( object, key ) ) return false
+			}
+
+			return true
+		}
+
+		public function keys( object : Object ) : Array {
+			var keys : Array = []
+			for( var key in object ) {
+				if( has( object, key ) ) keys[ keys.length ] = key
+			}
+
+			return keys
+		}
+
 
 		public function runTests() : void {
 			trace( 'testing...' )
