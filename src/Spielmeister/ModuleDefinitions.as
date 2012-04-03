@@ -2822,71 +2822,6 @@ define(
 )
 
 define(
-	"spell/shared/components/input/inputDefinition",
-	function() {
-		"use strict"
-
-
-		return function( inputId, actions ) {
-			this.inputId = inputId
-			this.actions = actions
-		}
-	}
-)
-
-define(
-	"spell/shared/components/input/inputReceiver",
-	function() {
-		"use strict"
-
-
-		return function( inputId, actions ) {
-			var self = this
-
-			self.inputId                = inputId
-			self.actions                = {}
-			self.events                 = []
-			self.lastProcessedSeqNumber = -1
-			self.lastSentSeqNumber      = -1
-
-			self.lastSentEventTypeByAction = {}
-
-			actions.forEach( function( action ) {
-				self.actions[ action ] = false
-			} )
-		}
-	}
-)
-
-define(
-	"funkysnakes/client/entities/gameStarter",
-	[
-		"spell/shared/components/input/inputDefinition",
-		"spell/shared/components/input/inputReceiver",
-		"spell/shared/util/input/keyCodes"
-	],
-	function(
-		inputDefinition,
-		inputReceiver,
-		keyCodes
-	) {
-		"use strict"
-
-
-		return function() {
-			this.inputDefinition = new inputDefinition(
-				"GameStarter",
-				[
-					{ action: "start game", key: keyCodes[ "enter" ] }
-				]
-			)
-			this.inputReceiver = new inputReceiver( "GameStarter", [ "start game" ] )
-			this.gameStarter = {}
-		}
-	}
-)
-
-define(
 	"funkysnakes/client/components/networkInterpolation",
 	function() {
 		"use strict"
@@ -3097,6 +3032,35 @@ define(
 )
 
 define(
+	'spell/shared/components/actor',
+	[
+		'underscore'
+	],
+	function(
+		_
+	) {
+		'use strict'
+
+
+		return function( id, actionIds ) {
+			this.id      = id
+			this.actions = _.reduce(
+				actionIds,
+				function( memo, iter ) {
+					memo[ iter ] = {
+						executing : false,
+						needSync  : false
+					}
+
+					return memo
+				},
+				{}
+			)
+		}
+	}
+)
+
+define(
 	"funkysnakes/client/entities/head",
 	[
 		"funkysnakes/client/components/appearance",
@@ -3113,7 +3077,7 @@ define(
 		'funkysnakes/shared/components/amountTailElements',
 
 		"spell/client/components/network/synchronizationSlave",
-		"spell/shared/components/input/inputReceiver"
+		"spell/shared/components/actor"
 	],
 	function(
 		appearance,
@@ -3130,7 +3094,7 @@ define(
 		amountTailElements,
 
 		synchronizationSlave,
-		inputReceiver
+		actor
 	) {
 		"use strict"
 
@@ -3152,7 +3116,7 @@ define(
 			} )
 
 			this.activePowerups       = new activePowerups()
-			this.inputReceiver        = new inputReceiver( "player", [ "left", "right" ] )
+			this.actor                = new actor( "player", [ "left", "right" ] )
 			this.networkInterpolation = new networkInterpolation()
 			this.orientation          = new orientation( args.angle )
 			this.position             = new position( [ args.x, args.y, 0 ] )
@@ -3243,28 +3207,49 @@ define(
 )
 
 define(
+	"spell/shared/components/input/inputDefinition",
+	function() {
+		"use strict"
+
+
+		return function( actorId, mapping ) {
+			this.actorId                = actorId
+			this.keyCodeToActionMapping = mapping
+		}
+	}
+)
+
+define(
 	"funkysnakes/client/entities/player",
 	[
 		"spell/shared/components/input/inputDefinition",
-		"spell/shared/components/input/inputReceiver"
+		"spell/shared/components/actor"
 	],
 	function(
 		inputDefinition,
-		inputReceiver
+		actor
 	) {
 		"use strict"
 
 
 		return function( playerId, leftKey, rightKey, spaceKey ) {
-			this.inputDefinition = new inputDefinition(
-				playerId,
-				[
-					{ action: "left"    , key: leftKey  },
-					{ action: "right"   , key: rightKey },
-					{ action: "use item", key: spaceKey }
-				]
-			)
-			this.inputReceiver = new inputReceiver( playerId, [ "left", "right", "use item" ] )
+			var keyCodeToActionMapping = [
+				{
+					keyCode  : leftKey,
+					actionId : "left"
+				},
+				{
+					keyCode  : rightKey,
+					actionId : "right"
+				},
+				{
+					keyCode  : spaceKey,
+					actionId : "useItem"
+				}
+			]
+
+			this.inputDefinition = new inputDefinition( playerId, keyCodeToActionMapping )
+			this.actor = new actor( playerId, [ "left", "right", "useItem" ] )
 			this.player = {}
 		}
 	}
@@ -3673,11 +3658,116 @@ define(
 )
 
 define(
+	"funkysnakes/client/entities/ui/container",
+	[
+		"funkysnakes/client/components/appearance",
+		"funkysnakes/shared/components/position",
+		"funkysnakes/client/components/renderData"
+	],
+	function(
+		appearance,
+		position,
+		renderData
+	) {
+		"use strict"
+
+
+		return function( args ) {
+
+            if( !!args.textureId ) {
+                this.appearance = new appearance( {
+                    scale     : args.scale,
+                    textureId : args.textureId
+                } )
+            }
+
+			this.position = new position( args.position || [ 0, 0, 0 ] )
+
+			this.renderData = new renderData( {
+				pass    : 110,
+				opacity : ( args.opacity !== undefined ? args.opacity : 1.0 )
+			} )
+
+		}
+	}
+)
+
+define(
+	"funkysnakes/client/components/clickable",
+	function() {
+		"use strict"
+
+		return function( ) {
+            this.pressed = false
+		}
+	}
+)
+
+define(
+	"spell/client/components/boundingBox",
+	function() {
+		"use strict"
+
+		var boundingBox = function( args ) {
+            this.x        = args.x
+            this.y        = args.y
+            this.width    = args.width
+            this.height   = args.height
+		}
+
+		return boundingBox
+	}
+)
+
+define(
+	"funkysnakes/client/entities/ui/button",
+	[
+		"funkysnakes/client/components/appearance",
+		"funkysnakes/shared/components/position",
+		"funkysnakes/client/components/renderData",
+        "funkysnakes/client/components/clickable",
+        "spell/client/components/boundingBox"
+	],
+	function(
+		appearance,
+		position,
+		renderData,
+        clickable,
+        boundingBox
+	) {
+		"use strict"
+
+
+		return function( args ) {
+			this.appearance = new appearance( {
+				textureId : args.textureId
+			} )
+
+            this.boundingBox = new boundingBox( {
+                x       : args.boundingBox.x,
+                y       : args.boundingBox.y,
+                width   : args.boundingBox.width,
+                height  : args.boundingBox.height
+            } )
+
+            this.clickable = new clickable()
+
+			this.position = new position( args.position || [ 0, 0, 0 ] )
+
+			this.renderData = new renderData( {
+				pass    : 110,
+				opacity : ( args.opacity !== undefined ? args.opacity : 1.0 )
+			} )
+
+		}
+	}
+)
+
+define(
 	"funkysnakes/client/entities",
 	[
 		"funkysnakes/client/entities/arena",
 		"funkysnakes/client/entities/cloud",
-		"funkysnakes/client/entities/gameStarter",
 		"funkysnakes/client/entities/head",
 		"funkysnakes/client/entities/invincibilityPowerup",
 		"funkysnakes/client/entities/shieldPowerup",
@@ -3688,12 +3778,13 @@ define(
 		"funkysnakes/client/entities/widget",
 		"funkysnakes/client/entities/widgetThatFades",
 		"funkysnakes/shared/entities/lobby/game",
-		"funkysnakes/client/entities/effect"
+		"funkysnakes/client/entities/effect",
+        "funkysnakes/client/entities/ui/container",
+        "funkysnakes/client/entities/ui/button"
 	],
 	function(
 		arena,
 		cloud,
-		gameStarter,
 		head,
 		invincibilityPowerup,
 		shieldPowerup,
@@ -3704,7 +3795,9 @@ define(
 		widget,
 		widgetThatFades,
 		game,
-		effect
+		effect,
+        container,
+        button
 	) {
 		"use strict"
 
@@ -3712,7 +3805,6 @@ define(
 		return {
 			"arena"               : arena,
 			"cloud"               : cloud,
-			"gameStarter"         : gameStarter,
 			"head"                : head,
 			"invincibilityPowerup": invincibilityPowerup,
 			"shieldPowerup"       : shieldPowerup,
@@ -3724,7 +3816,9 @@ define(
 			"widgetThatFades"  : widgetThatFades,
 
 			"lobby/game"          : game,
-			"effect"              : effect
+			"effect"              : effect,
+            "container"           : container,
+            "button"              : button
 		}
 	}
 )
@@ -4267,15 +4361,6 @@ define(
 				shadowTexture = undefined,
 				drewShields   = false
 
-			if( this.isScreenResized ) {
-				context.resizeColorBuffer( this.newScreenWidth, this.newScreenHeight )
-				context.viewport( 0, 0, this.newScreenWidth, this.newScreenHeight )
-
-				this.isScreenResized = false
-				this.newScreenWidth  = -1
-				this.newScreenHeight = -1
-			}
-
 			// clear color buffer
 			context.clear()
 
@@ -4409,17 +4494,12 @@ define(
 			context.viewport( viewportPositionX, viewportPositionY, viewportWidth, viewportHeight )
 
 
-			this.isScreenResized = false
-			this.newScreenWidth  = -1
-			this.newScreenHeight = -1
-
 			eventManager.subscribe(
 				[ Events.SCREEN_RESIZED ],
 				_.bind(
 					function( screenWidth, screenHeight ) {
-						this.isScreenResized = true
-						this.newScreenWidth  = screenWidth
-						this.newScreenHeight = screenHeight
+						context.resizeColorBuffer( screenWidth, screenHeight )
+						context.viewport( viewportPositionX, viewportPositionY, screenWidth, screenHeight )
 					},
 					this
 				)
@@ -4893,7 +4973,7 @@ define(
 )
 
 define(
-	"funkysnakes/client/systems/sendInput",
+	"funkysnakes/client/systems/sendActorStateUpdate",
 	[
 		"underscore"
 	],
@@ -4907,19 +4987,30 @@ define(
 			connection,
 			player
 		) {
-			var inputEvents = _.filter( player.inputReceiver.events, function( event ) {
-				return event.sequenceNumber > player.inputReceiver.lastSentSeqNumber &&
-					player.inputReceiver.lastSentEventTypeByAction[ event.action ] != event.type
-			} )
+			var actions = player.actor.actions,
+				actionIds = _.keys( actions ),
+				actionStateChanges = []
 
-			_.each( inputEvents, function( event ) {
-				player.inputReceiver.lastSentEventTypeByAction[ event.action ] = event.type
-			} )
+			// This loop looks weird, but an in place update of "needSync" is required.
+			for( var i = 0, length = actionIds.length; i < length; i++ ) {
+				var actionId = actionIds[ i ],
+					action   = actions[ actionId ]
 
-			if ( inputEvents.length > 0 ) {
-				player.inputReceiver.lastSentSeqNumber = _.last( inputEvents ).sequenceNumber
-				connection.send( "input", inputEvents )
+				if( !action.needSync ) continue
+
+
+				actionStateChanges.push( {
+					id        : actionId,
+					executing : action.executing
+				} )
+
+				action.needSync = false
 			}
+
+			if( actionStateChanges.length === 0 ) return
+
+
+			connection.send( "actorStateUpdate", actionStateChanges )
 		}
 	}
 )
@@ -5152,6 +5243,107 @@ define(
 )
 
 define(
+	"spell/client/systems/uiSystem",
+	[
+        'spell/shared/util/Events',
+
+		"underscore"
+	],
+	function(
+        Events,
+
+		_
+	) {
+		"use strict"
+
+        var resetAllPressed = function( uiManager, entities ) {
+            _.each(
+                entities,
+                function( entity ) {
+                    if( entity.clickable.pressed === true ) {
+                        uiManager.triggerEvent( entity.id, "onAbort" )
+                    }
+
+                    entity.clickable.pressed = false
+                }
+            )
+        }
+
+        var processClickEvents = function( uiManager, clickEvents, entities ) {
+            _.each(
+                clickEvents,
+                function( clickEvent ) {
+
+                    var entity = _.find( entities, function( entity ) {
+
+                        var left   = entity.boundingBox.x,
+                            right  = left + entity.boundingBox.width,
+                            top    = entity.boundingBox.y,
+                            bottom = top + entity.boundingBox.height,
+                            x      = clickEvent.position[ 0 ],
+                            y      = clickEvent.position[ 1 ]
+
+                        return (
+                            right  >= x &&
+                                left   <= x &&
+                                bottom >= y &&
+                                top    <= y
+                            )
+                    } )
+
+                    if( !entity ) {
+                        if( clickEvent.type === "mouseup" ) resetAllPressed( uiManager, entities )
+
+                        return
+                    }
+
+                    if( entity.clickable.pressed === false && clickEvent.type === "mouseup" ) {
+                        resetAllPressed( uiManager, entities )
+                        return
+
+                    } else if( entity.clickable.pressed === false && clickEvent.type === "mousedown" ) {
+                        uiManager.triggerEvent( entity.id, clickEvent.type )
+                        entity.clickable.pressed = true
+
+                    } else if( entity.clickable.pressed === true && clickEvent.type === "mouseup" ) {
+                        uiManager.triggerEvent( entity.id, clickEvent.type )
+                        entity.clickable.pressed = false
+                    }
+                }
+            )
+        }
+
+		var process = function(
+            inputEvents,
+			entities
+		) {
+
+            var clickEvents = _.filter( inputEvents, function( event ) {
+                    return ( event.type === "mousedown" || event.type === "mouseup" )
+                }
+            )
+
+            if( _.isEmpty(clickEvents) ) return
+
+            processClickEvents( this.uiManager, clickEvents, entities )
+		}
+
+		var uiSystem = function(
+			uiManager
+		) {
+			this.uiManager   = uiManager
+		}
+
+        uiSystem.prototype = {
+			process : process
+		}
+
+
+		return uiSystem
+	}
+)
+
+define(
 	"spell/client/systems/sound/processSound",
 	[
 		"underscore",
@@ -5211,7 +5403,7 @@ define(
 )
 
 define(
-	"spell/client/systems/input/processLocalInput",
+	"spell/client/systems/input/processLocalKeyInput",
 	[
 		"underscore"
 	],
@@ -5224,40 +5416,40 @@ define(
 		return function(
 			timeInMs,
 			inputEvents,
-			inputDefinitions,
-			inputReceivers
+			inputDefinitionEntities,
+			actorEntities
 		) {
+			// update the actor entities action component with the player input
 			_.each( inputEvents, function( event ) {
-				_.each( inputDefinitions, function( definition ) {
-					var action = _.find( definition.inputDefinition.actions, function( action ) {
-						return action.key === event.keyCode
+				_.each( inputDefinitionEntities, function( definition ) {
+					var inputDefinition = definition.inputDefinition
+
+					var keyCodeToAction = _.find( inputDefinition.keyCodeToActionMapping, function( keyCodeToAction ) {
+						return keyCodeToAction.keyCode === event.keyCode
 					} )
 
-					if( !action ) return
+					if( !keyCodeToAction ) return
 
 
-					var type
-					if( event.type === "keydown" ) {
-						type = "start"
+					var isExecuting = ( event.type === 'keydown' )
 
-					} else if( event.type === "keyup" ) {
-						type = "stop"
-					}
+					_.each( actorEntities, function( actorEntity ) {
+						var actor = actorEntity.actor,
+							action = actor.actions[ keyCodeToAction.actionId ]
 
-					_.each( inputReceivers, function( receiver ) {
-						if ( receiver.inputReceiver.inputId === definition.inputDefinition.inputId ) {
-							receiver.inputReceiver.events.push( {
-								type          : type,
-								action        : action.action,
-								sequenceNumber: event.sequenceNumber,
-								time          : timeInMs
-							} )
+						if( !action ||
+							action.executing === isExecuting || // only changes in action state are interesting
+							actor.id !== inputDefinition.actorId ) {
+
+							return
 						}
+
+
+						action.executing = isExecuting
+						action.needSync  = true
 					} )
 				} )
 			} )
-
-			inputEvents.length = 0
 		}
 	}
 )
@@ -5346,8 +5538,7 @@ define(
 
 						var entitySnapshots = entity.synchronizationSlave.snapshots
 						snapshots.add( entitySnapshots, entityUpdate.time, {
-							lastProcessedInput: entityUpdate.lastProcessedInput,
-							entity            : updatedEntity
+							entity : updatedEntity
 						} )
 					} )
 				} )
@@ -5357,27 +5548,213 @@ define(
 )
 
 define(
-	"spell/shared/systems/input/processInputEvents",
-	[
-		"underscore"
-	],
+	"spell/client/util/ui/createUiManager",
+    [
+        "underscore"
+    ],
 	function(
-		_
-	) {
+
+        _
+        ) {
 		"use strict"
 
+        var ABSOLUTE_LAYOUT = "absolute"
+        var RELATIVE_LAYOUT = "relative"
 
-		return function( inputReceivers ) {
-			_.each( inputReceivers, function( receiver ) {
-				_.each( receiver.inputReceiver.events, function( event ) {
-					receiver.inputReceiver.actions[ event.action ] = event.type === "start"
-				} )
-				receiver.inputReceiver.events.length = 0
-			} )
-		}
+        var createUiManager = function( entityManager, constants ) {
+
+            var uiEntitiesEvents = {}
+
+            var calculateAxisMagnitude = function( layoutType, containerPos, containerVal, calculatedPos, elementPos , elementVal ) {
+
+                if( !elementVal ) {
+                    return ( layoutType === ABSOLUTE_LAYOUT ) ? containerVal : containerVal - elementPos
+                }
+
+                var availableVal = ( elementVal > containerVal && !!containerVal ) ? containerVal : elementVal
+
+
+                if( layoutType === ABSOLUTE_LAYOUT ) {
+                    var calculated = ( availableVal > containerVal && !!containerVal ) ? containerVal : availableVal
+
+                    return ( calculated + calculatedPos > containerVal + containerPos && !!containerVal ) ?
+                        containerVal - Math.abs(calculatedPos - containerPos)
+                        : calculated
+                } else {
+                    var calculated =  ( !!containerVal && elementPos ) ? ( containerVal - elementPos ) : availableVal
+
+                    return ( availableVal > calculated  ) ? calculated : availableVal
+                }
+            }
+
+
+            var calculateAxis = function( layoutType, containerPos, elementPos ) {
+
+                if( layoutType === ABSOLUTE_LAYOUT) {
+                    return ( elementPos < containerPos && !!containerPos ) ? containerPos : elementPos
+                } else {
+                    return containerPos + elementPos
+                }
+            }
+
+            var createEventsFromElement = function( element ) {
+                var eventConfig = {}
+
+                if( !!element.onPress ) {
+                    eventConfig.onPress = element.onPress
+                }
+
+                if( !!element.onClick ) {
+                    eventConfig.onClick = element.onClick
+                }
+
+                if( !!element.onAbort ) {
+                    eventConfig.onAbort = element.onAbort
+                }
+
+                return eventConfig
+            }
+
+            var triggerEvent = function( entityId, eventName ) {
+
+                var events = uiEntitiesEvents[ entityId ]
+
+                var key = ( eventName === "mousedown" ) ? "onPress" :
+                   ( eventName === "mouseup" ) ? "onClick" : eventName
+
+                if( !_.isFunction( events[ key ] ) ) return
+
+                events[key]()
+            }
+
+            var calculateBoundingBox = function( element, uiElementConfig ) {
+                var boundingBoxConfig = {}
+
+                boundingBoxConfig.x      = ( !element.boundingBox || !_.has( element.boundingBox, "x" ) )     ? uiElementConfig.position[ 0 ]  : element.boundingBox.x
+                boundingBoxConfig.y      = ( !element.boundingBox || !_.has( element.boundingBox, "y" ) )     ? uiElementConfig.position[ 1 ]  : element.boundingBox.y
+                boundingBoxConfig.width  = ( !element.boundingBox || !_.has( element.boundingBox, "width" ) ) ? uiElementConfig.dimension[ 0 ] : element.boundingBox.width
+                boundingBoxConfig.height = ( !element.boundingBox || !_.has( element.boundingBox, "height" ) ) ? uiElementConfig.dimension[ 1 ] : element.boundingBox.height
+
+                return boundingBoxConfig
+            }
+
+            var drawItem = function( element, containerDimension ) {
+
+                var xPositionContainer = containerDimension.xPositionContainer || 0
+                var yPositionContainer = containerDimension.yPositionContainer || 0
+                var widthContainer     = containerDimension.widthContainer     || 0
+                var heightContainer    = containerDimension.heightContainer    || 0
+
+                var layoutType         = ( _.has( element, "layout") && element.layout === ABSOLUTE_LAYOUT ) ? ABSOLUTE_LAYOUT : RELATIVE_LAYOUT
+
+                var xPosition = _.has( element, "xPosition" ) ? calculateAxis( layoutType, xPositionContainer, parseInt( element.xPosition ) ) : xPositionContainer
+                var yPosition = _.has( element, "yPosition" ) ? calculateAxis( layoutType, yPositionContainer, parseInt( element.yPosition ) ) : yPositionContainer
+
+                var width     = Math.abs(calculateAxisMagnitude(
+                    layoutType,
+                    xPositionContainer,
+                    widthContainer,
+                    xPosition,
+                    parseInt(element.xPosition) || 0,
+                    parseInt(element.width)     || 0
+                ))
+
+
+                var height    = Math.abs(calculateAxisMagnitude(
+                    layoutType,
+                    yPositionContainer,
+                    heightContainer,
+                    yPosition,
+                    parseInt(element.yPosition) || 0,
+                    parseInt(element.height)    || 0
+                ))
+
+                var yPositionOnCanvas = ( constants.ySize > yPosition ) ? constants.ySize - yPosition : 0
+
+                var uiElementConfig = {
+                    position       : [ xPosition, yPositionOnCanvas, 0 ],
+                    screenPosition : [ xPosition, yPosition - height , 0 ],
+                    textureId : element.textureId,
+                    scale     : [ width, height, 0 ],
+                    dimension : [ width, height, 0 ]
+                }
+
+                uiElementConfig.boundingBox = calculateBoundingBox( element, uiElementConfig )
+
+
+                var entityName = element.type
+
+                switch( element.type ) {
+
+                    case "container":
+
+                        containerDimension.xPositionContainer = xPosition
+                        containerDimension.yPositionContainer = yPosition
+                        containerDimension.widthContainer     = width
+                        containerDimension.heightContainer    = height
+
+                        entityName = "container"
+
+                        break
+                    case "panel":
+//                        var fontWriter = createFontWriter( BelloPro, resourceLoader.getResources()[ BelloPro.image ] )
+//
+//                        var rgbColor = [
+//                            1,
+//                            1,
+//                            1
+//                        ]
+//
+//                        fontWriter.drawString(
+//                            context,
+//                            element.title ,
+//                            rgbColor,
+//                            1,
+//                            xPosition,
+//                            yPosition
+//                        )
+                    default:
+
+                }
+
+                var uiEntity = entityManager.createEntity(
+                    entityName,
+                    [ uiElementConfig ]
+                )
+
+                uiEntitiesEvents[ uiEntity.id ] = createEventsFromElement( element )
+
+                return containerDimension
+            }
+
+
+            var parseObject = function( object, containerDimension ) {
+
+                var containerDimension = ( !!containerDimension ) ? _.clone(containerDimension) : {}
+
+                var newContainerDimension = drawItem( object, containerDimension )
+
+                if( _.isArray( object.items ) ) {
+
+                    _.each(
+                        object.items,
+                        function( item ) {
+                            parseObject( item, newContainerDimension )
+                        }
+                    )
+
+                }
+            }
+
+            return {
+                parseConfig  : parseObject,
+                triggerEvent : triggerEvent
+            }
+        }
+
+        return createUiManager
 	}
 )
-
 define(
 	"spell/shared/util/map",
 	[
@@ -5840,7 +6217,7 @@ define(
 		"funkysnakes/client/systems/Renderer",
 		"funkysnakes/client/systems/debugRenderer",
 		"funkysnakes/client/systems/renderPerformanceGraph",
-		"funkysnakes/client/systems/sendInput",
+		"funkysnakes/client/systems/sendActorStateUpdate",
 		"funkysnakes/client/systems/updateHoverAnimations",
 		"funkysnakes/client/systems/updateRenderData",
 		"funkysnakes/client/systems/updateScoreDisplays",
@@ -5849,11 +6226,12 @@ define(
 		"funkysnakes/shared/systems/integrateOrientation",
 		"funkysnakes/shared/systems/moveTailElements",
 
+        "spell/client/systems/uiSystem",
         "spell/client/systems/sound/processSound",
-		"spell/client/systems/input/processLocalInput",
+		"spell/client/systems/input/processLocalKeyInput",
 		"spell/client/systems/network/destroyEntities",
 		"spell/client/systems/network/processEntityUpdates",
-		"spell/shared/systems/input/processInputEvents",
+        "spell/client/util/ui/createUiManager",
 		"spell/shared/util/entities/Entities",
 		"spell/shared/util/entities/datastructures/entityMap",
 		"spell/shared/util/entities/datastructures/multiMap",
@@ -5862,7 +6240,8 @@ define(
 		"spell/shared/util/zones/ZoneEntityManager",
 		"spell/shared/util/Events",
 		"spell/shared/util/platform/PlatformKit",
-		"spell/shared/util/platform/Types"
+		"spell/shared/util/platform/Types",
+        "underscore"
 	],
 	function(
 		createClouds,
@@ -5873,7 +6252,7 @@ define(
 		Renderer,
 		debugRenderer,
 		renderPerformanceGraph,
-		sendInput,
+		sendActorStateUpdate,
 		updateHoverAnimations,
 		updateRenderData,
 		updateScoreDisplays,
@@ -5882,11 +6261,12 @@ define(
 		integrateOrientation,
 		moveTailElements,
 
+        uiSystem,
 		processSound,
-		processLocalInput,
+		processLocalKeyInput,
 		destroyEntities,
 		processEntityUpdates,
-		processInputEvents,
+        createUiManager,
 		Entities,
 		entityMap,
 		multiMap,
@@ -5895,7 +6275,9 @@ define(
 		ZoneEntityManager,
 		Events,
 		PlatformKit,
-		Types
+		Types,
+
+        _
 	) {
 		"use strict"
 
@@ -6000,26 +6382,25 @@ define(
 			var queryIds      = this.queryIds
 
 			var connection        = globals.connection
-			var renderingContext  = globals.renderingContext
-			var textures          = globals.textures
 			var inputEvents       = globals.inputEvents
 			var statisticsManager = globals.statisticsManager
 			var sounds            = globals.sounds
 
 			statisticsManager.startTick()
 
-			processLocalInput(
+			processLocalKeyInput(
 				timeInMs,
 				inputEvents,
-				entities.executeQuery( queryIds[ "processLocalInput" ][ 0 ] ).elements,
-				entities.executeQuery( queryIds[ "processLocalInput" ][ 1 ] ).elements
+				entities.executeQuery( queryIds[ "processLocalKeyInput" ][ 0 ] ).elements,
+				entities.executeQuery( queryIds[ "processLocalKeyInput" ][ 1 ] ).elements
 			)
-			sendInput(
+            this.uiSystem.process(
+                inputEvents,
+                entities.executeQuery( queryIds[ "uiEntities" ][ 0 ] ).elements
+            )
+			sendActorStateUpdate(
 				connection,
-				entities.executeQuery( queryIds[ "sendInput" ][ 0 ] ).singleton
-			)
-			processInputEvents(
-				entities.executeQuery( queryIds[ "processInputEvents" ][ 0 ] ).elements
+				entities.executeQuery( queryIds[ "playerEntities" ][ 0 ] ).singleton
 			)
 			processEntityUpdates(
 				entities.executeQuery( queryIds[ "processEntityUpdates" ][ 0 ] ).entityMap,
@@ -6072,6 +6453,9 @@ define(
 				sounds,
 				entities.executeQuery( queryIds[ "soundEmitters" ][ 0 ] ).elements
 			)
+
+
+            inputEvents.length = 0
 
 			var timeA = Types.Time.getCurrentInMs()
 
@@ -6133,9 +6517,6 @@ define(
 				inputManager.init()
 
 
-//				addVisualReferenceObject( entityManager )
-
-
 				entityManager.createEntity(
 					"player",
 					[
@@ -6189,11 +6570,6 @@ define(
 					} ]
 				)
 
-				if( PlatformKit.features.touch ) {
-					addVirtualKeys( entityManager, true )
-				}
-
-
 				entityManager.createEntity( "arena" )
 
 
@@ -6217,15 +6593,12 @@ define(
 				} )
 
 				this.queryIds = {
-					processLocalInput: [
+					processLocalKeyInput: [
 						entities.prepareQuery( [ "inputDefinition" ] ),
-						entities.prepareQuery( [ "inputReceiver"   ] )
+						entities.prepareQuery( [ "actor" ] )
 					],
-					processInputEvents: [
-						entities.prepareQuery( [ "inputReceiver" ] )
-					],
-					sendInput: [
-						entities.prepareQuery( [ "inputReceiver", "player" ], singleton )
+					playerEntities: [
+						entities.prepareQuery( [ "player", "actor" ], singleton )
 					],
 					processEntityUpdates: [
 						entities.prepareQuery( [ "synchronizationSlave" ], synchronizationIdMap )
@@ -6271,9 +6644,171 @@ define(
 					],
 					soundEmitters: [
 						entities.prepareQuery( [ "soundEmitter" ] )
-					]
+					],
+                    uiEntities: [
+                        entities.prepareQuery( [ "position", "boundingBox", "clickable" ] )
+                    ]
 				}
 
+                var setAction = function( entity, key, value ) {
+                    var action = entity.actor.actions[ key ]
+                    action.executing = value
+                    action.needSync  = true
+                }
+
+                var uiJson = {
+                    type: 'container',
+                    xPosition: 0,
+                    yPosition: 0,
+                    width : constants.xSize,
+                    height: constants.ySize,
+                    items: [
+                        {
+                            name: 'Controls',
+                            type: 'container',
+                            yPosition: 750,
+                            items: [
+                                {
+                                    type: 'button',
+                                    textureId: "arrow_left.png",
+                                    onPress: _.bind(
+                                        function() {
+                                            setAction(
+                                                entities.executeQuery( this.queryIds[ "sendActorStateUpdate" ][ 0 ] ).singleton,
+                                                "left",
+                                                true
+                                            )
+                                        },
+                                        this
+                                    ),
+                                    onAbort: _.bind(
+                                        function() {
+                                            setAction(
+                                                entities.executeQuery( this.queryIds[ "sendActorStateUpdate" ][ 0 ] ).singleton,
+                                                "left",
+                                                false
+                                            )
+                                        },
+                                        this
+                                    ),
+                                    onClick: _.bind(
+                                        function() {
+                                            setAction(
+                                                entities.executeQuery( this.queryIds[ "sendActorStateUpdate" ][ 0 ] ).singleton,
+                                                "left",
+                                                false
+                                            )
+                                        },
+                                        this
+                                    ),
+                                    xPosition: 138,
+                                    height: 64,
+                                    width: 64,
+                                    boundingBox: {
+                                        x: 0,
+                                        y: 0,
+                                        width: 340,
+                                        height: constants.ySize
+                                    }
+                                },
+                                {
+                                    type: 'button',
+                                    textureId: "space.png",
+                                    onPress: _.bind(
+                                        function() {
+                                            setAction(
+                                                entities.executeQuery( this.queryIds[ "sendActorStateUpdate" ][ 0 ] ).singleton,
+                                                "useItem",
+                                                true
+                                            )
+                                        },
+                                        this
+                                    ),
+                                    onAbort: _.bind(
+                                        function() {
+                                            setAction(
+                                                entities.executeQuery( this.queryIds[ "sendActorStateUpdate" ][ 0 ] ).singleton,
+                                                "useItem",
+                                                false
+                                            )
+                                        },
+                                        this
+                                    ),
+                                    onClick: _.bind(
+                                        function() {
+                                            setAction(
+                                                entities.executeQuery( this.queryIds[ "sendActorStateUpdate" ][ 0 ] ).singleton,
+                                                "useItem",
+                                                false
+                                            )
+                                        },
+                                        this
+                                    ),
+                                    xPosition: 384,
+                                    height: 64,
+                                    width: 256,
+                                    boundingBox: {
+                                        x: 342,
+                                        y: 0,
+                                        width: 340,
+                                        height: constants.ySize
+                                    }
+                                },
+                                {
+                                    type: 'button',
+                                    textureId: "arrow_right.png",
+                                    onPress: _.bind(
+                                        function() {
+                                            setAction(
+                                                entities.executeQuery( this.queryIds[ "sendActorStateUpdate" ][ 0 ] ).singleton,
+                                                "right",
+                                                true
+                                            )
+                                        },
+                                        this
+                                    ),
+                                    onAbort: _.bind(
+                                        function() {
+                                            setAction(
+                                                entities.executeQuery( this.queryIds[ "sendActorStateUpdate" ][ 0 ] ).singleton,
+                                                "right",
+                                                false
+                                            )
+                                        },
+                                        this
+                                    ),
+                                    onClick: _.bind(
+                                        function() {
+                                            setAction(
+                                                entities.executeQuery( this.queryIds[ "sendActorStateUpdate" ][ 0 ] ).singleton,
+                                                "right",
+                                                false
+                                            )
+                                        },
+                                        this
+                                    ),
+                                    xPosition: 822,
+                                    height: 64,
+                                    width: 64,
+                                    boundingBox: {
+                                        x: 684,
+                                        y: 0,
+                                        width: 340,
+                                        height: constants.ySize
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+
+                var uiManager = createUiManager( entityManager, constants )
+
+                this.uiSystem = new uiSystem( uiManager )
+
+                if( PlatformKit.features.touch ) {
+                    uiManager.parseConfig( uiJson )
+                }
 
 				this.renderUpdate = function( timeInMs, deltaTimeInMs ) {
 					thisZone.render( timeInMs, deltaTimeInMs, globals )
@@ -6386,8 +6921,6 @@ define(
 		"funkysnakes/client/systems/lobby/receiveGameData",
 		"funkysnakes/client/systems/lobby/updateGameData",
 
-		"spell/client/systems/input/processLocalInput",
-		"spell/shared/systems/input/processInputEvents",
 		"spell/shared/util/entities/Entities",
 		"spell/shared/util/entities/datastructures/entityMap",
 		"spell/shared/util/zones/ZoneEntityManager",
@@ -6397,8 +6930,6 @@ define(
 		receiveGameData,
 		updateGameData,
 
-		processLocalInput,
-		processInputEvents,
 		Entities,
 		entityMap,
 		ZoneEntityManager,
@@ -6446,8 +6977,6 @@ define(
 
 				this.lobby = PlatformKit.createLobby( eventManager, connection )
 				this.lobby.init()
-
-				entityManager.createEntity( "gameStarter" )
 
 
 				var gameNameMap = entityMap( function( entity ) {
@@ -7759,47 +8288,34 @@ define(
 		 */
 
 		var inputEvents = []
-		var virtualKeys = null
-
-
-		var getVirtualKey = function( virtualKeys, position ) {
-			return _.find(
-				virtualKeys,
-				function( virtualKey ) {
-					var x, y, borderLeft, borderRight, borderTop, borderBottom
-
-					x = position[ 0 ]
-					y = position[ 1 ]
-
-					borderLeft   = virtualKey.position[ 0 ]
-					borderRight  = virtualKey.position[ 0 ] + virtualKey.size[ 0 ]
-					borderTop    = virtualKey.position[ 1 ]
-					borderBottom = virtualKey.position[ 1 ] + virtualKey.size[ 1 ]
-
-					return ( math.isInInterval( x, borderLeft, borderRight ) &&
-							 math.isInInterval( y, borderTop, borderBottom ) )
-				}
-			)
-		}
 
 		var mouseHandler = function( event ) {
 			// scale screen space position to "world" position
 			event.position[ 0 ] *= constants.xSize
 			event.position[ 1 ] *= constants.ySize
 
-			var virtualKey = getVirtualKey( virtualKeys, event.position )
-
-			if( !virtualKey ) return true
-
-
 			var internalEvent = {
-				type           : ( event.type === 'mousedown' ? 'keydown' : 'keyup' ),
-				keyCode        : virtualKey.keyCode,
-				sequenceNumber : nextSequenceNumber++
+				type           : event.type,
+				sequenceNumber : nextSequenceNumber++,
+                position       : event.position
 			}
 
 			inputEvents.push( internalEvent )
 		}
+
+        var touchHandler = function( event ) {
+            // scale screen space position to "world" position
+            event.position[ 0 ] *= constants.xSize
+            event.position[ 1 ] *= constants.ySize
+
+            var internalEvent = {
+                type           : ( event.type === 'touchstart' ? 'mousedown' : 'mouseup' ),
+                sequenceNumber : nextSequenceNumber++,
+                position       : event.position
+            }
+
+            inputEvents.push( internalEvent )
+        }
 
 		var keyHandler = function( event ) {
 			inputEvents.push( {
@@ -7810,50 +8326,32 @@ define(
 		}
 
 
-		var InputManager = function( eventManager, Events ) {
-			this.nativeInput = PlatformKit.createInput( eventManager, Events )
+		var InputManager = function( configurationManager ) {
+			this.nativeInput = PlatformKit.createInput( configurationManager )
 
-			var keyWidth, keyHeight, keyPadding, keyPositionY
-			keyWidth     = Math.floor( constants.xSize / 30 ) * 10
-			keyHeight    = constants.ySize
-			keyPadding   = ( constants.xSize - ( keyWidth * 3 ) ) / 2
-			keyPositionY = 0
-
-
-			virtualKeys = [
-				{
-					keyCode  : keyCodes[ 'left arrow' ],
-					position : [ 0, keyPositionY, 0 ],
-					size     : [ keyWidth, keyHeight, 0 ]
-				},
-				{
-					keyCode  : keyCodes[ 'space' ],
-					position : [ keyWidth + keyPadding, keyPositionY, 0 ],
-					size     : [ keyWidth, keyHeight, 0 ]
-				},
-				{
-					keyCode  : keyCodes[ 'right arrow' ],
-					position : [ ( keyWidth + keyPadding ) * 2, keyPositionY, 0 ],
-					size     : [ keyWidth, keyHeight, 0 ]
-				}
-			]
 		}
 
 		InputManager.prototype = {
 			init : function() {
 				if( PlatformKit.features.touch ) {
-					this.nativeInput.setInputEventListener( 'mousedown', mouseHandler )
-					this.nativeInput.setInputEventListener( 'mouseup', mouseHandler )
+					this.nativeInput.setInputEventListener( 'touchstart', touchHandler )
+					this.nativeInput.setInputEventListener( 'touchend', touchHandler )
 				}
+
+                this.nativeInput.setInputEventListener( 'mousedown', mouseHandler )
+                this.nativeInput.setInputEventListener( 'mouseup', mouseHandler )
 
 				this.nativeInput.setInputEventListener( 'keydown', keyHandler )
 				this.nativeInput.setInputEventListener( 'keyup', keyHandler )
 			},
 			cleanUp : function() {
 				if( PlatformKit.features.touch ) {
-					this.nativeInput.removeInputEventListener( 'mousedown' )
-					this.nativeInput.removeInputEventListener( 'mouseup' )
+					this.nativeInput.removeInputEventListener( 'touchstart' )
+					this.nativeInput.removeInputEventListener( 'touchend' )
 				}
+
+                this.nativeInput.removeInputEventListener( 'mousedown' )
+                this.nativeInput.removeInputEventListener( 'mouseup' )
 
 				this.nativeInput.removeInputEventListener( 'keydown' )
 				this.nativeInput.removeInputEventListener( 'keyup' )
@@ -8218,7 +8716,7 @@ define(
 				configurationManager.renderingBackEnd
 			)
 
-			var inputManager         = new InputManager( eventManager, Events )
+			var inputManager         = new InputManager( configurationManager )
 			var resourceLoader       = new ResourceLoader( eventManager, configurationManager.resourceServer )
 			var statisticsManager    = new StatisticsManager()
 

@@ -11,7 +11,7 @@ package Spielmeister.Spell.Platform.Private {
 
 	public class Input {
 		private var stage : Stage
-		private var eventManager : Object
+		private var configurationManager : Object
 		private var mouseHandler : Function
 		private var keyHandler : Function
 		private var nativeEventMap : Object
@@ -20,9 +20,9 @@ package Spielmeister.Spell.Platform.Private {
 		private var screenHeight : Number
 
 
-		public function Input( stage : Stage, eventManager : Object, Events : Object ) {
+		public function Input( stage : Stage, configurationManager : Object ) {
 			this.stage = stage
-			this.eventManager = eventManager
+			this.configurationManager = configurationManager
 			this._ = new Underscore()
 
 			this.nativeEventMap = {
@@ -45,17 +45,6 @@ package Spielmeister.Spell.Platform.Private {
 			}
 
 			Multitouch.inputMode = MultitouchInputMode.NONE
-
-			eventManager.subscribe(
-				[ Events.SCREEN_RESIZED ],
-				_.bind(
-					function( width, height ) {
-						this.screenWidth  = width
-						this.screenHeight = height
-					},
-					this
-				)
-			)
 		}
 
 		public function setInputEventListener( eventName : String, callback : Function ) : void {
@@ -77,9 +66,11 @@ package Spielmeister.Spell.Platform.Private {
 		}
 
 		private function nativeMouseHandler( callback : Function, event : MouseEvent ) : void {
+			var screenSize : Object = this.configurationManager.screenSize
+
 			callback( {
 				type     : event.type.toLowerCase(),
-				position : [ event.stageX / this.screenWidth, event.stageY / this.screenHeight ]
+				position : [ event.stageX / screenSize.width, event.stageY / screenSize.height ]
 			} )
 		}
 
