@@ -5,6 +5,7 @@ package Spielmeister.Spell.Platform {
 	import Spielmeister.Spell.Platform.Private.Loader.*
 	import Spielmeister.Spell.Platform.Private.Lobby
 	import Spielmeister.Spell.Platform.Private.Socket.WebSocketAdapter
+	import Spielmeister.Spell.Platform.Private.Sound.SoundManager
 
 	import com.adobe.serialization.json.JSON
 
@@ -113,7 +114,8 @@ package Spielmeister.Spell.Platform {
 			resourceBundleName : String,
 			resourceUri : String,
 			loadingCompletedCallback : Function,
-			timedOutCallback : Function
+			timedOutCallback : Function,
+			... arguments
 		) : ImageLoader {
 			return new ImageLoader(
 				eventManager,
@@ -130,14 +132,16 @@ package Spielmeister.Spell.Platform {
 			resourceBundleName : String,
 			resourceUri : String,
 			loadingCompletedCallback : Function,
-			timedOutCallback : Function
+			timedOutCallback : Function,
+			soundManager : Object
 		) : SoundLoader {
 			return new SoundLoader(
 				eventManager,
 				host,
 				resourceBundleName,
 				resourceUri,
-				loadingCompletedCallback
+				loadingCompletedCallback,
+				soundManager
 			)
 		}
 
@@ -147,7 +151,8 @@ package Spielmeister.Spell.Platform {
 			resourceBundleName : String,
 			resourceUri : String,
 			loadingCompletedCallback : Function,
-			timedOutCallback : Function
+			timedOutCallback : Function,
+			... arguments
 		) : TextLoader {
 			return new TextLoader(
 				eventManager,
@@ -217,6 +222,10 @@ package Spielmeister.Spell.Platform {
 					callback( event.target.stageWidth, event.target.stageHeight )
 				}
 			)
+		}
+
+		public function createSoundManager() : SoundManager {
+			return new SoundManager()
 		}
 
 		private function createHost( loaderUrl : String ) : String {

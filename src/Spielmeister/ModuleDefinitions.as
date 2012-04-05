@@ -3693,12 +3693,23 @@ define(
 )
 
 define(
-	"funkysnakes/client/components/clickable",
+	"funkysnakes/client/components/ui/clickable",
 	function() {
 		"use strict"
 
 		return function( ) {
             this.pressed = false
+		}
+	}
+)
+
+define(
+	"funkysnakes/client/components/ui/on",
+	function() {
+		"use strict"
+
+		return function( value ) {
+            this.value = !!value
 		}
 	}
 )
@@ -3725,7 +3736,8 @@ define(
 		"funkysnakes/client/components/appearance",
 		"funkysnakes/shared/components/position",
 		"funkysnakes/client/components/renderData",
-        "funkysnakes/client/components/clickable",
+        "funkysnakes/client/components/ui/clickable",
+        "funkysnakes/client/components/ui/on",
         "spell/client/components/boundingBox"
 	],
 	function(
@@ -3733,6 +3745,7 @@ define(
 		position,
 		renderData,
         clickable,
+        on,
         boundingBox
 	) {
 		"use strict"
@@ -3750,6 +3763,10 @@ define(
                 height  : args.boundingBox.height
             } )
 
+            if( args.enableToggle !== undefined && args.enableToggle === true ) {
+                this.on = new on( args.on )
+            }
+
             this.clickable = new clickable()
 
 			this.position = new position( args.position || [ 0, 0, 0 ] )
@@ -3757,6 +3774,47 @@ define(
 			this.renderData = new renderData( {
 				pass    : 110,
 				opacity : ( args.opacity !== undefined ? args.opacity : 1.0 )
+			} )
+
+		}
+	}
+)
+
+define(
+	"funkysnakes/client/components/ui/text",
+	function() {
+		"use strict"
+
+		return function( string ) {
+            this.value = string
+		}
+	}
+)
+
+define(
+	"funkysnakes/client/entities/ui/label",
+	[
+		"funkysnakes/shared/components/position",
+		"funkysnakes/client/components/renderData",
+        "funkysnakes/client/components/ui/text"
+	],
+	function(
+		position,
+		renderData,
+        text
+	) {
+		"use strict"
+
+
+		return function( args ) {
+
+            this.text = new text( args.text )
+
+			this.position = new position( args.position || [ 0, 0, 0 ] )
+
+			this.renderData = new renderData( {
+				pass    : 150,
+				opacity : 1.0
 			} )
 
 		}
@@ -3780,7 +3838,8 @@ define(
 		"funkysnakes/shared/entities/lobby/game",
 		"funkysnakes/client/entities/effect",
         "funkysnakes/client/entities/ui/container",
-        "funkysnakes/client/entities/ui/button"
+        "funkysnakes/client/entities/ui/button",
+        "funkysnakes/client/entities/ui/label"
 	],
 	function(
 		arena,
@@ -3797,7 +3856,8 @@ define(
 		game,
 		effect,
         container,
-        button
+        button,
+        label
 	) {
 		"use strict"
 
@@ -3818,7 +3878,8 @@ define(
 			"lobby/game"          : game,
 			"effect"              : effect,
             "container"           : container,
-            "button"              : button
+            "button"              : button,
+            "label"               : label
 		}
 	}
 )
@@ -4288,11 +4349,2461 @@ define(
 )
 
 define(
+	"spell/client/util/font/fonts/BelloPro",
+	function() {
+		"use strict"
+		return {
+	"font": {
+		"info": {
+			"face": "Bello Pro",
+			"size": "32",
+			"bold": "0",
+			"italic": "0",
+			"charset": "",
+			"unicode": "1",
+			"stretchH": "100",
+			"smooth": "1",
+			"aa": "2",
+			"padding": "0,0,0,0",
+			"spacing": "1,1",
+			"outline": "0"
+		},
+		"common": {
+			"lineHeight": "32",
+			"base": "25",
+			"scaleW": "300",
+			"scaleH": "300",
+			"pages": "1",
+			"packed": "0",
+			"alphaChnl": "0",
+			"redChnl": "4",
+			"greenChnl": "4",
+			"blueChnl": "4"
+		}
+	},
+	"chars": {
+		"0": {
+			"id": "0",
+			"x": "21",
+			"y": "30",
+			"width": "0",
+			"height": "1",
+			"xoffset": "0",
+			"yoffset": "31",
+			"xadvance": "0",
+			"page": "0",
+			"chnl": "15"
+		},
+		"13": {
+			"id": "13",
+			"x": "21",
+			"y": "28",
+			"width": "1",
+			"height": "1",
+			"xoffset": "0",
+			"yoffset": "31",
+			"xadvance": "3",
+			"page": "0",
+			"chnl": "15"
+		},
+		"32": {
+			"id": "32",
+			"x": "19",
+			"y": "28",
+			"width": "1",
+			"height": "1",
+			"xoffset": "0",
+			"yoffset": "31",
+			"xadvance": "5",
+			"page": "0",
+			"chnl": "15"
+		},
+		"33": {
+			"id": "33",
+			"x": "233",
+			"y": "118",
+			"width": "8",
+			"height": "19",
+			"xoffset": "3",
+			"yoffset": "7",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"34": {
+			"id": "34",
+			"x": "52",
+			"y": "180",
+			"width": "10",
+			"height": "9",
+			"xoffset": "3",
+			"yoffset": "8",
+			"xadvance": "13",
+			"page": "0",
+			"chnl": "15"
+		},
+		"35": {
+			"id": "35",
+			"x": "81",
+			"y": "161",
+			"width": "11",
+			"height": "13",
+			"xoffset": "1",
+			"yoffset": "11",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"36": {
+			"id": "36",
+			"x": "121",
+			"y": "100",
+			"width": "9",
+			"height": "20",
+			"xoffset": "1",
+			"yoffset": "10",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"37": {
+			"id": "37",
+			"x": "66",
+			"y": "122",
+			"width": "14",
+			"height": "19",
+			"xoffset": "2",
+			"yoffset": "10",
+			"xadvance": "17",
+			"page": "0",
+			"chnl": "15"
+		},
+		"38": {
+			"id": "38",
+			"x": "38",
+			"y": "55",
+			"width": "19",
+			"height": "23",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "19",
+			"page": "0",
+			"chnl": "15"
+		},
+		"39": {
+			"id": "39",
+			"x": "295",
+			"y": "26",
+			"width": "4",
+			"height": "9",
+			"xoffset": "3",
+			"yoffset": "8",
+			"xadvance": "7",
+			"page": "0",
+			"chnl": "15"
+		},
+		"40": {
+			"id": "40",
+			"x": "94",
+			"y": "79",
+			"width": "9",
+			"height": "21",
+			"xoffset": "4",
+			"yoffset": "9",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"41": {
+			"id": "41",
+			"x": "83",
+			"y": "79",
+			"width": "10",
+			"height": "21",
+			"xoffset": "0",
+			"yoffset": "9",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"42": {
+			"id": "42",
+			"x": "191",
+			"y": "155",
+			"width": "10",
+			"height": "12",
+			"xoffset": "3",
+			"yoffset": "7",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"43": {
+			"id": "43",
+			"x": "272",
+			"y": "150",
+			"width": "10",
+			"height": "11",
+			"xoffset": "2",
+			"yoffset": "14",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"44": {
+			"id": "44",
+			"x": "82",
+			"y": "175",
+			"width": "5",
+			"height": "9",
+			"xoffset": "2",
+			"yoffset": "20",
+			"xadvance": "9",
+			"page": "0",
+			"chnl": "15"
+		},
+		"45": {
+			"id": "45",
+			"x": "129",
+			"y": "174",
+			"width": "7",
+			"height": "6",
+			"xoffset": "3",
+			"yoffset": "16",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"46": {
+			"id": "46",
+			"x": "166",
+			"y": "169",
+			"width": "5",
+			"height": "5",
+			"xoffset": "3",
+			"yoffset": "21",
+			"xadvance": "9",
+			"page": "0",
+			"chnl": "15"
+		},
+		"47": {
+			"id": "47",
+			"x": "39",
+			"y": "147",
+			"width": "11",
+			"height": "18",
+			"xoffset": "2",
+			"yoffset": "10",
+			"xadvance": "13",
+			"page": "0",
+			"chnl": "15"
+		},
+		"48": {
+			"id": "48",
+			"x": "212",
+			"y": "155",
+			"width": "9",
+			"height": "12",
+			"xoffset": "1",
+			"yoffset": "14",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"49": {
+			"id": "49",
+			"x": "30",
+			"y": "166",
+			"width": "7",
+			"height": "14",
+			"xoffset": "1",
+			"yoffset": "12",
+			"xadvance": "7",
+			"page": "0",
+			"chnl": "15"
+		},
+		"50": {
+			"id": "50",
+			"x": "12",
+			"y": "166",
+			"width": "9",
+			"height": "14",
+			"xoffset": "0",
+			"yoffset": "13",
+			"xadvance": "9",
+			"page": "0",
+			"chnl": "15"
+		},
+		"51": {
+			"id": "51",
+			"x": "97",
+			"y": "142",
+			"width": "10",
+			"height": "17",
+			"xoffset": "0",
+			"yoffset": "13",
+			"xadvance": "9",
+			"page": "0",
+			"chnl": "15"
+		},
+		"52": {
+			"id": "52",
+			"x": "108",
+			"y": "142",
+			"width": "10",
+			"height": "17",
+			"xoffset": "0",
+			"yoffset": "13",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"53": {
+			"id": "53",
+			"x": "238",
+			"y": "138",
+			"width": "9",
+			"height": "16",
+			"xoffset": "0",
+			"yoffset": "14",
+			"xadvance": "9",
+			"page": "0",
+			"chnl": "15"
+		},
+		"54": {
+			"id": "54",
+			"x": "207",
+			"y": "138",
+			"width": "10",
+			"height": "16",
+			"xoffset": "1",
+			"yoffset": "10",
+			"xadvance": "9",
+			"page": "0",
+			"chnl": "15"
+		},
+		"55": {
+			"id": "55",
+			"x": "228",
+			"y": "138",
+			"width": "9",
+			"height": "16",
+			"xoffset": "1",
+			"yoffset": "14",
+			"xadvance": "9",
+			"page": "0",
+			"chnl": "15"
+		},
+		"56": {
+			"id": "56",
+			"x": "218",
+			"y": "138",
+			"width": "9",
+			"height": "16",
+			"xoffset": "0",
+			"yoffset": "10",
+			"xadvance": "9",
+			"page": "0",
+			"chnl": "15"
+		},
+		"57": {
+			"id": "57",
+			"x": "196",
+			"y": "138",
+			"width": "10",
+			"height": "16",
+			"xoffset": "0",
+			"yoffset": "14",
+			"xadvance": "9",
+			"page": "0",
+			"chnl": "15"
+		},
+		"58": {
+			"id": "58",
+			"x": "283",
+			"y": "149",
+			"width": "6",
+			"height": "11",
+			"xoffset": "3",
+			"yoffset": "15",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"59": {
+			"id": "59",
+			"x": "22",
+			"y": "166",
+			"width": "7",
+			"height": "14",
+			"xoffset": "2",
+			"yoffset": "15",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"60": {
+			"id": "60",
+			"x": "126",
+			"y": "160",
+			"width": "9",
+			"height": "13",
+			"xoffset": "2",
+			"yoffset": "13",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"61": {
+			"id": "61",
+			"x": "41",
+			"y": "180",
+			"width": "10",
+			"height": "9",
+			"xoffset": "2",
+			"yoffset": "15",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"62": {
+			"id": "62",
+			"x": "202",
+			"y": "155",
+			"width": "9",
+			"height": "12",
+			"xoffset": "1",
+			"yoffset": "14",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"63": {
+			"id": "63",
+			"x": "190",
+			"y": "118",
+			"width": "10",
+			"height": "19",
+			"xoffset": "3",
+			"yoffset": "7",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"64": {
+			"id": "64",
+			"x": "58",
+			"y": "55",
+			"width": "19",
+			"height": "23",
+			"xoffset": "3",
+			"yoffset": "8",
+			"xadvance": "22",
+			"page": "0",
+			"chnl": "15"
+		},
+		"65": {
+			"id": "65",
+			"x": "138",
+			"y": "77",
+			"width": "23",
+			"height": "20",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "20",
+			"page": "0",
+			"chnl": "15"
+		},
+		"66": {
+			"id": "66",
+			"x": "18",
+			"y": "127",
+			"width": "16",
+			"height": "19",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "16",
+			"page": "0",
+			"chnl": "15"
+		},
+		"67": {
+			"id": "67",
+			"x": "218",
+			"y": "77",
+			"width": "13",
+			"height": "20",
+			"xoffset": "1",
+			"yoffset": "7",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"68": {
+			"id": "68",
+			"x": "225",
+			"y": "98",
+			"width": "17",
+			"height": "19",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "17",
+			"page": "0",
+			"chnl": "15"
+		},
+		"69": {
+			"id": "69",
+			"x": "203",
+			"y": "77",
+			"width": "14",
+			"height": "20",
+			"xoffset": "1",
+			"yoffset": "7",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"70": {
+			"id": "70",
+			"x": "129",
+			"y": "54",
+			"width": "19",
+			"height": "22",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "15",
+			"page": "0",
+			"chnl": "15"
+		},
+		"71": {
+			"id": "71",
+			"x": "0",
+			"y": "59",
+			"width": "13",
+			"height": "24",
+			"xoffset": "1",
+			"yoffset": "7",
+			"xadvance": "14",
+			"page": "0",
+			"chnl": "15"
+		},
+		"72": {
+			"id": "72",
+			"x": "248",
+			"y": "52",
+			"width": "23",
+			"height": "21",
+			"xoffset": "0",
+			"yoffset": "6",
+			"xadvance": "21",
+			"page": "0",
+			"chnl": "15"
+		},
+		"73": {
+			"id": "73",
+			"x": "51",
+			"y": "127",
+			"width": "14",
+			"height": "19",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"74": {
+			"id": "74",
+			"x": "78",
+			"y": "55",
+			"width": "19",
+			"height": "23",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "17",
+			"page": "0",
+			"chnl": "15"
+		},
+		"75": {
+			"id": "75",
+			"x": "0",
+			"y": "84",
+			"width": "18",
+			"height": "21",
+			"xoffset": "0",
+			"yoffset": "6",
+			"xadvance": "16",
+			"page": "0",
+			"chnl": "15"
+		},
+		"76": {
+			"id": "76",
+			"x": "149",
+			"y": "54",
+			"width": "17",
+			"height": "22",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "15",
+			"page": "0",
+			"chnl": "15"
+		},
+		"77": {
+			"id": "77",
+			"x": "220",
+			"y": "53",
+			"width": "27",
+			"height": "21",
+			"xoffset": "0",
+			"yoffset": "6",
+			"xadvance": "25",
+			"page": "0",
+			"chnl": "15"
+		},
+		"78": {
+			"id": "78",
+			"x": "162",
+			"y": "77",
+			"width": "23",
+			"height": "20",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "20",
+			"page": "0",
+			"chnl": "15"
+		},
+		"79": {
+			"id": "79",
+			"x": "261",
+			"y": "95",
+			"width": "17",
+			"height": "19",
+			"xoffset": "1",
+			"yoffset": "7",
+			"xadvance": "15",
+			"page": "0",
+			"chnl": "15"
+		},
+		"80": {
+			"id": "80",
+			"x": "167",
+			"y": "54",
+			"width": "17",
+			"height": "22",
+			"xoffset": "0",
+			"yoffset": "6",
+			"xadvance": "16",
+			"page": "0",
+			"chnl": "15"
+		},
+		"81": {
+			"id": "81",
+			"x": "110",
+			"y": "28",
+			"width": "24",
+			"height": "25",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "15",
+			"page": "0",
+			"chnl": "15"
+		},
+		"82": {
+			"id": "82",
+			"x": "186",
+			"y": "77",
+			"width": "16",
+			"height": "20",
+			"xoffset": "1",
+			"yoffset": "7",
+			"xadvance": "16",
+			"page": "0",
+			"chnl": "15"
+		},
+		"83": {
+			"id": "83",
+			"x": "232",
+			"y": "75",
+			"width": "13",
+			"height": "20",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "13",
+			"page": "0",
+			"chnl": "15"
+		},
+		"84": {
+			"id": "84",
+			"x": "272",
+			"y": "52",
+			"width": "20",
+			"height": "21",
+			"xoffset": "0",
+			"yoffset": "6",
+			"xadvance": "14",
+			"page": "0",
+			"chnl": "15"
+		},
+		"85": {
+			"id": "85",
+			"x": "35",
+			"y": "127",
+			"width": "15",
+			"height": "19",
+			"xoffset": "1",
+			"yoffset": "7",
+			"xadvance": "15",
+			"page": "0",
+			"chnl": "15"
+		},
+		"86": {
+			"id": "86",
+			"x": "243",
+			"y": "96",
+			"width": "17",
+			"height": "19",
+			"xoffset": "1",
+			"yoffset": "7",
+			"xadvance": "17",
+			"page": "0",
+			"chnl": "15"
+		},
+		"87": {
+			"id": "87",
+			"x": "159",
+			"y": "98",
+			"width": "23",
+			"height": "19",
+			"xoffset": "1",
+			"yoffset": "7",
+			"xadvance": "22",
+			"page": "0",
+			"chnl": "15"
+		},
+		"88": {
+			"id": "88",
+			"x": "204",
+			"y": "98",
+			"width": "20",
+			"height": "19",
+			"xoffset": "1",
+			"yoffset": "7",
+			"xadvance": "19",
+			"page": "0",
+			"chnl": "15"
+		},
+		"89": {
+			"id": "89",
+			"x": "245",
+			"y": "27",
+			"width": "18",
+			"height": "24",
+			"xoffset": "1",
+			"yoffset": "7",
+			"xadvance": "17",
+			"page": "0",
+			"chnl": "15"
+		},
+		"90": {
+			"id": "90",
+			"x": "153",
+			"y": "28",
+			"width": "16",
+			"height": "25",
+			"xoffset": "1",
+			"yoffset": "7",
+			"xadvance": "13",
+			"page": "0",
+			"chnl": "15"
+		},
+		"91": {
+			"id": "91",
+			"x": "209",
+			"y": "54",
+			"width": "10",
+			"height": "22",
+			"xoffset": "2",
+			"yoffset": "8",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"92": {
+			"id": "92",
+			"x": "90",
+			"y": "142",
+			"width": "6",
+			"height": "18",
+			"xoffset": "3",
+			"yoffset": "10",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"93": {
+			"id": "93",
+			"x": "71",
+			"y": "79",
+			"width": "11",
+			"height": "21",
+			"xoffset": "0",
+			"yoffset": "9",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"94": {
+			"id": "94",
+			"x": "73",
+			"y": "180",
+			"width": "8",
+			"height": "9",
+			"xoffset": "2",
+			"yoffset": "8",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"95": {
+			"id": "95",
+			"x": "157",
+			"y": "171",
+			"width": "8",
+			"height": "5",
+			"xoffset": "2",
+			"yoffset": "21",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"96": {
+			"id": "96",
+			"x": "295",
+			"y": "36",
+			"width": "4",
+			"height": "7",
+			"xoffset": "1",
+			"yoffset": "6",
+			"xadvance": "7",
+			"page": "0",
+			"chnl": "15"
+		},
+		"97": {
+			"id": "97",
+			"x": "264",
+			"y": "135",
+			"width": "12",
+			"height": "14",
+			"xoffset": "0",
+			"yoffset": "12",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"98": {
+			"id": "98",
+			"x": "223",
+			"y": "118",
+			"width": "9",
+			"height": "19",
+			"xoffset": "1",
+			"yoffset": "7",
+			"xadvance": "9",
+			"page": "0",
+			"chnl": "15"
+		},
+		"99": {
+			"id": "99",
+			"x": "93",
+			"y": "161",
+			"width": "10",
+			"height": "13",
+			"xoffset": "0",
+			"yoffset": "13",
+			"xadvance": "8",
+			"page": "0",
+			"chnl": "15"
+		},
+		"100": {
+			"id": "100",
+			"x": "212",
+			"y": "118",
+			"width": "10",
+			"height": "19",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"101": {
+			"id": "101",
+			"x": "104",
+			"y": "160",
+			"width": "10",
+			"height": "13",
+			"xoffset": "0",
+			"yoffset": "13",
+			"xadvance": "8",
+			"page": "0",
+			"chnl": "15"
+		},
+		"102": {
+			"id": "102",
+			"x": "27",
+			"y": "59",
+			"width": "10",
+			"height": "24",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "8",
+			"page": "0",
+			"chnl": "15"
+		},
+		"103": {
+			"id": "103",
+			"x": "137",
+			"y": "121",
+			"width": "13",
+			"height": "19",
+			"xoffset": "0",
+			"yoffset": "12",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"104": {
+			"id": "104",
+			"x": "123",
+			"y": "121",
+			"width": "13",
+			"height": "19",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"105": {
+			"id": "105",
+			"x": "72",
+			"y": "142",
+			"width": "8",
+			"height": "18",
+			"xoffset": "0",
+			"yoffset": "8",
+			"xadvance": "6",
+			"page": "0",
+			"chnl": "15"
+		},
+		"106": {
+			"id": "106",
+			"x": "233",
+			"y": "27",
+			"width": "11",
+			"height": "25",
+			"xoffset": "-2",
+			"yoffset": "7",
+			"xadvance": "6",
+			"page": "0",
+			"chnl": "15"
+		},
+		"107": {
+			"id": "107",
+			"x": "109",
+			"y": "122",
+			"width": "13",
+			"height": "19",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"108": {
+			"id": "108",
+			"x": "242",
+			"y": "118",
+			"width": "8",
+			"height": "19",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "6",
+			"page": "0",
+			"chnl": "15"
+		},
+		"109": {
+			"id": "109",
+			"x": "146",
+			"y": "158",
+			"width": "17",
+			"height": "12",
+			"xoffset": "1",
+			"yoffset": "14",
+			"xadvance": "16",
+			"page": "0",
+			"chnl": "15"
+		},
+		"110": {
+			"id": "110",
+			"x": "164",
+			"y": "156",
+			"width": "13",
+			"height": "12",
+			"xoffset": "1",
+			"yoffset": "14",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"111": {
+			"id": "111",
+			"x": "178",
+			"y": "155",
+			"width": "12",
+			"height": "12",
+			"xoffset": "0",
+			"yoffset": "14",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"112": {
+			"id": "112",
+			"x": "0",
+			"y": "106",
+			"width": "13",
+			"height": "20",
+			"xoffset": "0",
+			"yoffset": "12",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"113": {
+			"id": "113",
+			"x": "27",
+			"y": "106",
+			"width": "12",
+			"height": "20",
+			"xoffset": "0",
+			"yoffset": "12",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"114": {
+			"id": "114",
+			"x": "277",
+			"y": "134",
+			"width": "11",
+			"height": "14",
+			"xoffset": "0",
+			"yoffset": "12",
+			"xadvance": "9",
+			"page": "0",
+			"chnl": "15"
+		},
+		"115": {
+			"id": "115",
+			"x": "136",
+			"y": "159",
+			"width": "9",
+			"height": "13",
+			"xoffset": "0",
+			"yoffset": "13",
+			"xadvance": "9",
+			"page": "0",
+			"chnl": "15"
+		},
+		"116": {
+			"id": "116",
+			"x": "130",
+			"y": "141",
+			"width": "9",
+			"height": "17",
+			"xoffset": "1",
+			"yoffset": "9",
+			"xadvance": "8",
+			"page": "0",
+			"chnl": "15"
+		},
+		"117": {
+			"id": "117",
+			"x": "67",
+			"y": "166",
+			"width": "13",
+			"height": "13",
+			"xoffset": "0",
+			"yoffset": "13",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"118": {
+			"id": "118",
+			"x": "115",
+			"y": "160",
+			"width": "10",
+			"height": "13",
+			"xoffset": "0",
+			"yoffset": "13",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"119": {
+			"id": "119",
+			"x": "38",
+			"y": "166",
+			"width": "14",
+			"height": "13",
+			"xoffset": "0",
+			"yoffset": "13",
+			"xadvance": "14",
+			"page": "0",
+			"chnl": "15"
+		},
+		"120": {
+			"id": "120",
+			"x": "53",
+			"y": "166",
+			"width": "13",
+			"height": "13",
+			"xoffset": "0",
+			"yoffset": "13",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"121": {
+			"id": "121",
+			"x": "284",
+			"y": "115",
+			"width": "12",
+			"height": "18",
+			"xoffset": "1",
+			"yoffset": "13",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"122": {
+			"id": "122",
+			"x": "289",
+			"y": "134",
+			"width": "10",
+			"height": "14",
+			"xoffset": "0",
+			"yoffset": "13",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"123": {
+			"id": "123",
+			"x": "197",
+			"y": "54",
+			"width": "11",
+			"height": "22",
+			"xoffset": "3",
+			"yoffset": "8",
+			"xadvance": "13",
+			"page": "0",
+			"chnl": "15"
+		},
+		"124": {
+			"id": "124",
+			"x": "104",
+			"y": "79",
+			"width": "6",
+			"height": "21",
+			"xoffset": "4",
+			"yoffset": "8",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"125": {
+			"id": "125",
+			"x": "185",
+			"y": "54",
+			"width": "11",
+			"height": "22",
+			"xoffset": "1",
+			"yoffset": "8",
+			"xadvance": "13",
+			"page": "0",
+			"chnl": "15"
+		},
+		"126": {
+			"id": "126",
+			"x": "110",
+			"y": "174",
+			"width": "9",
+			"height": "6",
+			"xoffset": "2",
+			"yoffset": "8",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"160": {
+			"id": "160",
+			"x": "19",
+			"y": "30",
+			"width": "1",
+			"height": "1",
+			"xoffset": "0",
+			"yoffset": "31",
+			"xadvance": "5",
+			"page": "0",
+			"chnl": "15"
+		},
+		"161": {
+			"id": "161",
+			"x": "81",
+			"y": "142",
+			"width": "8",
+			"height": "18",
+			"xoffset": "0",
+			"yoffset": "14",
+			"xadvance": "8",
+			"page": "0",
+			"chnl": "15"
+		},
+		"162": {
+			"id": "162",
+			"x": "111",
+			"y": "100",
+			"width": "9",
+			"height": "20",
+			"xoffset": "1",
+			"yoffset": "10",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"163": {
+			"id": "163",
+			"x": "184",
+			"y": "138",
+			"width": "11",
+			"height": "16",
+			"xoffset": "1",
+			"yoffset": "12",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"164": {
+			"id": "164",
+			"x": "0",
+			"y": "166",
+			"width": "11",
+			"height": "14",
+			"xoffset": "1",
+			"yoffset": "12",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"165": {
+			"id": "165",
+			"x": "26",
+			"y": "147",
+			"width": "12",
+			"height": "18",
+			"xoffset": "0",
+			"yoffset": "12",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"166": {
+			"id": "166",
+			"x": "293",
+			"y": "52",
+			"width": "6",
+			"height": "21",
+			"xoffset": "4",
+			"yoffset": "8",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"167": {
+			"id": "167",
+			"x": "288",
+			"y": "74",
+			"width": "11",
+			"height": "20",
+			"xoffset": "1",
+			"yoffset": "9",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"168": {
+			"id": "168",
+			"x": "120",
+			"y": "174",
+			"width": "8",
+			"height": "6",
+			"xoffset": "2",
+			"yoffset": "7",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"169": {
+			"id": "169",
+			"x": "140",
+			"y": "141",
+			"width": "15",
+			"height": "16",
+			"xoffset": "1",
+			"yoffset": "11",
+			"xadvance": "18",
+			"page": "0",
+			"chnl": "15"
+		},
+		"170": {
+			"id": "170",
+			"x": "0",
+			"y": "181",
+			"width": "10",
+			"height": "10",
+			"xoffset": "2",
+			"yoffset": "11",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"171": {
+			"id": "171",
+			"x": "245",
+			"y": "155",
+			"width": "14",
+			"height": "11",
+			"xoffset": "4",
+			"yoffset": "14",
+			"xadvance": "20",
+			"page": "0",
+			"chnl": "15"
+		},
+		"172": {
+			"id": "172",
+			"x": "145",
+			"y": "173",
+			"width": "11",
+			"height": "5",
+			"xoffset": "2",
+			"yoffset": "17",
+			"xadvance": "17",
+			"page": "0",
+			"chnl": "15"
+		},
+		"173": {
+			"id": "173",
+			"x": "137",
+			"y": "173",
+			"width": "7",
+			"height": "6",
+			"xoffset": "3",
+			"yoffset": "16",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"174": {
+			"id": "174",
+			"x": "156",
+			"y": "139",
+			"width": "15",
+			"height": "16",
+			"xoffset": "4",
+			"yoffset": "6",
+			"xadvance": "19",
+			"page": "0",
+			"chnl": "15"
+		},
+		"175": {
+			"id": "175",
+			"x": "53",
+			"y": "122",
+			"width": "8",
+			"height": "4",
+			"xoffset": "2",
+			"yoffset": "8",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"176": {
+			"id": "176",
+			"x": "88",
+			"y": "175",
+			"width": "7",
+			"height": "7",
+			"xoffset": "1",
+			"yoffset": "8",
+			"xadvance": "9",
+			"page": "0",
+			"chnl": "15"
+		},
+		"177": {
+			"id": "177",
+			"x": "260",
+			"y": "153",
+			"width": "11",
+			"height": "11",
+			"xoffset": "1",
+			"yoffset": "14",
+			"xadvance": "13",
+			"page": "0",
+			"chnl": "15"
+		},
+		"178": {
+			"id": "178",
+			"x": "21",
+			"y": "181",
+			"width": "7",
+			"height": "10",
+			"xoffset": "1",
+			"yoffset": "11",
+			"xadvance": "8",
+			"page": "0",
+			"chnl": "15"
+		},
+		"179": {
+			"id": "179",
+			"x": "222",
+			"y": "155",
+			"width": "7",
+			"height": "12",
+			"xoffset": "1",
+			"yoffset": "11",
+			"xadvance": "8",
+			"page": "0",
+			"chnl": "15"
+		},
+		"180": {
+			"id": "180",
+			"x": "96",
+			"y": "175",
+			"width": "6",
+			"height": "7",
+			"xoffset": "1",
+			"yoffset": "6",
+			"xadvance": "7",
+			"page": "0",
+			"chnl": "15"
+		},
+		"181": {
+			"id": "181",
+			"x": "172",
+			"y": "138",
+			"width": "11",
+			"height": "16",
+			"xoffset": "2",
+			"yoffset": "14",
+			"xadvance": "14",
+			"page": "0",
+			"chnl": "15"
+		},
+		"182": {
+			"id": "182",
+			"x": "269",
+			"y": "115",
+			"width": "14",
+			"height": "18",
+			"xoffset": "1",
+			"yoffset": "13",
+			"xadvance": "17",
+			"page": "0",
+			"chnl": "15"
+		},
+		"183": {
+			"id": "183",
+			"x": "295",
+			"y": "44",
+			"width": "4",
+			"height": "5",
+			"xoffset": "4",
+			"yoffset": "17",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"184": {
+			"id": "184",
+			"x": "103",
+			"y": "175",
+			"width": "6",
+			"height": "7",
+			"xoffset": "2",
+			"yoffset": "24",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"185": {
+			"id": "185",
+			"x": "290",
+			"y": "149",
+			"width": "5",
+			"height": "11",
+			"xoffset": "2",
+			"yoffset": "10",
+			"xadvance": "6",
+			"page": "0",
+			"chnl": "15"
+		},
+		"186": {
+			"id": "186",
+			"x": "63",
+			"y": "180",
+			"width": "9",
+			"height": "9",
+			"xoffset": "2",
+			"yoffset": "11",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"187": {
+			"id": "187",
+			"x": "230",
+			"y": "155",
+			"width": "14",
+			"height": "11",
+			"xoffset": "4",
+			"yoffset": "14",
+			"xadvance": "20",
+			"page": "0",
+			"chnl": "15"
+		},
+		"188": {
+			"id": "188",
+			"x": "0",
+			"y": "127",
+			"width": "17",
+			"height": "19",
+			"xoffset": "2",
+			"yoffset": "10",
+			"xadvance": "19",
+			"page": "0",
+			"chnl": "15"
+		},
+		"189": {
+			"id": "189",
+			"x": "251",
+			"y": "116",
+			"width": "17",
+			"height": "18",
+			"xoffset": "2",
+			"yoffset": "10",
+			"xadvance": "20",
+			"page": "0",
+			"chnl": "15"
+		},
+		"190": {
+			"id": "190",
+			"x": "183",
+			"y": "98",
+			"width": "20",
+			"height": "19",
+			"xoffset": "1",
+			"yoffset": "10",
+			"xadvance": "22",
+			"page": "0",
+			"chnl": "15"
+		},
+		"191": {
+			"id": "191",
+			"x": "51",
+			"y": "147",
+			"width": "10",
+			"height": "18",
+			"xoffset": "0",
+			"yoffset": "14",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"192": {
+			"id": "192",
+			"x": "140",
+			"y": "0",
+			"width": "23",
+			"height": "27",
+			"xoffset": "0",
+			"yoffset": "0",
+			"xadvance": "20",
+			"page": "0",
+			"chnl": "15"
+		},
+		"193": {
+			"id": "193",
+			"x": "116",
+			"y": "0",
+			"width": "23",
+			"height": "27",
+			"xoffset": "0",
+			"yoffset": "0",
+			"xadvance": "20",
+			"page": "0",
+			"chnl": "15"
+		},
+		"194": {
+			"id": "194",
+			"x": "44",
+			"y": "0",
+			"width": "23",
+			"height": "27",
+			"xoffset": "0",
+			"yoffset": "0",
+			"xadvance": "20",
+			"page": "0",
+			"chnl": "15"
+		},
+		"195": {
+			"id": "195",
+			"x": "19",
+			"y": "0",
+			"width": "24",
+			"height": "27",
+			"xoffset": "0",
+			"yoffset": "0",
+			"xadvance": "20",
+			"page": "0",
+			"chnl": "15"
+		},
+		"196": {
+			"id": "196",
+			"x": "209",
+			"y": "0",
+			"width": "23",
+			"height": "26",
+			"xoffset": "0",
+			"yoffset": "1",
+			"xadvance": "20",
+			"page": "0",
+			"chnl": "15"
+		},
+		"197": {
+			"id": "197",
+			"x": "68",
+			"y": "0",
+			"width": "23",
+			"height": "27",
+			"xoffset": "0",
+			"yoffset": "0",
+			"xadvance": "20",
+			"page": "0",
+			"chnl": "15"
+		},
+		"198": {
+			"id": "198",
+			"x": "111",
+			"y": "79",
+			"width": "26",
+			"height": "20",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "24",
+			"page": "0",
+			"chnl": "15"
+		},
+		"199": {
+			"id": "199",
+			"x": "281",
+			"y": "27",
+			"width": "13",
+			"height": "24",
+			"xoffset": "1",
+			"yoffset": "7",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"200": {
+			"id": "200",
+			"x": "194",
+			"y": "0",
+			"width": "14",
+			"height": "27",
+			"xoffset": "1",
+			"yoffset": "0",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"201": {
+			"id": "201",
+			"x": "179",
+			"y": "0",
+			"width": "14",
+			"height": "27",
+			"xoffset": "1",
+			"yoffset": "0",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"202": {
+			"id": "202",
+			"x": "164",
+			"y": "0",
+			"width": "14",
+			"height": "27",
+			"xoffset": "1",
+			"yoffset": "0",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"203": {
+			"id": "203",
+			"x": "50",
+			"y": "28",
+			"width": "14",
+			"height": "26",
+			"xoffset": "1",
+			"yoffset": "1",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"204": {
+			"id": "204",
+			"x": "95",
+			"y": "28",
+			"width": "14",
+			"height": "26",
+			"xoffset": "0",
+			"yoffset": "0",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"205": {
+			"id": "205",
+			"x": "80",
+			"y": "28",
+			"width": "14",
+			"height": "26",
+			"xoffset": "0",
+			"yoffset": "0",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"206": {
+			"id": "206",
+			"x": "65",
+			"y": "28",
+			"width": "14",
+			"height": "26",
+			"xoffset": "0",
+			"yoffset": "0",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"207": {
+			"id": "207",
+			"x": "218",
+			"y": "27",
+			"width": "14",
+			"height": "25",
+			"xoffset": "0",
+			"yoffset": "1",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"208": {
+			"id": "208",
+			"x": "279",
+			"y": "95",
+			"width": "17",
+			"height": "19",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "17",
+			"page": "0",
+			"chnl": "15"
+		},
+		"209": {
+			"id": "209",
+			"x": "92",
+			"y": "0",
+			"width": "23",
+			"height": "27",
+			"xoffset": "0",
+			"yoffset": "0",
+			"xadvance": "20",
+			"page": "0",
+			"chnl": "15"
+		},
+		"210": {
+			"id": "210",
+			"x": "0",
+			"y": "32",
+			"width": "17",
+			"height": "26",
+			"xoffset": "1",
+			"yoffset": "0",
+			"xadvance": "15",
+			"page": "0",
+			"chnl": "15"
+		},
+		"211": {
+			"id": "211",
+			"x": "269",
+			"y": "0",
+			"width": "17",
+			"height": "26",
+			"xoffset": "1",
+			"yoffset": "0",
+			"xadvance": "15",
+			"page": "0",
+			"chnl": "15"
+		},
+		"212": {
+			"id": "212",
+			"x": "251",
+			"y": "0",
+			"width": "17",
+			"height": "26",
+			"xoffset": "1",
+			"yoffset": "0",
+			"xadvance": "15",
+			"page": "0",
+			"chnl": "15"
+		},
+		"213": {
+			"id": "213",
+			"x": "233",
+			"y": "0",
+			"width": "17",
+			"height": "26",
+			"xoffset": "1",
+			"yoffset": "0",
+			"xadvance": "15",
+			"page": "0",
+			"chnl": "15"
+		},
+		"214": {
+			"id": "214",
+			"x": "135",
+			"y": "28",
+			"width": "17",
+			"height": "25",
+			"xoffset": "1",
+			"yoffset": "1",
+			"xadvance": "15",
+			"page": "0",
+			"chnl": "15"
+		},
+		"215": {
+			"id": "215",
+			"x": "11",
+			"y": "181",
+			"width": "9",
+			"height": "10",
+			"xoffset": "2",
+			"yoffset": "15",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"216": {
+			"id": "216",
+			"x": "18",
+			"y": "32",
+			"width": "15",
+			"height": "26",
+			"xoffset": "1",
+			"yoffset": "4",
+			"xadvance": "16",
+			"page": "0",
+			"chnl": "15"
+		},
+		"217": {
+			"id": "217",
+			"x": "186",
+			"y": "28",
+			"width": "15",
+			"height": "25",
+			"xoffset": "1",
+			"yoffset": "1",
+			"xadvance": "15",
+			"page": "0",
+			"chnl": "15"
+		},
+		"218": {
+			"id": "218",
+			"x": "170",
+			"y": "28",
+			"width": "15",
+			"height": "25",
+			"xoffset": "1",
+			"yoffset": "1",
+			"xadvance": "15",
+			"page": "0",
+			"chnl": "15"
+		},
+		"219": {
+			"id": "219",
+			"x": "34",
+			"y": "28",
+			"width": "15",
+			"height": "26",
+			"xoffset": "1",
+			"yoffset": "0",
+			"xadvance": "15",
+			"page": "0",
+			"chnl": "15"
+		},
+		"220": {
+			"id": "220",
+			"x": "202",
+			"y": "28",
+			"width": "15",
+			"height": "25",
+			"xoffset": "1",
+			"yoffset": "1",
+			"xadvance": "15",
+			"page": "0",
+			"chnl": "15"
+		},
+		"221": {
+			"id": "221",
+			"x": "0",
+			"y": "0",
+			"width": "18",
+			"height": "31",
+			"xoffset": "1",
+			"yoffset": "0",
+			"xadvance": "17",
+			"page": "0",
+			"chnl": "15"
+		},
+		"222": {
+			"id": "222",
+			"x": "264",
+			"y": "27",
+			"width": "16",
+			"height": "24",
+			"xoffset": "0",
+			"yoffset": "4",
+			"xadvance": "16",
+			"page": "0",
+			"chnl": "15"
+		},
+		"223": {
+			"id": "223",
+			"x": "98",
+			"y": "55",
+			"width": "16",
+			"height": "23",
+			"xoffset": "-4",
+			"yoffset": "8",
+			"xadvance": "12",
+			"page": "0",
+			"chnl": "15"
+		},
+		"224": {
+			"id": "224",
+			"x": "19",
+			"y": "84",
+			"width": "12",
+			"height": "21",
+			"xoffset": "0",
+			"yoffset": "5",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"225": {
+			"id": "225",
+			"x": "32",
+			"y": "84",
+			"width": "12",
+			"height": "21",
+			"xoffset": "0",
+			"yoffset": "5",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"226": {
+			"id": "226",
+			"x": "45",
+			"y": "79",
+			"width": "12",
+			"height": "21",
+			"xoffset": "0",
+			"yoffset": "5",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"227": {
+			"id": "227",
+			"x": "14",
+			"y": "106",
+			"width": "12",
+			"height": "20",
+			"xoffset": "0",
+			"yoffset": "6",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"228": {
+			"id": "228",
+			"x": "177",
+			"y": "118",
+			"width": "12",
+			"height": "19",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"229": {
+			"id": "229",
+			"x": "58",
+			"y": "79",
+			"width": "12",
+			"height": "21",
+			"xoffset": "0",
+			"yoffset": "5",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"230": {
+			"id": "230",
+			"x": "248",
+			"y": "138",
+			"width": "15",
+			"height": "14",
+			"xoffset": "0",
+			"yoffset": "12",
+			"xadvance": "13",
+			"page": "0",
+			"chnl": "15"
+		},
+		"231": {
+			"id": "231",
+			"x": "119",
+			"y": "142",
+			"width": "10",
+			"height": "17",
+			"xoffset": "0",
+			"yoffset": "13",
+			"xadvance": "8",
+			"page": "0",
+			"chnl": "15"
+		},
+		"232": {
+			"id": "232",
+			"x": "78",
+			"y": "101",
+			"width": "10",
+			"height": "20",
+			"xoffset": "0",
+			"yoffset": "6",
+			"xadvance": "8",
+			"page": "0",
+			"chnl": "15"
+		},
+		"233": {
+			"id": "233",
+			"x": "100",
+			"y": "101",
+			"width": "10",
+			"height": "20",
+			"xoffset": "0",
+			"yoffset": "6",
+			"xadvance": "8",
+			"page": "0",
+			"chnl": "15"
+		},
+		"234": {
+			"id": "234",
+			"x": "89",
+			"y": "101",
+			"width": "10",
+			"height": "20",
+			"xoffset": "0",
+			"yoffset": "6",
+			"xadvance": "8",
+			"page": "0",
+			"chnl": "15"
+		},
+		"235": {
+			"id": "235",
+			"x": "201",
+			"y": "118",
+			"width": "10",
+			"height": "19",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "8",
+			"page": "0",
+			"chnl": "15"
+		},
+		"236": {
+			"id": "236",
+			"x": "141",
+			"y": "98",
+			"width": "8",
+			"height": "20",
+			"xoffset": "0",
+			"yoffset": "6",
+			"xadvance": "6",
+			"page": "0",
+			"chnl": "15"
+		},
+		"237": {
+			"id": "237",
+			"x": "131",
+			"y": "100",
+			"width": "9",
+			"height": "20",
+			"xoffset": "0",
+			"yoffset": "6",
+			"xadvance": "6",
+			"page": "0",
+			"chnl": "15"
+		},
+		"238": {
+			"id": "238",
+			"x": "150",
+			"y": "98",
+			"width": "8",
+			"height": "20",
+			"xoffset": "0",
+			"yoffset": "6",
+			"xadvance": "6",
+			"page": "0",
+			"chnl": "15"
+		},
+		"239": {
+			"id": "239",
+			"x": "62",
+			"y": "147",
+			"width": "9",
+			"height": "18",
+			"xoffset": "0",
+			"yoffset": "8",
+			"xadvance": "6",
+			"page": "0",
+			"chnl": "15"
+		},
+		"240": {
+			"id": "240",
+			"x": "66",
+			"y": "101",
+			"width": "11",
+			"height": "20",
+			"xoffset": "0",
+			"yoffset": "6",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"241": {
+			"id": "241",
+			"x": "95",
+			"y": "122",
+			"width": "13",
+			"height": "19",
+			"xoffset": "1",
+			"yoffset": "7",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"242": {
+			"id": "242",
+			"x": "164",
+			"y": "118",
+			"width": "12",
+			"height": "19",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"243": {
+			"id": "243",
+			"x": "40",
+			"y": "106",
+			"width": "12",
+			"height": "20",
+			"xoffset": "0",
+			"yoffset": "6",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"244": {
+			"id": "244",
+			"x": "53",
+			"y": "101",
+			"width": "12",
+			"height": "20",
+			"xoffset": "0",
+			"yoffset": "6",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"245": {
+			"id": "245",
+			"x": "151",
+			"y": "119",
+			"width": "12",
+			"height": "19",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"246": {
+			"id": "246",
+			"x": "0",
+			"y": "147",
+			"width": "12",
+			"height": "18",
+			"xoffset": "0",
+			"yoffset": "8",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"247": {
+			"id": "247",
+			"x": "29",
+			"y": "181",
+			"width": "11",
+			"height": "9",
+			"xoffset": "1",
+			"yoffset": "15",
+			"xadvance": "13",
+			"page": "0",
+			"chnl": "15"
+		},
+		"248": {
+			"id": "248",
+			"x": "13",
+			"y": "147",
+			"width": "12",
+			"height": "18",
+			"xoffset": "0",
+			"yoffset": "10",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"249": {
+			"id": "249",
+			"x": "246",
+			"y": "75",
+			"width": "13",
+			"height": "20",
+			"xoffset": "0",
+			"yoffset": "6",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"250": {
+			"id": "250",
+			"x": "260",
+			"y": "74",
+			"width": "13",
+			"height": "20",
+			"xoffset": "0",
+			"yoffset": "6",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"251": {
+			"id": "251",
+			"x": "274",
+			"y": "74",
+			"width": "13",
+			"height": "20",
+			"xoffset": "0",
+			"yoffset": "6",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"252": {
+			"id": "252",
+			"x": "81",
+			"y": "122",
+			"width": "13",
+			"height": "19",
+			"xoffset": "0",
+			"yoffset": "7",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"253": {
+			"id": "253",
+			"x": "287",
+			"y": "0",
+			"width": "12",
+			"height": "25",
+			"xoffset": "1",
+			"yoffset": "6",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		},
+		"254": {
+			"id": "254",
+			"x": "115",
+			"y": "54",
+			"width": "13",
+			"height": "23",
+			"xoffset": "0",
+			"yoffset": "9",
+			"xadvance": "11",
+			"page": "0",
+			"chnl": "15"
+		},
+		"255": {
+			"id": "255",
+			"x": "14",
+			"y": "59",
+			"width": "12",
+			"height": "24",
+			"xoffset": "1",
+			"yoffset": "7",
+			"xadvance": "10",
+			"page": "0",
+			"chnl": "15"
+		}
+	},
+	"name": "BelloPro",
+	"image": "images/ttf/BelloPro_0.png"
+}
+	}
+)
+
+define(
+	"spell/client/util/font/createFontWriter",
+    [
+        "funkysnakes/shared/config/constants"
+    ],
+	function(
+        constants
+        ) {
+		"use strict"
+
+        var FontWriter = function( font, bitmap ) {
+
+            var getCharInfo = function( char ) {
+                return font.chars[ char ]
+            }
+
+            var drawChar = function( context, char, rgbColor, scale, posX, posY ) {
+
+				// WARNING from Martin: This code does not pass the AS3 compiler. I disabled it because it is not used currently.
+
+//                var charInfo = getCharInfo( char )
+//
+//                var sx = parseInt( charInfo.x ),
+//                    sy = parseInt( charInfo.y ),
+//                    sw = parseInt( charInfo.width ),
+//                    sh = parseInt( charInfo.height ),
+//                    dx = parseInt( posX ) + parseInt( charInfo.xoffset * scale ),
+//                    dy = constants.ySize - ( parseInt( posY ) + sh + parseInt( charInfo.yoffset * scale )) ,
+//                    dw = parseInt( parseInt( charInfo.width )  * scale ),
+//                    dh = parseInt( parseInt( charInfo.height ) * scale )
+//
+//                context.drawSubTexture( bitmap, sx, sy, sw, sh, dx, dy, dw, dh )
+//
+////                colorize( context, rgbColor, dx, dy, dw, dh )
+            }
+
+            var colorize = function( context, rgbColor, x, y, width, height ) {
+
+                var imgdata = context.getImageData(
+                    x,
+                    y,
+                    width,
+                    height
+                )
+
+                var pixel = imgdata.data
+
+                for ( var i = 0; i < pixel.length; i += 4 ) {
+                    pixel[ i   ] = rgbColor[ 0 ] * pixel[ i   ]
+                    pixel[ i+1 ] = rgbColor[ 1 ] * pixel[ i+1 ]
+                    pixel[ i+2 ] = rgbColor[ 2 ] * pixel[ i+2 ]
+                }
+
+                context.putImageData( imgdata, x, y )
+            }
+
+            var drawString = function( context, string, rgbColor, scale, position ) {
+
+                var stringified = string.toString()
+                var posXOffset  = 0
+
+                for( var i = 0; i < stringified.length; i++ ) {
+
+                    var charCode = stringified.charCodeAt( i )
+
+                    drawChar(
+                        context,
+                        charCode,
+                        rgbColor,
+                        scale,
+                        position[ 0 ] + posXOffset,
+                        position[ 1 ]
+                    )
+
+					// WARNING from Martin: This code does not pass the AS3 compiler. I disabled it because it is not used currently.
+
+//                    posXOffset += parseInt( parseInt( getCharInfo( charCode ).xadvance ) * scale )
+                }
+
+                return posXOffset
+            }
+
+            return {
+                drawString: drawString
+            }
+        }
+
+        return FontWriter
+    }
+)
+
+define(
 	"funkysnakes/client/systems/Renderer",
 	[
 		"funkysnakes/client/systems/shieldRenderer",
 		"funkysnakes/shared/config/constants",
 		"spell/shared/util/Events",
+        "spell/client/util/font/fonts/BelloPro",
+        "spell/client/util/font/createFontWriter",
 
 		"glmatrix/vec3",
 		"glmatrix/mat4",
@@ -4302,6 +6813,8 @@ define(
 		shieldRenderer,
 		constants,
 		Events,
+        BelloPro,
+        createFontWriter,
 
 		vec3,
 		mat4,
@@ -4353,13 +6866,15 @@ define(
 			timeInMs,
 			deltaTimeInMs,
 			entitiesByPass,
-			shieldEntities
+			shieldEntities,
+            textEntities
 		) {
 			var context       = this.context,
 				textures      = this.textures,
 				texture       = undefined,
 				shadowTexture = undefined,
-				drewShields   = false
+				drewShields   = false,
+                fontWriter    = this.fontWriter
 
 			// clear color buffer
 			context.clear()
@@ -4464,8 +6979,26 @@ define(
 //					)
 				}
 			)
-		}
 
+//            _.each(
+//                textEntities,
+//                function( entity ) {
+//                    var rgbColor = [
+//                        1,
+//                        0,
+//                        0
+//                    ]
+//
+//                    fontWriter.drawString(
+//                        context,
+//                        entity.text.value,
+//                        rgbColor,
+//                        1,
+//                        entity.position
+//                    )
+//                }
+//            )
+		}
 
 		/**
 		 * public
@@ -4478,6 +7011,7 @@ define(
 		) {
 			this.textures        = textures
 			this.context         = context
+            this.fontWriter      = createFontWriter( BelloPro, textures[ "ttf/BelloPro_0.png" ]  )
 
 			// setting up the view space matrix
 			this.worldToView = mat4.create()
@@ -4486,12 +7020,9 @@ define(
 			context.setViewMatrix( this.worldToView )
 
 			// setting up the viewport
-			var viewportPositionX = 0,
-				viewportPositionY = 0,
-				viewportWidth = 1024,
-				viewportHeight = 768
-
-			context.viewport( viewportPositionX, viewportPositionY, viewportWidth, viewportHeight )
+            var viewportPositionX = 0,
+                viewportPositionY = 0
+			context.viewport( viewportPositionX, viewportPositionY, constants.maxWidth, constants.maxHeight )
 
 
 			eventManager.subscribe(
@@ -5269,27 +7800,31 @@ define(
             )
         }
 
+        var findClickedEntity = function( entities, clickEvent ) {
+            return _.find( entities, function( entity ) {
+
+                var left   = entity.boundingBox.x,
+                    right  = left + entity.boundingBox.width,
+                    top    = entity.boundingBox.y,
+                    bottom = top + entity.boundingBox.height,
+                    x      = clickEvent.position[ 0 ],
+                    y      = clickEvent.position[ 1 ]
+
+                return (
+                    right  >= x &&
+                        left   <= x &&
+                        bottom >= y &&
+                        top    <= y
+                    )
+            } )
+        }
+
         var processClickEvents = function( uiManager, clickEvents, entities ) {
             _.each(
                 clickEvents,
                 function( clickEvent ) {
 
-                    var entity = _.find( entities, function( entity ) {
-
-                        var left   = entity.boundingBox.x,
-                            right  = left + entity.boundingBox.width,
-                            top    = entity.boundingBox.y,
-                            bottom = top + entity.boundingBox.height,
-                            x      = clickEvent.position[ 0 ],
-                            y      = clickEvent.position[ 1 ]
-
-                        return (
-                            right  >= x &&
-                                left   <= x &&
-                                bottom >= y &&
-                                top    <= y
-                            )
-                    } )
+                    var entity = findClickedEntity( entities, clickEvent )
 
                     if( !entity ) {
                         if( clickEvent.type === "mouseup" ) resetAllPressed( uiManager, entities )
@@ -5548,7 +8083,7 @@ define(
 )
 
 define(
-	"spell/client/util/ui/createUiManager",
+	"spell/client/util/ui/Button",
     [
         "underscore"
     ],
@@ -5556,10 +8091,131 @@ define(
 
         _
         ) {
+        "use strict"
+
+        var setDisabled = function( value ) {
+            this.disabled = !!value
+        }
+
+        var onPressed = function() {
+            if( !!this.pressedTextureId ) {
+                this.entity.appearance.textureId = this.pressedTextureId
+            }
+        }
+
+        var onReleased = function() {
+            this.entity.appearance.textureId = this.textureId
+        }
+
+        var Button = function( entityRef, config ) {
+            this.entity    = entityRef
+            this.textureId = entityRef.appearance.textureId
+            this.pressedTextureId = ( _.has( config, "pressedTextureId" ) ) ? config.pressedTextureId : undefined
+        }
+
+        Button.prototype = {
+            setDisabled      : setDisabled,
+            onPressed        : onPressed,
+            onReleased       : onReleased
+        }
+
+        return Button
+    }
+)
+define(
+	"spell/client/util/ui/ToggleButton",
+    [
+        "underscore"
+    ],
+	function(
+
+        _
+        ) {
+        "use strict"
+
+        var toggle = function( value ) {
+
+            this.entity.on.value = ( value !== undefined ) ?  !!value : !this.entity.on.value
+
+            if( this.entity.on.value === false ) {
+                this.setOffImage()
+            } else {
+                this.restoreTexture()
+            }
+        }
+
+        var restoreTexture = function() {
+            this.entity.appearance.textureId = this.textureId
+        }
+
+        var getOnValue = function() {
+            return this.entity.on.value
+        }
+
+        var setDisabled = function( value ) {
+            this.disabled = !!value
+        }
+
+        var onPressed = function() {
+            if( !!this.pressedTextureId ) {
+                this.entity.appearance.textureId = this.pressedTextureId
+            }
+        }
+
+        var setOffImage = function() {
+            if( !!this.offTextureId ) {
+                this.entity.appearance.textureId = this.offTextureId
+            }
+        }
+
+        var ToggleButton = function( entityRef, config ) {
+            this.entity           = entityRef
+            this.textureId        = this.entity.appearance.textureId
+            this.pressedTextureId = ( _.has( config, "pressedTextureId" ) ) ? config.pressedTextureId : undefined
+            this.offTextureId     = ( _.has( config, "offTextureId" ) )     ? config.offTextureId     : undefined
+
+            if( this.entity.on.value === false ) {
+                this.setOffImage()
+            }
+        }
+
+        ToggleButton.prototype = {
+            setDisabled      : setDisabled,
+            onPressed        : onPressed,
+            onReleased       : restoreTexture,
+            toggle           : toggle,
+            getOnValue       : getOnValue,
+            setOffImage      : setOffImage,
+            restoreTexture   : restoreTexture
+        }
+
+        return ToggleButton
+    }
+)
+define(
+	"spell/client/util/ui/createUiManager",
+    [
+        "spell/client/util/ui/Button",
+        "spell/client/util/ui/ToggleButton",
+
+        "underscore"
+    ],
+	function(
+        Button,
+        ToggleButton,
+
+        _
+        ) {
 		"use strict"
 
         var ABSOLUTE_LAYOUT = "absolute"
         var RELATIVE_LAYOUT = "relative"
+
+        var eventNames = [
+            'onPress',
+            'onClick',
+            'onAbort'
+        ]
 
         var createUiManager = function( entityManager, constants ) {
 
@@ -5597,22 +8253,40 @@ define(
                 }
             }
 
-            var createEventsFromElement = function( element ) {
+            var createEventsFromElement = function( element, UIElement ) {
                 var eventConfig = {}
 
-                if( !!element.onPress ) {
-                    eventConfig.onPress = element.onPress
-                }
+                _.each(
+                    eventNames,
+                    function( eventName ) {
+                        if( _.has( element, eventName ) ) {
 
-                if( !!element.onClick ) {
-                    eventConfig.onClick = element.onClick
-                }
+                            eventConfig[ eventName ] = function() {
+                                if( eventName === "onPress" ) {
+                                    UIElement.onPressed()
 
-                if( !!element.onAbort ) {
-                    eventConfig.onAbort = element.onAbort
-                }
+                                } else {
+                                    UIElement.onReleased()
+                                }
+
+                                element[ eventName ].call( UIElement )
+                            }
+                        }
+                    }
+                )
 
                 return eventConfig
+            }
+
+            var createUiElement =  function( entity, elementConfig ) {
+
+                if( _.has( entity, "on" ) && _.has( entity, "clickable" ) ) {
+                    return new ToggleButton( entity, elementConfig )
+
+                } else if( _.has( entity, "clickable" ) ) {
+                    return new Button( entity, elementConfig )
+                }
+
             }
 
             var triggerEvent = function( entityId, eventName ) {
@@ -5630,10 +8304,10 @@ define(
             var calculateBoundingBox = function( element, uiElementConfig ) {
                 var boundingBoxConfig = {}
 
-                boundingBoxConfig.x      = ( !element.boundingBox || !_.has( element.boundingBox, "x" ) )     ? uiElementConfig.position[ 0 ]  : element.boundingBox.x
-                boundingBoxConfig.y      = ( !element.boundingBox || !_.has( element.boundingBox, "y" ) )     ? uiElementConfig.position[ 1 ]  : element.boundingBox.y
-                boundingBoxConfig.width  = ( !element.boundingBox || !_.has( element.boundingBox, "width" ) ) ? uiElementConfig.dimension[ 0 ] : element.boundingBox.width
-                boundingBoxConfig.height = ( !element.boundingBox || !_.has( element.boundingBox, "height" ) ) ? uiElementConfig.dimension[ 1 ] : element.boundingBox.height
+                boundingBoxConfig.x      = ( !element.boundingBox || !_.has( element.boundingBox, "x" ) )      ? uiElementConfig.screenPosition[ 0 ]  : element.boundingBox.x
+                boundingBoxConfig.y      = ( !element.boundingBox || !_.has( element.boundingBox, "y" ) )      ? uiElementConfig.screenPosition[ 1 ]  : element.boundingBox.y
+                boundingBoxConfig.width  = ( !element.boundingBox || !_.has( element.boundingBox, "width" ) )  ? uiElementConfig.dimension[ 0 ]       : element.boundingBox.width
+                boundingBoxConfig.height = ( !element.boundingBox || !_.has( element.boundingBox, "height" ) ) ? uiElementConfig.dimension[ 1 ]       : element.boundingBox.height
 
                 return boundingBoxConfig
             }
@@ -5669,11 +8343,11 @@ define(
                     parseInt(element.height)    || 0
                 ))
 
-                var yPositionOnCanvas = ( constants.ySize > yPosition ) ? constants.ySize - yPosition : 0
+                var yPositionOnCanvas = ( constants.ySize > yPosition ) ? constants.ySize - yPosition - height : 0
 
                 var uiElementConfig = {
                     position       : [ xPosition, yPositionOnCanvas, 0 ],
-                    screenPosition : [ xPosition, yPosition - height , 0 ],
+                    screenPosition : [ xPosition, ( yPosition > height) ? yPosition - height : yPosition , 0 ],
                     textureId : element.textureId,
                     scale     : [ width, height, 0 ],
                     dimension : [ width, height, 0 ]
@@ -5681,10 +8355,9 @@ define(
 
                 uiElementConfig.boundingBox = calculateBoundingBox( element, uiElementConfig )
 
-
                 var entityName = element.type
 
-                switch( element.type ) {
+                switch( entityName ) {
 
                     case "container":
 
@@ -5696,23 +8369,21 @@ define(
                         entityName = "container"
 
                         break
-                    case "panel":
-//                        var fontWriter = createFontWriter( BelloPro, resourceLoader.getResources()[ BelloPro.image ] )
-//
-//                        var rgbColor = [
-//                            1,
-//                            1,
-//                            1
-//                        ]
-//
-//                        fontWriter.drawString(
-//                            context,
-//                            element.title ,
-//                            rgbColor,
-//                            1,
-//                            xPosition,
-//                            yPosition
-//                        )
+                    case "label":
+                        uiElementConfig.text = element.string
+                        uiElementConfig.position = uiElementConfig.screenPosition
+//                        console.log( uiElementConfig )
+                        break
+                    case "button":
+                        if( _.has( element, "enableToggle" ) && element.enableToggle === true ) {
+                            uiElementConfig.enableToggle = true
+                            uiElementConfig.on           = ( _.has( element, "on" ) )           ? !!element.on     : true
+                            uiElementConfig.offTextureId = ( _.has( element, "offTextureId" ) ) ? element.offTextureId : undefined
+                        }
+
+                        uiElementConfig.pressedTextureId = ( _.has( element, "pressedTextureId" ) ) ? element.pressedTextureId : undefined
+
+                        break
                     default:
 
                 }
@@ -5722,7 +8393,13 @@ define(
                     [ uiElementConfig ]
                 )
 
-                uiEntitiesEvents[ uiEntity.id ] = createEventsFromElement( element )
+                uiEntitiesEvents[ uiEntity.id ] = createEventsFromElement(
+                    element,
+                    createUiElement(
+                        uiEntity,
+                        uiElementConfig
+                    )
+                )
 
                 return containerDimension
             }
@@ -5755,6 +8432,7 @@ define(
         return createUiManager
 	}
 )
+
 define(
 	"spell/shared/util/map",
 	[
@@ -6240,8 +8918,7 @@ define(
 		"spell/shared/util/zones/ZoneEntityManager",
 		"spell/shared/util/Events",
 		"spell/shared/util/platform/PlatformKit",
-		"spell/shared/util/platform/Types",
-        "underscore"
+		"spell/shared/util/platform/Types"
 	],
 	function(
 		createClouds,
@@ -6250,7 +8927,7 @@ define(
 		fade,
 		interpolateNetworkData,
 		Renderer,
-		debugRenderer,
+        debugRenderer,
 		renderPerformanceGraph,
 		sendActorStateUpdate,
 		updateHoverAnimations,
@@ -6275,9 +8952,7 @@ define(
 		ZoneEntityManager,
 		Events,
 		PlatformKit,
-		Types,
-
-        _
+		Types
 	) {
 		"use strict"
 
@@ -6299,56 +8974,6 @@ define(
 				[ {
 					position  : [ 5, 694, 0 ],
 					textureId : textureId
-				} ]
-			)
-		}
-
-		function addVirtualKeys( entityManager ) {
-			var marginBottom = 25
-			var positionY = marginBottom
-
-			entityManager.createEntity(
-				"widgetThatFades",
-				[ {
-					position  : [ 138, positionY, 0 ],
-					textureId : 'arrow_left.png',
-					opacity : 0.0,
-					fade : {
-						beginAfter : 3000,
-						duration   : 250,
-						start      : 0.0,
-						end        : 1.0
-					}
-				} ]
-			)
-
-			entityManager.createEntity(
-				"widgetThatFades",
-				[ {
-					position  : [ 384, positionY, 0 ],
-					textureId : 'space.png',
-					opacity : 0.0,
-					fade : {
-						beginAfter : 3000,
-						duration   : 250,
-						start      : 0.0,
-						end        : 1.0
-					}
-				} ]
-			)
-
-			entityManager.createEntity(
-				"widgetThatFades",
-				[ {
-					position  : [ 822, positionY, 0 ],
-					textureId : 'arrow_right.png',
-					opacity : 0.0,
-					fade : {
-						beginAfter : 3000,
-						duration   : 250,
-						start      : 0.0,
-						end        : 1.0
-					}
 				} ]
 			)
 		}
@@ -6463,7 +9088,8 @@ define(
 				timeInMs,
 				deltaTimeInMs,
 				entities.executeQuery( queryIds[ "render" ][ 0 ] ).multiMap,
-				entities.executeQuery( queryIds[ "shieldRenderer" ][ 0 ] ).elements
+				entities.executeQuery( queryIds[ "shieldRenderer" ][ 0 ] ).elements,
+                entities.executeQuery( queryIds[ "textEntities" ][ 0 ] ).elements
 			)
 
 			statisticsManager.updateSeries( 'timeSpentRendering', Types.Time.getCurrentInMs() - timeA )
@@ -6505,6 +9131,7 @@ define(
 				var entityManager = this.entityManager
 				var eventManager  = globals.eventManager
 				var inputManager  = globals.inputManager
+                var soundManager  = globals.soundManager
 
 				this.renderer = new Renderer( eventManager, globals.textures, globals.renderingContext  )
 
@@ -6647,6 +9274,9 @@ define(
 					],
                     uiEntities: [
                         entities.prepareQuery( [ "position", "boundingBox", "clickable" ] )
+                    ],
+                    textEntities: [
+                        entities.prepareQuery( [ "text" ] )
                     ]
 				}
 
@@ -6656,6 +9286,122 @@ define(
                     action.needSync  = true
                 }
 
+                var player = entities.executeQuery( this.queryIds[ "playerEntities" ][ 0 ] ).singleton
+
+                var touchControls = {
+                    name: 'Controls',
+                    type: 'container',
+                    yPosition: 685,
+                    items: [
+                        {
+                            type: 'button',
+                            textureId: "arrow_left.png",
+                            pressedTextureId: "arrow_left_pressed.png",
+                            onPress: function() {
+                                setAction(
+                                    player,
+                                    "left",
+                                    true
+                                )
+                            },
+                            onAbort: function() {
+                                setAction(
+                                    player,
+                                    "left",
+                                    false
+                                )
+                            },
+                            onClick: function() {
+                                setAction(
+                                    player,
+                                    "left",
+                                    false
+                                )
+                            },
+                            xPosition: 138,
+                            height: 64,
+                            width: 64,
+                            boundingBox: {
+                                x: 0,
+                                y: 200,
+                                width: 340,
+                                height: constants.ySize
+                            }
+                        },
+                        {
+                            type: 'button',
+                            textureId: "space.png",
+							pressedTextureId: "space_pressed.png",
+                            onPress: function() {
+                                setAction(
+                                    player,
+                                    "useItem",
+                                    true
+                                )
+                            },
+                            onAbort: function() {
+                                setAction(
+                                    player,
+                                    "useItem",
+                                    false
+                                )
+                            },
+                            onClick: function() {
+                                setAction(
+                                    player,
+                                    "useItem",
+                                    false
+                                )
+                            },
+                            xPosition: 384,
+                            height: 64,
+                            width: 256,
+                            boundingBox: {
+                                x: 342,
+                                y: 200,
+                                width: 340,
+                                height: constants.ySize
+                            }
+                        },
+                        {
+                            type: 'button',
+                            textureId: "arrow_right.png",
+                            pressedTextureId: "arrow_right_pressed.png",
+                            onPress: function() {
+                                setAction(
+                                    player,
+                                    "right",
+                                    true
+                                )
+                            },
+                            onAbort: function() {
+                                setAction(
+                                    player,
+                                    "right",
+                                    false
+                                )
+                            },
+                            onClick: function() {
+                                setAction(
+                                    player,
+                                    "right",
+                                    false
+                                )
+                            },
+                            xPosition: 822,
+                            height: 64,
+                            width: 64,
+                            boundingBox: {
+                                x: 684,
+                                y: 200,
+                                width: 340,
+                                height: constants.ySize
+                            }
+                        }
+                    ]
+                }
+
+
                 var uiJson = {
                     type: 'container',
                     xPosition: 0,
@@ -6664,138 +9410,27 @@ define(
                     height: constants.ySize,
                     items: [
                         {
-                            name: 'Controls',
+                            type: 'label',
+                            string: "This is a SpellJS Cross Platform Multiplayer Demonstration",
+                            xPosition: 250
+                        },
+                        {
                             type: 'container',
-                            yPosition: 750,
+                            yPosition: 5,
                             items: [
                                 {
                                     type: 'button',
-                                    textureId: "arrow_left.png",
-                                    onPress: _.bind(
-                                        function() {
-                                            setAction(
-                                                entities.executeQuery( this.queryIds[ "playerEntities" ][ 0 ] ).singleton,
-                                                "left",
-                                                true
-                                            )
-                                        },
-                                        this
-                                    ),
-                                    onAbort: _.bind(
-                                        function() {
-                                            setAction(
-                                                entities.executeQuery( this.queryIds[ "playerEntities" ][ 0 ] ).singleton,
-                                                "left",
-                                                false
-                                            )
-                                        },
-                                        this
-                                    ),
-                                    onClick: _.bind(
-                                        function() {
-                                            setAction(
-                                                entities.executeQuery( this.queryIds[ "playerEntities" ][ 0 ] ).singleton,
-                                                "left",
-                                                false
-                                            )
-                                        },
-                                        this
-                                    ),
-                                    xPosition: 138,
+                                    textureId: "speaker.png",
+                                    offTextureId: "speaker_mute.png",
+                                    on:  !soundManager.isMuted(),
+                                    enableToggle: true,
+                                    onClick: function() {
+                                        this.toggle()
+                                        soundManager.setMuted( !this.getOnValue() )
+                                    },
+                                    xPosition: constants.xSize - 69 ,
                                     height: 64,
-                                    width: 64,
-                                    boundingBox: {
-                                        x: 0,
-                                        y: 0,
-                                        width: 340,
-                                        height: constants.ySize
-                                    }
-                                },
-                                {
-                                    type: 'button',
-                                    textureId: "space.png",
-                                    onPress: _.bind(
-                                        function() {
-                                            setAction(
-                                                entities.executeQuery( this.queryIds[ "playerEntities" ][ 0 ] ).singleton,
-                                                "useItem",
-                                                true
-                                            )
-                                        },
-                                        this
-                                    ),
-                                    onAbort: _.bind(
-                                        function() {
-                                            setAction(
-                                                entities.executeQuery( this.queryIds[ "playerEntities" ][ 0 ] ).singleton,
-                                                "useItem",
-                                                false
-                                            )
-                                        },
-                                        this
-                                    ),
-                                    onClick: _.bind(
-                                        function() {
-                                            setAction(
-                                                entities.executeQuery( this.queryIds[ "playerEntities" ][ 0 ] ).singleton,
-                                                "useItem",
-                                                false
-                                            )
-                                        },
-                                        this
-                                    ),
-                                    xPosition: 384,
-                                    height: 64,
-                                    width: 256,
-                                    boundingBox: {
-                                        x: 342,
-                                        y: 0,
-                                        width: 340,
-                                        height: constants.ySize
-                                    }
-                                },
-                                {
-                                    type: 'button',
-                                    textureId: "arrow_right.png",
-                                    onPress: _.bind(
-                                        function() {
-                                            setAction(
-                                                entities.executeQuery( this.queryIds[ "playerEntities" ][ 0 ] ).singleton,
-                                                "right",
-                                                true
-                                            )
-                                        },
-                                        this
-                                    ),
-                                    onAbort: _.bind(
-                                        function() {
-                                            setAction(
-                                                entities.executeQuery( this.queryIds[ "playerEntities" ][ 0 ] ).singleton,
-                                                "right",
-                                                false
-                                            )
-                                        },
-                                        this
-                                    ),
-                                    onClick: _.bind(
-                                        function() {
-                                            setAction(
-                                                entities.executeQuery( this.queryIds[ "playerEntities" ][ 0 ] ).singleton,
-                                                "right",
-                                                false
-                                            )
-                                        },
-                                        this
-                                    ),
-                                    xPosition: 822,
-                                    height: 64,
-                                    width: 64,
-                                    boundingBox: {
-                                        x: 684,
-                                        y: 0,
-                                        width: 340,
-                                        height: constants.ySize
-                                    }
+                                    width: 64
                                 }
                             ]
                         }
@@ -6807,8 +9442,10 @@ define(
                 this.uiSystem = new uiSystem( uiManager )
 
                 if( PlatformKit.features.touch ) {
-                    uiManager.parseConfig( uiJson )
+                    uiJson.items.push( touchControls )
                 }
+
+                uiManager.parseConfig( uiJson )
 
 				this.renderUpdate = function( timeInMs, deltaTimeInMs ) {
 					thisZone.render( timeInMs, deltaTimeInMs, globals )
@@ -8483,7 +11120,7 @@ define(
 			updateProgress.call( this, this.resourceBundles[ resourceBundleName ] )
 		}
 
-		var createLoader = function( eventManager, host, resourceBundleName, resourceName, loadingCompletedCallback, loadingTimedOutCallback ) {
+		var createLoader = function( eventManager, host, resourceBundleName, resourceName, loadingCompletedCallback, loadingTimedOutCallback, soundManager ) {
 			var extension = _.last( resourceName.split( '.' ) )
 			var loaderFactory = extensionToLoaderFactory[ extension ]
 
@@ -8497,7 +11134,8 @@ define(
 				resourceBundleName,
 				resourceName,
 				loadingCompletedCallback,
-				loadingTimedOutCallback
+				loadingTimedOutCallback,
+                ( extension === 'json' ) ? soundManager : undefined
 			)
 
 			return loader
@@ -8520,7 +11158,8 @@ define(
 							resourceBundle.name,
 							resourceName,
 							_.bind( resourceLoadingCompletedCallback, this, resourceBundle.name, resourceName ),
-							_.bind( resourceLoadingTimedOutCallback, this, resourceBundle.name, resourceName )
+							_.bind( resourceLoadingTimedOutCallback, this, resourceBundle.name, resourceName ),
+                            this.soundManager
 						)
 
 						if( loader !== undefined ) {
@@ -8540,9 +11179,11 @@ define(
 		 * public
 		 */
 
-		var ResourceLoader = function( eventManager, hostConfig ) {
+		var ResourceLoader = function( soundManager, eventManager, hostConfig ) {
 			if( eventManager === undefined ) throw 'Argument "eventManager" is undefined.'
+            if( soundManager === undefined ) throw 'Argument "soundManager" is undefined.'
 
+            this.soundManager = soundManager
 			this.eventManager = eventManager
 			this.resourceBundles = {}
 			this.resources = {}
@@ -8716,8 +11357,9 @@ define(
 				configurationManager.renderingBackEnd
 			)
 
+            var soundManager         = PlatformKit.createSoundManager()
 			var inputManager         = new InputManager( configurationManager )
-			var resourceLoader       = new ResourceLoader( eventManager, configurationManager.resourceServer )
+			var resourceLoader       = new ResourceLoader( soundManager, eventManager, configurationManager.resourceServer )
 			var statisticsManager    = new StatisticsManager()
 
 			statisticsManager.init()
@@ -8729,7 +11371,8 @@ define(
 				inputEvents          : inputManager.getInputEvents(),
 				renderingContext     : renderingContext,
 				resourceLoader       : resourceLoader,
-				statisticsManager    : statisticsManager
+				statisticsManager    : statisticsManager,
+                soundManager         : soundManager
 			}
 
 			clientMain( globals )
@@ -8851,9 +11494,16 @@ define(
 			'images/vehicles/ship_player4_invincible.png',
 			'images/effects/shield.png',
 			'images/arrow_left.png',
+			'images/arrow_left_pressed.png',
 			'images/arrow_right.png',
+			'images/arrow_right_pressed.png',
+            'images/speaker_mute.png',
+            'images/speaker.png',
 			'images/space.png',
-			'sounds/sets/set1.json'
+			'images/space_pressed.png',
+            'images/ttf/batang_0.png',
+            'images/ttf/BelloPro_0.png',
+            'sounds/sets/set1.json'
 		]
 
 

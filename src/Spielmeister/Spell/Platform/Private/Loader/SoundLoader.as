@@ -5,7 +5,7 @@ package Spielmeister.Spell.Platform.Private.Loader {
 		private var onCompleteCallback : Function
 
 
-		public function SoundLoader(eventManager : Object, host : String, resourceBundleName : String, resourceUri : String, callback : Function ) {
+		public function SoundLoader( eventManager : Object, host : String, resourceBundleName : String, resourceUri : String, callback : Function, soundManager : Object ) {
 			this.host               = host
 			this.onCompleteCallback = callback
 		}
