@@ -36,7 +36,7 @@ package Spielmeister {
 				var name = dependencies[ i ]
 
 				if( need.modules[ name ] === undefined ) {
-					throw 'Could not find module definition for "' + name + '". Is it included and registered via define?'
+					throw 'Could not find module definition for dependency "' + name + '" of module "' + moduleName + '" . Is it included and registered via define?'
 				}
 
 				if( need.modules[ name ].instance === undefined ) {
