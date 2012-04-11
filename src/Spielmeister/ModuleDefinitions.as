@@ -6723,22 +6723,20 @@ define(
 
             var drawChar = function( context, char, rgbColor, scale, posX, posY ) {
 
-				// WARNING from Martin: This code does not pass the AS3 compiler. I disabled it because it is not used currently.
+                var charInfo = getCharInfo( char )
 
-//                var charInfo = getCharInfo( char )
-//
-//                var sx = parseInt( charInfo.x ),
-//                    sy = parseInt( charInfo.y ),
-//                    sw = parseInt( charInfo.width ),
-//                    sh = parseInt( charInfo.height ),
-//                    dx = parseInt( posX ) + parseInt( charInfo.xoffset * scale ),
-//                    dy = constants.ySize - ( parseInt( posY ) + sh + parseInt( charInfo.yoffset * scale )) ,
-//                    dw = parseInt( parseInt( charInfo.width )  * scale ),
-//                    dh = parseInt( parseInt( charInfo.height ) * scale )
-//
-//                context.drawSubTexture( bitmap, sx, sy, sw, sh, dx, dy, dw, dh )
-//
-////                colorize( context, rgbColor, dx, dy, dw, dh )
+                var sx = parseInt( charInfo.x ),
+                    sy = parseInt( charInfo.y ),
+                    sw = parseInt( charInfo.width ),
+                    sh = parseInt( charInfo.height ),
+                    dx = parseInt( posX ) + charInfo.xoffset * scale,
+                    dy = constants.ySize - ( parseInt( posY ) + sh + charInfo.yoffset * scale ),
+                    dw = charInfo.width * scale,
+                    dh = charInfo.height * scale
+
+                context.drawSubTexture( bitmap, sx, sy, sw, sh, dx, dy, dw, dh )
+
+//                colorize( context, rgbColor, dx, dy, dw, dh )
             }
 
             var colorize = function( context, rgbColor, x, y, width, height ) {
@@ -6779,9 +6777,7 @@ define(
                         position[ 1 ]
                     )
 
-					// WARNING from Martin: This code does not pass the AS3 compiler. I disabled it because it is not used currently.
-
-//                    posXOffset += parseInt( parseInt( getCharInfo( charCode ).xadvance ) * scale )
+                    posXOffset += parseInt( getCharInfo( charCode ).xadvance ) * scale
                 }
 
                 return posXOffset
