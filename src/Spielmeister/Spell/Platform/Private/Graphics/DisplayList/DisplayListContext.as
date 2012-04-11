@@ -8,8 +8,8 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 	import flash.display.Shape
 	import flash.geom.ColorTransform
 	import flash.geom.Matrix
-	import flash.geom.Matrix3D
-	import flash.geom.Vector3D
+	import flash.geom.Point
+	import flash.geom.Rectangle
 
 	import mx.core.IChildList
 
@@ -211,6 +211,60 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 			colorBuffer.bitmapData.draw(
 				texture.privateBitmapDataResource,
+				transferMatrix,
+				colorTransform,
+				null,
+				null,
+				true
+			)
+		}
+
+
+		public function drawSubTexture(
+			texture : Object,
+			sx : Number,
+			sy : Number,
+			sw : Number,
+			sh : Number,
+			dx : Number,
+			dy : Number,
+			dw : Number,
+			dh : Number
+		) : void {
+			tmpMatrix.assign( worldToScreen )
+			tmpMatrix.prepend( currentState.matrix )
+
+			// rotating the image so that it is not upside down
+			tmpMatrix.prependTranslation( dx, dy, 0 )
+			tmpMatrix.prependRotation( Math.PI, Vector3d.Z_AXIS )
+			tmpMatrix.prependScale( -1, 1, 1 )
+			tmpMatrix.prependTranslation( 0, -dh, 0 )
+
+			// correcting scale
+			tmpMatrix.prependScale( dw / texture.width * ( texture.width / sw ), dh / texture.height * ( texture.height / sh ), 1 )
+
+			transferMatrix.a  = tmpMatrix.n11
+			transferMatrix.b  = tmpMatrix.n21
+			transferMatrix.c  = tmpMatrix.n12
+			transferMatrix.d  = tmpMatrix.n22
+			transferMatrix.tx = tmpMatrix.n14
+			transferMatrix.ty = tmpMatrix.n24
+
+
+			var colorTransform : ColorTransform = null
+			if( currentState.opacity < 1 ) {
+				colorTransform = new ColorTransform( 1, 1, 1, currentState.opacity )
+			}
+
+			/**
+			 * Yes, your are eyes are not deceiving you. This method creates a temporary BitmapData instance in order to perform source texture cropping
+			 * a.k.a. "a texture matrix". This is how it's done on htrae!
+			 */
+			var tmpBitmapData : BitmapData = new BitmapData( sw, sh, false )
+			tmpBitmapData.copyPixels( texture.privateBitmapDataResource, new Rectangle( sx, sy, sw, sh ), new Point( 0, 0 ) )
+
+			colorBuffer.bitmapData.draw(
+				tmpBitmapData,
 				transferMatrix,
 				colorTransform,
 				null,

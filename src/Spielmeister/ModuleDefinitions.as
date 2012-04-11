@@ -2506,8 +2506,7 @@ package Spielmeister {
 					'spell/shared/util/Logger',
 					'spell/shared/util/platform/PlatformKit',
 
-					'glmatrix/mat4',
-					'glmatrix/vec3'
+					'glmatrix/mat4'
 				],
 				function(
 					ConfigurationManager,
@@ -2517,8 +2516,7 @@ package Spielmeister {
 					Logger,
 					PlatformKit,
 
-					mat4,
-					vec3
+					mat4
 				) {
 					'use strict'
 
@@ -2529,9 +2527,10 @@ package Spielmeister {
 					var bufferWidth          = 320
 					var bufferHeight         = 240
 
+					var soundManager         = {}
 					var eventManager         = new EventManager()
 					var configurationManager = new ConfigurationManager( eventManager )
-					var resourceLoader       = new ResourceLoader( eventManager, configurationManager.resourceServer )
+					var resourceLoader       = new ResourceLoader( soundManager, eventManager, configurationManager.resourceServer )
 
 					var resourceUris = [
 						'images/4.2.04_256.png'
@@ -2569,7 +2568,8 @@ package Spielmeister {
 					}
 
 					var drawTestPattern2 = function( x, y, width, height ) {
-						context.drawTexture( texture, x, y, width, height )
+//						context.drawTexture( texture, x, y, width, height )
+						context.drawSubTexture( texture, 64, 64, 128, 128, x, y, width, height )
 					}
 
 					var createMatrix = function() {
@@ -2610,7 +2610,7 @@ package Spielmeister {
 						context.clear()
 
 						drawTestPattern1( 0, 0, bufferWidth, bufferHeight )
-//						drawTestPattern2( 10, 10, bufferWidth, bufferHeight )
+			//			drawTestPattern2( 0, 0, bufferWidth, bufferHeight )
 					}
 
 					var drawViewCoordinates = function() {
@@ -2620,7 +2620,7 @@ package Spielmeister {
 						context.setViewMatrix( worldToView )
 
 						drawTestPattern1( 0, 0, 1, 1 )
-//						drawTestPattern2( 0, 0, 1, 1 )
+			//			drawTestPattern2( 0, 0, 1, 1 )
 					}
 
 					var drawWorldCoordinates = function() {
@@ -2633,7 +2633,7 @@ package Spielmeister {
 						context.translate( [ -1.0, -1.0, 0 ] )
 
 						drawTestPattern1( 0, 0, 1, 1 )
-//						drawTestPattern2( 0, 0, 1, 1 )
+			//			drawTestPattern2( 0, 0, 1, 1 )
 					}
 
 					var drawModelCoordinates = function() {
@@ -2648,7 +2648,7 @@ package Spielmeister {
 						// "appearance" transformations go here - pattern is rotated in object space
 						context.rotate( Math.PI / 30 )
 
-//						drawTestPattern1( 0, 0, 1, 1 )
+			//			drawTestPattern1( 0, 0, 1, 1 )
 						drawTestPattern2( 0, 0, 1, 1 )
 					}
 
@@ -2660,11 +2660,11 @@ package Spielmeister {
 						 * http://www.songho.ca/opengl/gl_transform.html
 						 */
 
-//						drawScreenCoordinates()
+			//			drawScreenCoordinates()
 
-//						drawViewCoordinates()
+			//			drawViewCoordinates()
 
-//						drawWorldCoordinates()
+			//			drawWorldCoordinates()
 
 						drawModelCoordinates()
 					}
@@ -2685,7 +2685,6 @@ package Spielmeister {
 					resourceLoader.start()
 				}
 			)
-
 		}
 
 
