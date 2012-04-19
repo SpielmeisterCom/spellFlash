@@ -11547,7 +11547,7 @@ define(
 			addSeries : function( id, name, unit ) {
 				if( !id ) return
 
-				if( _.has( this.series, id ) ) return
+				if( _.has( this.series, id ) ) throw 'Series with id "' + id + '" already exists'
 
 				this.series[ id ] = createSeries( id, name, unit )
 			},
