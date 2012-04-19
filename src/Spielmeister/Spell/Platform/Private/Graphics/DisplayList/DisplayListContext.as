@@ -60,7 +60,8 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 			container.addChild( colorBuffer )
 
-			this.currentState = this.stateStack.getTop()
+			this.stateStack.pushState()
+			this.currentState = this.stateStack.popState()
 
 
 			// initializing
@@ -156,14 +157,12 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 
 		public function save() : void {
-			stateStack.pushState()
-			currentState = stateStack.getTop()
+			currentState = stateStack.pushState()
 		}
 
 
 		public function restore() : void {
-			stateStack.popState()
-			currentState = stateStack.getTop()
+			currentState = stateStack.popState()
 		}
 
 

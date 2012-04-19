@@ -1,6 +1,9 @@
 package Spielmeister.Spell.Platform.Private.Graphics {
 	import net.richardlord.coral.Matrix3d
 
+	/**
+	 * The state stack supplies means to save and restore state information in a stack-like fashion without allocations at runtime.
+	 */
 	public class StateStack {
 		private var depth : uint
 		private var stack : Vector.<StateStackElement>
@@ -16,22 +19,17 @@ package Spielmeister.Spell.Platform.Private.Graphics {
 			}
 		}
 
-		public function pushState() : void {
+		public function pushState() : StateStackElement {
 			if( index === depth -1 ) throw 'Can not push state. Maximum state stack depth of ' + depth + ' was reached.'
 
 			copyState( stack[ index ], stack[ ++index ] )
+			return stack[ index ]
 		}
 
-		public function popState() : void {
-			if( index > 0 ) {
-				index--
+		public function popState() : StateStackElement {
+			if( index < 0 ) throw 'Can not pop state. The state stack is already depleted.'
 
-			} else {
-				throw 'Can not pop state. The state stack is already depleted.'
-			}
-		}
-
-		public function getTop() : StateStackElement {
+			index--
 			return stack[ index ]
 		}
 
