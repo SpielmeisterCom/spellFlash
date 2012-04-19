@@ -2266,38 +2266,41 @@ package Spielmeister {
 				}
 			)
 
-
 			define(
-				"spell/shared/util/Events",
+				'spell/shared/util/Events',
 				[
-					"underscore"
+					'spell/shared/util/createEnumesqueObject'
 				],
 				function(
-					_
+					createEnumesqueObject
 				) {
-					"use strict"
+					'use strict'
 
 
-					var events = [
+					return createEnumesqueObject( [
+						// CONNECTION
+						'SERVER_CONNECTION_ESTABLISHED',
+						'MESSAGE_RECEIVED',
+
+						// clock synchronization
+						'CLOCK_SYNC_ESTABLISHED',
+
+						// EventManager
+						'SUBSCRIBE',
+						'UNSUBSCRIBE',
+
 						// ResourceLoader
-						"RESOURCE_PROGRESS",
-						"RESOURCE_LOADING_COMPLETED",
-						"RESOURCE_ERROR",
-			            "SCREEN_RESIZED"
-					]
+						'RESOURCE_PROGRESS',
+						'RESOURCE_LOADING_COMPLETED',
+						'RESOURCE_ERROR',
 
-					return _.reduce(
-						events,
-						function( memo, event ) {
-							memo.result[ event ] = memo.index++
-
-							return memo
-						},
-						{
-							index  : 10,
-							result : {}
-						}
-					).result
+						// MISC
+						'RENDER_UPDATE',
+						'LOGIC_UPDATE',
+						'CREATE_ZONE',
+						'DESTROY_ZONE',
+						'SCREEN_RESIZED'
+					] )
 				}
 			)
 
@@ -2683,6 +2686,37 @@ package Spielmeister {
 
 					resourceLoader.addResourceBundle( "bundle1", resourceUris )
 					resourceLoader.start()
+				}
+			)
+
+			define(
+				'spell/shared/util/createEnumesqueObject',
+				[
+					'underscore'
+				],
+				function(
+					_
+				) {
+					'use strict'
+
+
+					/**
+					 * Creates an object with the properties defined by the array "keys". Each property has a unique Number.
+					 */
+					return function( keys ) {
+						return _.reduce(
+							keys,
+							function( memo, key ) {
+								memo.result[ key ] = memo.index++
+
+								return memo
+							},
+							{
+								index  : 0,
+								result : {}
+							}
+						).result
+					}
 				}
 			)
 		}
@@ -3318,6 +3352,19 @@ define(
 )
 
 define(
+	"funkysnakes/shared/components/tailElement",
+	function() {
+		"use strict"
+
+
+		return function( args ) {
+			this.bodyId         = args.bodyId
+			this.positionInTail = args.positionInTail
+		}
+	}
+)
+
+define(
 	"funkysnakes/shared/config/players",
 	[
 		"funkysnakes/shared/config/constants",
@@ -3418,6 +3465,7 @@ define(
 		"funkysnakes/client/components/shadowCaster",
 		"funkysnakes/shared/components/position",
 		"funkysnakes/shared/components/assignedToPlayer",
+		"funkysnakes/shared/components/tailElement",
 		"funkysnakes/shared/config/players",
 		"spell/shared/components/sound/soundEmitter",
 
@@ -3430,6 +3478,7 @@ define(
 		shadowCaster,
 		position,
 		assignedToPlayer,
+		tailElement,
 		playerConfiguration,
 		soundEmitter,
 
@@ -3482,6 +3531,10 @@ define(
 			this.shadowCaster= new shadowCaster( {
 				textureId: "shadows/container.png"
 			} )
+
+			if( args.tailElement ) {
+				this.tailElement = new tailElement( args.tailElement )
+			}
 		}
 	}
 )
@@ -3601,7 +3654,7 @@ define(
 )
 
 define(
-	"funkysnakes/shared/components/lobby/game",
+	"funkysnakes/shared/components/game",
 	function() {
 		"use strict"
 
@@ -3612,14 +3665,20 @@ define(
 			this.name       = args.name
 			this.players    = []
 			this.start      = false
+
+			/**
+			 * waitingForStart, running
+			 * @type {String}
+			 */
+			this.state = 'waitingForStart'
 		}
 	}
 )
 
 define(
-	"funkysnakes/shared/entities/lobby/game",
+	"funkysnakes/shared/entities/game",
 	[
-		"funkysnakes/shared/components/lobby/game"
+		"funkysnakes/shared/components/game"
 	],
 	function(
 		game
@@ -3834,7 +3893,7 @@ define(
 		"funkysnakes/client/entities/background",
 		"funkysnakes/client/entities/widget",
 		"funkysnakes/client/entities/widgetThatFades",
-		"funkysnakes/shared/entities/lobby/game",
+		"funkysnakes/shared/entities/game",
 		"funkysnakes/client/entities/effect",
         "funkysnakes/client/entities/ui/container",
         "funkysnakes/client/entities/ui/button",
@@ -3872,9 +3931,9 @@ define(
 			"speedPowerup"        : speedPowerup,
 			"background"          : background,
 			"widget"              : widget,
-			"widgetThatFades"  : widgetThatFades,
+			"widgetThatFades"     : widgetThatFades,
 
-			"lobby/game"          : game,
+			"game"                : game,
 			"effect"              : effect,
             "container"           : container,
             "button"              : button,
@@ -4222,17 +4281,6 @@ define(
 
 					entity.activePowerups = current.data.entity[ "activePowerups" ]
 
-//					// tailElement
-//					if( next.data.entity.hasOwnProperty( "tailElement" ) &&
-//						!entity.hasOwnProperty( "tailElement" ) ) {
-//
-//						entityManager.addComponent(
-//							entity,
-//							"tailElement",
-//							[ next.data.entity.tailElement ]
-//						)
-//					}
-
 				} else if( current !== undefined ) {
 					entityManager.addComponent( entity, "position", [ current.data.entity[ "position" ] ] )
 					entity.orientation = current.data.entity[ "orientation" ]
@@ -4253,10 +4301,6 @@ define(
 							[ next.data.entity.tailElement ]
 						)
 					}
-
-				} else {
-					// Remove position, effectively removing the entity from the world.
-					entityManager.removeComponent( entity, "position" )
 				}
 			} )
 		}
@@ -7021,7 +7065,7 @@ define(
 
 
 			eventManager.subscribe(
-				[ Events.SCREEN_RESIZED ],
+				Events.SCREEN_RESIZED,
 				_.bind(
 					function( screenWidth, screenHeight ) {
 						context.resizeColorBuffer( screenWidth, screenHeight )
@@ -8026,13 +8070,40 @@ define(
 )
 
 define(
+	'spell/shared/util/network/Messages',
+	[
+		'spell/shared/util/createEnumesqueObject'
+	],
+	function(
+		createEnumesqueObject
+	) {
+		'use strict'
+
+
+		return createEnumesqueObject( [
+			/**
+			 * The client sends this message to the server. The server responds with a ZONE_CHANGE message.
+			 */
+			'JOIN_ANY_GAME',
+
+			/**
+			 * The server sends this message to the client.
+			 */
+			'DELTA_STATE_UPDATE'
+		] )
+	}
+)
+
+define(
 	"spell/client/systems/network/processEntityUpdates",
 	[
+		"spell/shared/util/network/Messages",
 		"spell/shared/util/network/snapshots",
 
 		"underscore"
 	],
 	function(
+		Messages,
 		snapshots,
 
 		_
@@ -8045,29 +8116,34 @@ define(
 			entityManager,
 			incomingMessages
 		) {
-			while ( incomingMessages.entityUpdate !== undefined && incomingMessages.entityUpdate.length > 0 ) {
-				var entityUpdate = incomingMessages.entityUpdate.shift()
+			var deltaStateUpdates = incomingMessages[ Messages.DELTA_STATE_UPDATE ]
 
-				_.each( entityUpdate.createdEntities, function( createdEntity ) {
-					entityManager.createEntity( createdEntity.type, createdEntity.args )
-				} )
+			while( deltaStateUpdates !== undefined && deltaStateUpdates.length > 0 ) {
+				var stateUpdate = deltaStateUpdates.shift()
 
-				_.each( entityUpdate.destroyedEntities, function( entityId ) {
+				_.each(
+					stateUpdate.createdEntities,
+					function( createdEntity ) {
+						entityManager.createEntity( createdEntity.type, createdEntity.args )
+					}
+				)
+
+				_.each( stateUpdate.destroyedEntities, function( entityId ) {
 					var entityToDestroy = synchronizedEntities[ entityId ]
 					entityManager.addComponent( entityToDestroy, "markedForDestruction" )
 				} )
 
-				_.each( entityUpdate.updatedEntities, function( entityGroup ) {
+				_.each( stateUpdate.updatedEntities, function( entityGroup ) {
 					_.each( entityGroup, function( updatedEntity ) {
-						if ( !synchronizedEntities.hasOwnProperty( updatedEntity.id ) ) {
-							throw "Unknown synchronized entity. Id: " +updatedEntity.id
+						if( !synchronizedEntities.hasOwnProperty( updatedEntity.id ) ) {
+							throw "Unknown synchronized entity. Id: " + updatedEntity.id
 						}
 
 						var entity = synchronizedEntities[ updatedEntity.id ]
 						delete updatedEntity.id
 
 						var entitySnapshots = entity.synchronizationSlave.snapshots
-						snapshots.add( entitySnapshots, entityUpdate.time, {
+						snapshots.add( entitySnapshots, stateUpdate.time, {
 							entity : updatedEntity
 						} )
 					} )
@@ -8741,6 +8817,25 @@ define(
 )
 
 define(
+	'spell/shared/util/entities/datastructures/passIdMultiMap',
+	[
+		'spell/shared/util/entities/datastructures/multiMap'
+	],
+	function(
+		multiMap
+	) {
+		'use strict'
+
+
+		return multiMap(
+			function( entity ) {
+				return entity.renderData.pass
+			}
+		)
+	}
+)
+
+define(
 	"spell/shared/util/entities/datastructures/singleton",
 	function() {
 		"use strict"
@@ -8907,6 +9002,7 @@ define(
         "spell/client/util/ui/createUiManager",
 		"spell/shared/util/entities/Entities",
 		"spell/shared/util/entities/datastructures/entityMap",
+		"spell/shared/util/entities/datastructures/passIdMultiMap",
 		"spell/shared/util/entities/datastructures/multiMap",
 		"spell/shared/util/entities/datastructures/singleton",
 		"spell/shared/util/entities/datastructures/sortedArray",
@@ -8941,6 +9037,7 @@ define(
         createUiManager,
 		Entities,
 		entityMap,
+		passIdMultiMap,
 		multiMap,
 		singleton,
 		sortedArray,
@@ -8974,10 +9071,9 @@ define(
 		}
 
 
-		var timeStampInMs, newTimeStampInMs, timeSpentInMs
-		timeStampInMs = 0
-		newTimeStampInMs = 0
-		timeSpentInMs = 0
+		var timeStampInMs = 0,
+			newTimeStampInMs = 0,
+			timeSpentInMs = 0
 
 		function updateZone(
 			timeInMs,
@@ -9128,11 +9224,11 @@ define(
 				var inputManager  = globals.inputManager
                 var soundManager  = globals.soundManager
 
-				this.renderer = new Renderer( eventManager, globals.textures, globals.renderingContext  )
+				this.renderer = new Renderer( eventManager, globals.textures, globals.renderingContext )
 
 				// WORKAROUND: manually triggering SCREEN_RESIZED event to force the renderer to reinitialize the canvas
 				eventManager.publish(
-					[ Events.SCREEN_RESIZED ],
+					Events.SCREEN_RESIZED,
 					[ globals.configurationManager.screenSize.width, globals.configurationManager.screenSize.height ]
 				)
 
@@ -9198,12 +9294,6 @@ define(
 				var synchronizationIdMap = entityMap( function( entity ) {
 					return entity.synchronizationSlave.id
 				} )
-
-				var passIdMultiMap = multiMap(
-					function( entity ) {
-						return entity.renderData.pass
-					}
-				)
 
 				var bodyIdMultiMap = multiMap( function( entity ) {
 					if ( entity.hasOwnProperty( "tailElement" ) ) {
@@ -9450,8 +9540,8 @@ define(
 					thisZone.update( timeInMs, deltaTimeInS, globals )
 				}
 
-				eventManager.subscribe( [ "renderUpdate" ], this.renderUpdate )
-				eventManager.subscribe( [ "logicUpdate", "20" ], this.logicUpdate )
+				eventManager.subscribe( Events.RENDER_UPDATE, this.renderUpdate )
+				eventManager.subscribe( [ Events.LOGIC_UPDATE, "20" ], this.logicUpdate )
 			},
 
 			onDestroy: function( globals ) {
@@ -9460,452 +9550,9 @@ define(
 
 				inputManager.cleanUp()
 
-				eventManager.unsubscribe( [ "renderUpdate" ], this.renderUpdate )
-				eventManager.unsubscribe( [ "logicUpdate", "20" ], this.logicUpdate )
+				eventManager.unsubscribe( Events.RENDER_UPDATE, this.renderUpdate )
+				eventManager.unsubscribe( [ Events.LOGIC_UPDATE, "20" ], this.logicUpdate )
 			}
-		}
-	}
-)
-
-define(
-	"funkysnakes/client/systems/lobby/receiveGameData",
-	[
-		"underscore"
-	],
-	function(
-		_
-	) {
-		"use strict"
-
-
-		return function(
-			games,
-			incomingMessages,
-			entityManager
-		) {
-			while ( incomingMessages.gameData !== undefined && incomingMessages.gameData.length > 0 ) {
-				var currentData = incomingMessages.gameData.pop()
-				incomingMessages.gameData.length = 0
-
-				var receivedGames = {}
-
-				_.each( currentData, function( gameComponent ) {
-					var name = gameComponent.name
-					var game = games[ name ]
-
-					if ( game === undefined ) {
-						game = entityManager.createEntity( "lobby/game", [ { name: name } ] )
-					}
-
-					game.game = gameComponent
-					game.game.hasChanged = true
-
-					receivedGames[ name ] = true
-				} )
-
-				_.each( games, function( game ) {
-					if ( receivedGames[ game.game.name ] !== true ) {
-						entityManager.destroyEntity( game )
-					}
-				} )
-			}
-		}
-	}
-)
-
-define(
-	"funkysnakes/client/systems/lobby/updateGameData",
-	[
-		"underscore"
-	],
-	function(
-		_
-	) {
-		"use strict"
-
-
-		return function(
-			lobby,
-			games
-		) {
-			var numberOfGames = _.size( games )
-
-			if( numberOfGames > 0 ) {
-				var gamesHaveChanged = _.any(
-					games,
-					function( game ) {
-						return ( game.game.hasChanged === true )
-					}
-				)
-
-				if( gamesHaveChanged === false ) return
-			}
-
-			lobby.setNoGamesOptionVisibility( numberOfGames === 0 )
-			lobby.refreshGameList( games )
-		}
-	}
-)
-
-define(
-	"funkysnakes/client/zones/lobby",
-	[
-		"funkysnakes/client/systems/lobby/receiveGameData",
-		"funkysnakes/client/systems/lobby/updateGameData",
-
-		"spell/shared/util/entities/Entities",
-		"spell/shared/util/entities/datastructures/entityMap",
-		"spell/shared/util/zones/ZoneEntityManager",
-		"spell/shared/util/platform/PlatformKit"
-	],
-	function(
-		receiveGameData,
-		updateGameData,
-
-		Entities,
-		entityMap,
-		ZoneEntityManager,
-		PlatformKit
-	) {
-		"use strict"
-
-
-		function updateZone(
-			timeInMs,
-			deltaTimeInS,
-			globals
-		) {
-			var entities      = this.entities
-			var entityManager = this.entityManager
-			var queryIds      = this.queryIds
-
-			var connection  = globals.connection
-
-			receiveGameData(
-				entities.executeQuery( queryIds[ "receiveGameData" ][ 0 ] ).entityMap,
-				connection.messages,
-				entityManager
-			)
-			updateGameData(
-				this.lobby,
-				entities.executeQuery( queryIds[ "updateGameData" ][ 0 ] ).entityMap
-			)
-		}
-
-
-		return {
-			onCreate: function( globals ) {
-				this.update = updateZone
-				this.render = function() {}
-
-				this.entities      = new Entities()
-				this.entityManager = new ZoneEntityManager( globals.entityManager, this.entities )
-
-				var thisZone      = this
-				var entities      = this.entities
-				var entityManager = this.entityManager
-				var connection    = globals.connection
-				var eventManager  = globals.eventManager
-
-				this.lobby = PlatformKit.createLobby( eventManager, connection )
-				this.lobby.init()
-
-
-				var gameNameMap = entityMap( function( entity ) {
-					return entity.game.name
-				} )
-
-				this.queryIds = {
-					receiveGameData: [
-						entities.prepareQuery( [ "game" ], gameNameMap )
-					],
-					updateGameData: [
-						entities.prepareQuery( [ "game" ], gameNameMap )
-					]
-				}
-
-
-				this.lobby.setVisible( true )
-
-				this.logicUpdate = function( timeInMs, deltaTimeInS ) {
-					thisZone.update(
-						timeInMs,
-						deltaTimeInS,
-						globals
-					)
-				}
-
-				eventManager.subscribe( [ "logicUpdate", "20" ], this.logicUpdate )
-			},
-
-			onDestroy: function( globals ) {
-				var eventManager = globals.eventManager
-
-				eventManager.unsubscribe( [ "logicUpdate", "20" ], this.logicUpdate )
-
-				this.lobby.setVisible( false )
-			}
-		}
-	}
-)
-
-define(
-	"spell/shared/util/Timer",
-	[
-		"spell/shared/util/platform/Types",
-
-		"underscore"
-	],
-	function(
-		Types,
-
-		_
-	) {
-		"use strict"
-
-
-		/**
-		 * private
-		 */
-
-//		var checkTimeWarp = function( newRemoteTime, updatedRemoteTime ) {
-//			if( updatedRemoteTime > newRemoteTime ) return
-//
-//			var tmp = newRemoteTime - updatedRemoteTime
-//			console.log( 'WARNING: clock reset into past by ' + tmp + ' ms' )
-//		}
-
-
-		/**
-		 * public
-		 */
-
-		function Timer( eventManager, statisticsManager, initialTime ) {
-			this.newRemoteTime        = initialTime
-			this.remoteTime           = initialTime
-			this.newRemoteTimPending  = false
-			this.localTime            = initialTime
-			this.previousSystemTime   = Types.Time.getCurrentInMs()
-			this.elapsedTime          = 0
-			this.deltaLocalRemoteTime = 0
-			this.statisticsManager    = statisticsManager
-
-			eventManager.subscribe(
-				[ "clockSyncUpdate" ],
-				_.bind(
-					function( updatedRemoteTime ) {
-//						checkTimeWarp( newRemoteTime, updatedRemoteTime )
-
-						this.newRemoteTime = updatedRemoteTime
-						this.newRemoteTimPending = true
-					},
-					this
-				)
-			)
-
-			// setting up statistics
-			statisticsManager.addSeries( 'remoteTime', '' )
-			statisticsManager.addSeries( 'localTime', '' )
-			statisticsManager.addSeries( 'deltaLocalRemoteTime', '' )
-			statisticsManager.addSeries( 'relativeClockSkew', '' )
-			statisticsManager.addSeries( 'newRemoteTimeTransfered', '' )
-		}
-
-		Timer.prototype = {
-			update : function() {
-				// TODO: think about incorporating the new value "softly" instead of directly replacing the old one
-				if( this.newRemoteTimPending ) {
-					this.remoteTime          = this.newRemoteTime
-					this.newRemoteTimPending = false
-				}
-
-				// measuring time
-				var systemTime            = Types.Time.getCurrentInMs()
-				this.elapsedTime          = Math.max( systemTime - this.previousSystemTime, 0 ) // it must never be smaller than 0
-				this.previousSystemTime   = systemTime
-
-				this.localTime            += this.elapsedTime
-				this.remoteTime           += this.elapsedTime
-				this.deltaLocalRemoteTime = this.localTime - this.remoteTime
-
-				// relative clock skew
-				var factor = 1000000000
-				this.relativeClockSkew = ( ( this.localTime / this.remoteTime * factor ) - factor ) * 2 + 1
-
-				// updating statistics
-				this.statisticsManager.updateSeries( 'remoteTime', this.remoteTime % 2000 )
-				this.statisticsManager.updateSeries( 'localTime', this.localTime % 2000 )
-				this.statisticsManager.updateSeries( 'deltaLocalRemoteTime', this.deltaLocalRemoteTime + 250 )
-				this.statisticsManager.updateSeries( 'relativeClockSkew', this.relativeClockSkew )
-			},
-			getLocalTime : function() {
-				return this.localTime
-			},
-			getElapsedTime : function() {
-				return this.elapsedTime
-			},
-			getRemoteTime : function() {
-				return this.remoteTime
-			}//,
-//			getDeltaLocalRemoteTime : function() {
-//				return deltaRemoteLocalTime
-//			},
-//			getRelativeClockSkew : function() {
-//				return relativeClockSkew
-//			}
-		}
-
-		return Timer
-	}
-)
-
-define(
-	"funkysnakes/shared/util/createMainLoop",
-	[
-		"spell/shared/util/Timer",
-		"spell/shared/util/platform/Types",
-		"spell/shared/util/platform/PlatformKit",
-
-		"underscore"
-	],
-	function(
-		Timer,
-		Types,
-		PlatformKit,
-
-		_
-	) {
-		"use strict"
-
-
-		var allowedDeltaInMs = 20
-
-
-		return function(
-			eventManager,
-			statisticsManager,
-			initialRemoteGameTimeInMs
-		) {
-			var timer         = new Timer( eventManager, statisticsManager, initialRemoteGameTimeInMs )
-			var localTimeInMs = initialRemoteGameTimeInMs
-
-
-			// Since the main loop supports arbitrary update intervals but can't publish events for every possible
-			// update interval, we need to maintain a set of all update intervals that subscribers are interested in.
-			var updateIntervals = {}
-
-			eventManager.subscribe(
-				[ "subscribe" ],
-				function( scope, subscriber ) {
-					if( scope[ 0 ] !== "logicUpdate" ) return
-
-					var interval = scope[ 1 ]
-
-					if( updateIntervals.hasOwnProperty( interval ) ) return
-
-					updateIntervals[ interval ] = {
-						accumulatedTimeInMs : 0,
-						localTimeInMs       : localTimeInMs
-					}
-				}
-			)
-
-			var clockSpeedFactor, elapsedTimeInMs
-			clockSpeedFactor = 1.0
-
-			var mainLoop = function() {
-				timer.update()
-				localTimeInMs   = timer.getLocalTime()
-				elapsedTimeInMs = timer.getElapsedTime()
-
-				_.each(
-					updateIntervals,
-					function( updateInterval, deltaTimeInMsAsString ) {
-						var deltaTimeInMs = parseInt( deltaTimeInMsAsString )
-
-						updateInterval.accumulatedTimeInMs += elapsedTimeInMs * clockSpeedFactor
-
-						while( updateInterval.accumulatedTimeInMs > deltaTimeInMs ) {
-							// Only simulate, if not too much time has accumulated to prevent CPU overload. This can happen, if
-							// the browser tab has been in the background for a while and requestAnimationFrame is used.
-							if( updateInterval.accumulatedTimeInMs <= 5 * deltaTimeInMs ) {
-								eventManager.publish(
-									[ "logicUpdate", deltaTimeInMsAsString ],
-									[ updateInterval.localTimeInMs, deltaTimeInMs / 1000 ]
-								)
-							}
-
-							updateInterval.accumulatedTimeInMs -= deltaTimeInMs
-							updateInterval.localTimeInMs   += deltaTimeInMs
-						}
-					}
-				)
-
-
-				eventManager.publish( [ "renderUpdate" ], [ localTimeInMs, elapsedTimeInMs ] )
-
-
-//				var localGameTimeDeltaInMs = timer.getRemoteTime() - localTimeInMs
-//
-//				if( Math.abs( localGameTimeDeltaInMs ) > allowedDeltaInMs ) {
-//					if( localGameTimeDeltaInMs > 0 ) {
-//						clockSpeedFactor = 1.25
-//
-//					} else {
-//						clockSpeedFactor = 0.25
-//					}
-//
-//				} else {
-//					clockSpeedFactor = 1.0
-//				}
-
-				PlatformKit.callNextFrame( mainLoop )
-			}
-
-			return mainLoop
-		}
-	}
-)
-
-define(
-	"funkysnakes/shared/components/collisionCircle",
-	function() {
-		"use strict"
-
-
-		return function( radius ) {
-			this.radius = radius
-		}
-	}
-)
-
-define(
-	"funkysnakes/shared/components/shield",
-	[
-		"funkysnakes/shared/config/constants"
-	],
-	function(
-		constants
-	) {
-		"use strict"
-
-
-		return function( args ) {
-			this.state = args.state
-			this.lifetime = args.lifetime || constants.shieldLifetime // in seconds
-		}
-	}
-)
-
-define(
-	"funkysnakes/shared/components/tailElement",
-	function() {
-		"use strict"
-
-
-		return function( args ) {
-			this.bodyId         = args.bodyId
-			this.positionInTail = args.positionInTail
 		}
 	}
 )
@@ -9913,11 +9560,13 @@ define(
 define(
 	"funkysnakes/shared/util/networkProtocol",
 	[
+		"spell/shared/util/network/Messages",
 		"spell/shared/util/platform/PlatformKit",
 
 		"underscore"
 	],
 	function(
+		Messages,
 		PlatformKit,
 
 		_
@@ -9938,163 +9587,9 @@ define(
 			},
 
 			decode: function( encodedMessage ) {
-				var message = jsonCoder.decode( encodedMessage )
-
-				if( message.type === "entityUpdate" ) {
-					_.each(
-						message.data.updatedEntities,
-						function( entityGroup, index ) {
-							message.data.updatedEntities[ index ] = entityGroup
-						}
-					)
-				}
-
-				return message
+				return jsonCoder.decode( encodedMessage )
 			}
 		}
-	}
-)
-
-define(
-	"spell/client/components/network/markedForDestruction",
-	function() {
-		"use strict"
-
-
-		return function() {}
-	}
-)
-
-define(
-	"spell/shared/util/create",
-	function() {
-		"use strict"
-
-
-		var create = function( constructor, args ) {
-			if ( constructor.prototype === undefined ) {
-				throw create.NO_CONSTRUCTOR_ERROR + constructor
-			}
-
-			var object = {}
-			object.prototype = constructor.prototype
-			var returnedObject = constructor.apply( object, args )
-			return returnedObject || object
-		}
-
-
-		create.NO_CONSTRUCTOR_ERROR = "The first argument for create must be a constructor. You passed in "
-
-
-		return create
-	}
-)
-
-define(
-	"spell/shared/util/entities/EntityManager",
-	[
-		"spell/shared/util/create"
-	],
-	function(
-		create
-	) {
-		"use strict"
-
-
-		var EntityManager = function( entityConstructors, componentConstructors ) {
-			this.entityConstructors    = entityConstructors
-			this.componentConstructors = componentConstructors
-
-			this.nextId = 0
-		}
-
-
-		EntityManager.COMPONENT_TYPE_NOT_KNOWN = "The type of component you tried to add is not known. Component type: "
-		EntityManager.ENTITY_TYPE_NOT_KNOWN    = "The type of entity you tried to create is not known. Entity type: "
-
-
-		EntityManager.prototype = {
-			createEntity: function( entityType, args ) {
-				var constructor = this.entityConstructors[ entityType ]
-
-				if ( constructor === undefined ) {
-					throw EntityManager.ENTITY_TYPE_NOT_KNOWN + entityType
-				}
-
-				var entityId = getNextId( this )
-				var entity   = create( constructor, args )
-				entity.id    = entityId
-
-				return entity
-			},
-
-			addComponent: function( entity, componentType, args ) {
-				var constructor = this.componentConstructors[ componentType ]
-
-				if ( constructor === undefined ) {
-					throw EntityManager.COMPONENT_TYPE_NOT_KNOWN + componentType
-				}
-
-				var component = create( constructor, args )
-				entity[ componentType ] = component
-
-				return component
-			},
-
-			removeComponent: function( entity, componentType ) {
-				var component = entity[ componentType ]
-
-				delete entity[ componentType ]
-
-				return component
-			}
-		}
-
-
-		function getNextId( self ) {
-			var id = self.nextId
-
-			self.nextId += 1
-
-			return id
-		}
-
-
-		return EntityManager
-	}
-)
-
-define(
-	"spell/shared/util/CircularBuffer",
-	function() {
-		"use strict"
-
-
-		function CircularBuffer( length, defaultValue ) {
-			if( !length ) throw 'Argument "length" is missing'
-
-			this.length = length
-			this.index = 0
-			this.array = new Array()
-
-			if( !defaultValue ) return
-
-			for( var i = 0; i < length; i++ ) {
-				this.array[ i ] = defaultValue
-			}
-		}
-
-		CircularBuffer.prototype = {
-			push: function( value ) {
-				this.array[ this.index ] = value
-				this.index = ( this.index + 1 ) % this.length
-			},
-			toArray: function() {
-				return this.array.slice()
-			}
-		}
-
-		return CircularBuffer
 	}
 )
 
@@ -10182,8 +9677,124 @@ define(
 )
 
 define(
+	"spell/client/util/network/createServerConnection",
+	[
+		"spell/shared/util/Events",
+		"spell/shared/util/platform/PlatformKit",
+		"spell/shared/util/Logger"
+	],
+	function(
+		Events,
+		PlatformKit,
+		Logger
+	) {
+		"use strict"
+
+
+		return function( eventManager, statisticsManager, host, protocol ) {
+			statisticsManager.addSeries( "charsSent", "chars/s" )
+			statisticsManager.addSeries( "charsReceived", "chars/s" )
+
+			var socket = PlatformKit.createSocket( host )
+
+			var connection = {
+				protocol : protocol,
+				socket   : socket,
+				messages : {},
+				handlers : {},
+				send : function( messageType, messageData ) {
+					var message = connection.protocol.encode( messageType, messageData )
+
+					statisticsManager.updateSeries( "charsSent", message.length )
+
+					try {
+						socket.send( message )
+
+					} catch ( e ) {
+						Logger.debug( 'FIXME: Could not send message, because the socket is not connected yet. Will retry in 0.5 sec' )
+
+						PlatformKit.registerTimer(
+							function() {
+								socket.send( message )
+							},
+							500
+						)
+					}
+				}
+			}
+
+			socket.setOnMessage(
+				function( messageData ) {
+					var message = protocol.decode( messageData )
+
+					statisticsManager.updateSeries( "charsReceived", messageData.length )
+
+					eventManager.publish(
+						[ Events.MESSAGE_RECEIVED, message.type ],
+						[ message.type, message.data ]
+					)
+
+					if( connection.handlers[ message.type ] === undefined ) {
+						if ( !connection.messages.hasOwnProperty( message.type ) ) {
+							connection.messages[ message.type ] = []
+						}
+						connection.messages[ message.type ].push( message.data )
+
+					} else {
+						connection.handlers[ message.type ]( message.type, message.data )
+					}
+				}
+			)
+
+			socket.setOnConnected(
+				function() {
+					eventManager.publish( Events.SERVER_CONNECTION_ESTABLISHED )
+				}
+			)
+
+			return connection
+		}
+	}
+)
+
+define(
+	"spell/shared/util/CircularBuffer",
+	function() {
+		"use strict"
+
+
+		function CircularBuffer( length, defaultValue ) {
+			if( !length ) throw 'Argument "length" is missing'
+
+			this.length = length
+			this.index = 0
+			this.array = new Array()
+
+			if( !defaultValue ) return
+
+			for( var i = 0; i < length; i++ ) {
+				this.array[ i ] = defaultValue
+			}
+		}
+
+		CircularBuffer.prototype = {
+			push: function( value ) {
+				this.array[ this.index ] = value
+				this.index = ( this.index + 1 ) % this.length
+			},
+			toArray: function() {
+				return this.array.slice()
+			}
+		}
+
+		return CircularBuffer
+	}
+)
+
+define(
 	"spell/client/util/network/initializeClockSync",
 	[
+		"spell/shared/util/Events",
 		"spell/shared/util/platform/Types",
 		"spell/shared/util/platform/PlatformKit",
 		"spell/shared/util/CircularBuffer",
@@ -10192,6 +9803,7 @@ define(
 		"underscore"
 	],
 	function(
+		Events,
 		Types,
 		PlatformKit,
 		CircularBuffer,
@@ -10248,20 +9860,12 @@ define(
 
 
 				if( currentUpdateNumber === minNumberOfClockSyncRoundTrips ) {
-					eventManager.publish(
-						[ "clockSyncEstablished" ],
-						[ computedServerTimeInMs ]
-					)
+					eventManager.publish( Events.CLOCK_SYNC_ESTABLISHED, [ computedServerTimeInMs ] )
 
 					initialSynchronization = false
 
-					Logger.debug( 'clock synchronization established' )
-
 				} else {
-//					eventManager.publish(
-//						[ "clockSyncUpdate" ],
-//						[ computedServerTimeInMs ]
-//					)
+//					eventManager.publish( "clockSyncUpdate", [ computedServerTimeInMs ] )
 				}
 
 				currentUpdateNumber++
@@ -10373,94 +9977,697 @@ define(
 
 
 		return {
-			initializeClockSync       : initializeClockSync
+			initializeClockSync : initializeClockSync
 		}
 	}
 )
 
 define(
-	"spell/client/util/network/createServerConnection",
+	'funkysnakes/client/zones/init',
 	[
-		"spell/shared/util/platform/PlatformKit",
-		"spell/shared/util/Logger"
+		'funkysnakes/shared/util/networkProtocol',
+		"funkysnakes/client/systems/updateRenderData",
+		'funkysnakes/client/systems/Renderer',
+
+		'spell/shared/util/entities/Entities',
+		'spell/shared/util/entities/datastructures/passIdMultiMap',
+		'spell/shared/util/network/Messages',
+		'spell/shared/util/zones/ZoneEntityManager',
+		'spell/client/util/network/createServerConnection',
+		'spell/client/util/network/network',
+		'spell/shared/util/Events',
+		'spell/shared/util/Logger',
+
+		'underscore'
 	],
 	function(
-		PlatformKit,
-		Logger
+		networkProtocol,
+		updateRenderData,
+		Renderer,
+
+		Entities,
+		passIdMultiMap,
+		Messages,
+		ZoneEntityManager,
+		createServerConnection,
+		network,
+		Events,
+		Logger,
+
+		_
 	) {
-		"use strict"
+		'use strict'
 
 
-		return function( eventManager, statisticsManager, host, protocol ) {
-			statisticsManager.addSeries( "charsSent", "chars/s" )
-			statisticsManager.addSeries( "charsReceived", "chars/s" )
+		/**
+		 * private
+		 */
 
-			var socket = PlatformKit.createSocket( host )
+		var initZoneResources = [
+			'images/loading.png'
+		]
 
-			var connection = {
-				protocol : protocol,
-				socket   : socket,
-				messages : {},
-				handlers : {},
-				send : function( messageType, messageData ) {
-					var message = connection.protocol.encode( messageType, messageData )
+		var gameZoneResources = [
+			'images/4.2.04_256.png',
+			'images/web/tile.jpg',
+			'images/web/menu.png',
+			'images/web/logo.png',
+			'images/html5_logo_64x64.png',
+			'images/flash_logo_64x64.png',
+			'images/help_controls.png',
+			'images/environment/cloud_dark_02.png',
+			'images/environment/cloud_dark_07.png',
+			'images/environment/cloud_light_05.png',
+			'images/environment/cloud_light_07.png',
+			'images/environment/cloud_dark_03.png',
+			'images/environment/cloud_light_04.png',
+			'images/environment/arena.png',
+			'images/environment/cloud_dark_05.png',
+			'images/environment/cloud_dark_06.png',
+			'images/environment/cloud_dark_01.png',
+			'images/environment/cloud_light_01.png',
+			'images/environment/ground.jpg',
+			'images/environment/cloud_light_06.png',
+			'images/environment/cloud_light_03.png',
+			'images/environment/cloud_dark_04.png',
+			'images/environment/cloud_light_02.png',
+			'images/items/neutral_container.png',
+			'images/items/object_energy.png',
+			'images/items/player4_container.png',
+			'images/items/dropped_container_1.png',
+			'images/items/player3_container.png',
+			'images/items/player1_container.png',
+			'images/items/dropped_container_0.png',
+			'images/items/invincible.png',
+			'images/items/player2_container.png',
+			'images/shadows/object_energy.png',
+			'images/shadows/invincible.png',
+			'images/shadows/container.png',
+			'images/shadows/vehicle.png',
+			'images/tile_cloud.png',
+			'images/tile_cloud2.png',
+			'images/vehicles/ship_player1.png',
+			'images/vehicles/ship_player1_speed.png',
+			'images/vehicles/ship_player1_invincible.png',
+			'images/vehicles/ship_player2.png',
+			'images/vehicles/ship_player2_speed.png',
+			'images/vehicles/ship_player2_invincible.png',
+			'images/vehicles/ship_player3.png',
+			'images/vehicles/ship_player3_speed.png',
+			'images/vehicles/ship_player3_invincible.png',
+			'images/vehicles/ship_player4.png',
+			'images/vehicles/ship_player4_speed.png',
+			'images/vehicles/ship_player4_invincible.png',
+			'images/effects/shield.png',
+			'images/arrow_left.png',
+			'images/arrow_left_pressed.png',
+			'images/arrow_right.png',
+			'images/arrow_right_pressed.png',
+			'images/speaker_mute.png',
+			'images/speaker.png',
+			'images/space.png',
+			'images/space_pressed.png',
+			'images/ttf/batang_0.png',
+			'images/ttf/BelloPro_0.png',
+			'sounds/sets/set1.json'
+		]
 
-					statisticsManager.updateSeries( "charsSent", message.length )
 
-					try {
-						socket.send( message )
+		function updateTextures( renderingContext, resources, textures ) {
+			// TODO: the resource loader should create spell texture object instances instead of raw html images
 
-					} catch ( e ) {
-						Logger.debug( 'FIXME: Could not send message, because the socket is not connected yet. Will retry in 0.5 sec' )
-
-						PlatformKit.registerTimer(
-							function() {
-								socket.send( message )
-							},
-							500
-						)
-					}
-				}
-			}
-
-			socket.setOnMessage(
-				function( messageData ) {
-					var message = protocol.decode( messageData )
-
-					statisticsManager.updateSeries( "charsReceived", messageData.length )
-
-					eventManager.publish(
-						[ "messageReceived", message.type ],
-						[ message.type, message.data ]
-					)
-
-					if( connection.handlers[ message.type ] === undefined ) {
-						if ( !connection.messages.hasOwnProperty( message.type ) ) {
-							connection.messages[ message.type ] = []
-						}
-						connection.messages[ message.type ].push( message.data )
-
-					} else {
-						connection.handlers[ message.type ]( message.type, message.data )
+			// HACK: creating textures out of images
+			_.each(
+				resources,
+				function( resource, resourceId ) {
+					var extension =  _.last( resourceId.split( '.' ) )
+					if( extension === 'png' || extension === 'jpg' ) {
+						textures[ resourceId.replace(/images\//g, '') ] = renderingContext.createTexture( resource )
 					}
 				}
 			)
 
-			return connection
+			return textures
 		}
+
+		function addLoadingIcon( entityManager, position ) {
+			var textureId = 'loading.png'
+
+			if( !textureId ) return
+
+			entityManager.createEntity(
+				"widget",
+				[ {
+					position  : position,
+					textureId : textureId
+				} ]
+			)
+		}
+
+		function update(
+			globals,
+			timeInMs,
+			dtInS
+		) {
+
+		}
+
+		function render(
+			globals,
+			timeInMs,
+			deltaTimeInMs
+		) {
+			var entities = this.entities,
+				queryIds = this.queryIds
+
+			updateRenderData(
+				entities.executeQuery( queryIds[ "updateRenderData" ][ 0 ] ).elements
+			)
+
+			this.renderer.process(
+				timeInMs,
+				deltaTimeInMs,
+				entities.executeQuery( queryIds[ "render" ][ 0 ] ).multiMap,
+				[]
+			)
+		}
+
+		return {
+			onCreate: function( globals ) {
+				var eventManager         = globals.eventManager,
+					configurationManager = globals.configurationManager,
+					statisticsManager    = globals.statisticsManager,
+					resourceLoader       = globals.resourceLoader,
+					zoneManager          = globals.zoneManager
+
+				var entities  = new Entities()
+				this.entities = entities
+
+				var entityManager  = new ZoneEntityManager( globals.entityManager, this.entities )
+				this.entityManager = entityManager
+
+				this.renderer = new Renderer( eventManager, globals.textures, globals.renderingContext )
+
+//				// WORKAROUND: manually triggering SCREEN_RESIZED event to force the renderer to reinitialize the canvas
+//				eventManager.publish(
+//					Events.SCREEN_RESIZED,
+//					[ globals.configurationManager.screenSize.width, globals.configurationManager.screenSize.height ]
+//				)
+
+				this.queryIds = {
+					render: [
+						entities.prepareQuery( [ "position", "appearance", "renderData" ], passIdMultiMap )
+					],
+					updateRenderData: [
+						entities.prepareQuery( [ "position", "renderData" ] )
+					]
+				}
+
+				this.renderCallback = _.bind( render, this, globals )
+				this.updateCallback = _.bind( update, this, globals )
+
+				eventManager.subscribe( Events.RENDER_UPDATE, this.renderCallback )
+				eventManager.subscribe( [ Events.LOGIC_UPDATE, '20' ], this.updateCallback )
+
+
+				eventManager.subscribe(
+					[ Events.MESSAGE_RECEIVED, Messages.ZONE_CHANGE ],
+					function( messageType, messageData ) {
+						Logger.debug( 'received zone change message' )
+
+						// discard entity updates from the previous zone
+						connection.messages[ Messages.DELTA_STATE_UPDATE ] = []
+
+						var currentZone = zoneManager.activeZones()[ 0 ],
+							newZone     = messageData
+
+						zoneManager.destroyZone( currentZone )
+						zoneManager.createZone( newZone )
+					}
+				)
+
+
+				var connection
+
+				eventManager.waitFor(
+					Events.SERVER_CONNECTION_ESTABLISHED
+
+				).resume( function() {
+					Logger.debug( 'connection to server established' )
+
+					eventManager.waitFor(
+						[ Events.RESOURCE_LOADING_COMPLETED, 'initZoneResources' ]
+
+					).resume( function() {
+						eventManager.waitFor(
+							[ Events.RESOURCE_LOADING_COMPLETED, 'gameZoneResources' ]
+
+						).and(
+							Events.CLOCK_SYNC_ESTABLISHED
+
+						).resume( function() {
+							Logger.debug( 'finished loading game zone resources' )
+							Logger.debug( 'clock synchronization established' )
+
+							updateTextures( globals.renderingContext, resourceLoader.getResources(), globals.textures )
+
+							addLoadingIcon( entityManager, [ 768, 704, 0 ] )
+
+							connection.send( Messages.JOIN_ANY_GAME )
+						} )
+
+						Logger.debug( 'finished loading init zone resources' )
+						updateTextures( globals.renderingContext, resourceLoader.getResources(), globals.textures )
+
+						// TODO: add animation
+						addLoadingIcon( entityManager, [ 0, 0, 0 ] )
+
+						// trigger loading of game zone resources
+						resourceLoader.addResourceBundle( 'gameZoneResources', gameZoneResources )
+						resourceLoader.start()
+
+						// start clock synchronization
+						network.initializeClockSync( eventManager, statisticsManager, connection )
+					} )
+
+					// trigger loading of init zone resources
+					resourceLoader.addResourceBundle( 'initZoneResources', initZoneResources )
+					resourceLoader.start()
+				} )
+
+				Logger.debug( 'connecting to game-server "' + configurationManager.gameServer.host + '"' )
+
+				connection = createServerConnection( eventManager, statisticsManager, configurationManager.gameServer.host, networkProtocol )
+				globals.connection = connection
+			},
+
+			onDestroy: function( globals ) {
+				var eventManager = globals.eventManager
+
+				eventManager.unsubscribe( Events.RENDER_UPDATE, this.renderCallback )
+				eventManager.unsubscribe( [ Events.LOGIC_UPDATE, '20' ], this.updateCallback )
+			}
+		}
+	}
+)
+
+define(
+	"spell/shared/util/Timer",
+	[
+		"spell/shared/util/Events",
+		"spell/shared/util/platform/Types",
+
+		"underscore"
+	],
+	function(
+		Events,
+		Types,
+
+		_
+	) {
+		"use strict"
+
+
+		/**
+		 * private
+		 */
+
+//		var checkTimeWarp = function( newRemoteTime, updatedRemoteTime ) {
+//			if( updatedRemoteTime > newRemoteTime ) return
+//
+//			var tmp = newRemoteTime - updatedRemoteTime
+//			console.log( 'WARNING: clock reset into past by ' + tmp + ' ms' )
+//		}
+
+
+		/**
+		 * public
+		 */
+
+		function Timer( eventManager, statisticsManager, initialTime ) {
+			this.newRemoteTime        = initialTime
+			this.remoteTime           = initialTime
+			this.newRemoteTimPending  = false
+			this.localTime            = initialTime
+			this.previousSystemTime   = Types.Time.getCurrentInMs()
+			this.elapsedTime          = 0
+			this.deltaLocalRemoteTime = 0
+			this.statisticsManager    = statisticsManager
+
+			eventManager.subscribe(
+				[ "clockSyncUpdate" ],
+				_.bind(
+					function( updatedRemoteTime ) {
+//						checkTimeWarp( newRemoteTime, updatedRemoteTime )
+
+						this.newRemoteTime = updatedRemoteTime
+						this.newRemoteTimPending = true
+					},
+					this
+				)
+			)
+
+			eventManager.subscribe(
+				Events.CLOCK_SYNC_ESTABLISHED,
+				_.bind(
+					function( initialRemoteGameTimeInMs ) {
+						this.newRemoteTime = this.remoteTime = this.localTime = initialRemoteGameTimeInMs
+						this.newRemoteTimPending = false
+					},
+					this
+				)
+			)
+
+			// setting up statistics
+			statisticsManager.addSeries( 'remoteTime', '' )
+			statisticsManager.addSeries( 'localTime', '' )
+			statisticsManager.addSeries( 'deltaLocalRemoteTime', '' )
+			statisticsManager.addSeries( 'relativeClockSkew', '' )
+			statisticsManager.addSeries( 'newRemoteTimeTransfered', '' )
+		}
+
+		Timer.prototype = {
+			update : function() {
+				// TODO: think about incorporating the new value "softly" instead of directly replacing the old one
+				if( this.newRemoteTimPending ) {
+					this.remoteTime          = this.newRemoteTime
+					this.newRemoteTimPending = false
+				}
+
+				// measuring time
+				var systemTime            = Types.Time.getCurrentInMs()
+				this.elapsedTime          = Math.max( systemTime - this.previousSystemTime, 0 ) // it must never be smaller than 0
+				this.previousSystemTime   = systemTime
+
+				this.localTime            += this.elapsedTime
+				this.remoteTime           += this.elapsedTime
+				this.deltaLocalRemoteTime = this.localTime - this.remoteTime
+
+				// relative clock skew
+				var factor = 1000000000
+				this.relativeClockSkew = ( ( this.localTime / this.remoteTime * factor ) - factor ) * 2 + 1
+
+				// updating statistics
+				this.statisticsManager.updateSeries( 'remoteTime', this.remoteTime % 2000 )
+				this.statisticsManager.updateSeries( 'localTime', this.localTime % 2000 )
+				this.statisticsManager.updateSeries( 'deltaLocalRemoteTime', this.deltaLocalRemoteTime + 250 )
+				this.statisticsManager.updateSeries( 'relativeClockSkew', this.relativeClockSkew )
+			},
+			getLocalTime : function() {
+				return this.localTime
+			},
+			getElapsedTime : function() {
+				return this.elapsedTime
+			},
+			getRemoteTime : function() {
+				return this.remoteTime
+			}//,
+//			getDeltaLocalRemoteTime : function() {
+//				return deltaRemoteLocalTime
+//			},
+//			getRelativeClockSkew : function() {
+//				return relativeClockSkew
+//			}
+		}
+
+		return Timer
+	}
+)
+
+define(
+	"funkysnakes/shared/util/createMainLoop",
+	[
+		"spell/shared/util/Events",
+		"spell/shared/util/Timer",
+		"spell/shared/util/platform/Types",
+		"spell/shared/util/platform/PlatformKit",
+
+		"underscore"
+	],
+	function(
+		Events,
+		Timer,
+		Types,
+		PlatformKit,
+
+		_
+	) {
+		"use strict"
+
+
+		var allowedDeltaInMs = 20
+
+
+		return function(
+			eventManager,
+			statisticsManager
+		) {
+			// Until the proper remote game time is computed local time will have to do.
+			var initialLocalGameTimeInMs = Types.Time.getCurrentInMs(),
+				timer                    = new Timer( eventManager, statisticsManager, initialLocalGameTimeInMs ),
+				localTimeInMs            = initialLocalGameTimeInMs
+
+			// Since the main loop supports arbitrary update intervals but can't publish events for every possible
+			// update interval, we need to maintain a set of all update intervals that subscribers are interested in.
+			var updateIntervals = {}
+
+			eventManager.subscribe(
+				Events.SUBSCRIBE,
+				function( scope, subscriber ) {
+					if( scope[ 0 ] !== Events.LOGIC_UPDATE ) return
+
+					var interval = scope[ 1 ]
+
+					if( updateIntervals.hasOwnProperty( interval ) ) return
+
+					updateIntervals[ interval ] = {
+						accumulatedTimeInMs : 0,
+						localTimeInMs       : localTimeInMs
+					}
+				}
+			)
+
+			var clockSpeedFactor, elapsedTimeInMs
+			clockSpeedFactor = 1.0
+
+			var mainLoop = function() {
+				timer.update()
+				localTimeInMs   = timer.getLocalTime()
+				elapsedTimeInMs = timer.getElapsedTime()
+
+				_.each(
+					updateIntervals,
+					function( updateInterval, deltaTimeInMsAsString ) {
+						var deltaTimeInMs = parseInt( deltaTimeInMsAsString )
+
+						updateInterval.accumulatedTimeInMs += elapsedTimeInMs * clockSpeedFactor
+
+						while( updateInterval.accumulatedTimeInMs > deltaTimeInMs ) {
+							// Only simulate, if not too much time has accumulated to prevent CPU overload. This can happen, if
+							// the browser tab has been in the background for a while and requestAnimationFrame is used.
+							if( updateInterval.accumulatedTimeInMs <= 5 * deltaTimeInMs ) {
+								eventManager.publish(
+									[ Events.LOGIC_UPDATE, deltaTimeInMsAsString ],
+									[ updateInterval.localTimeInMs, deltaTimeInMs / 1000 ]
+								)
+							}
+
+							updateInterval.accumulatedTimeInMs -= deltaTimeInMs
+							updateInterval.localTimeInMs   += deltaTimeInMs
+						}
+					}
+				)
+
+
+				eventManager.publish( Events.RENDER_UPDATE, [ localTimeInMs, elapsedTimeInMs ] )
+
+
+//				var localGameTimeDeltaInMs = timer.getRemoteTime() - localTimeInMs
+//
+//				if( Math.abs( localGameTimeDeltaInMs ) > allowedDeltaInMs ) {
+//					if( localGameTimeDeltaInMs > 0 ) {
+//						clockSpeedFactor = 1.25
+//
+//					} else {
+//						clockSpeedFactor = 0.25
+//					}
+//
+//				} else {
+//					clockSpeedFactor = 1.0
+//				}
+
+				PlatformKit.callNextFrame( mainLoop )
+			}
+
+			return mainLoop
+		}
+	}
+)
+
+define(
+	"funkysnakes/shared/components/collisionCircle",
+	function() {
+		"use strict"
+
+
+		return function( radius ) {
+			this.radius = radius
+		}
+	}
+)
+
+define(
+	"funkysnakes/shared/components/shield",
+	[
+		"funkysnakes/shared/config/constants"
+	],
+	function(
+		constants
+	) {
+		"use strict"
+
+
+		return function( args ) {
+			this.state = args.state
+			this.lifetime = args.lifetime || constants.shieldLifetime // in seconds
+		}
+	}
+)
+
+define(
+	"spell/client/components/network/markedForDestruction",
+	function() {
+		"use strict"
+
+
+		return function() {}
+	}
+)
+
+define(
+	"spell/shared/util/create",
+	function() {
+		"use strict"
+
+
+		var create = function( constructor, args ) {
+			if ( constructor.prototype === undefined ) {
+				throw create.NO_CONSTRUCTOR_ERROR + constructor
+			}
+
+			var object = {}
+			object.prototype = constructor.prototype
+			var returnedObject = constructor.apply( object, args )
+			return returnedObject || object
+		}
+
+
+		create.NO_CONSTRUCTOR_ERROR = "The first argument for create must be a constructor. You passed in "
+
+
+		return create
+	}
+)
+
+define(
+	"spell/shared/util/entities/EntityManager",
+	[
+		"spell/shared/util/create"
+	],
+	function(
+		create
+	) {
+		"use strict"
+
+
+		var EntityManager = function( entityConstructors, componentConstructors ) {
+			this.entityConstructors    = entityConstructors
+			this.componentConstructors = componentConstructors
+
+			this.nextId = 0
+		}
+
+
+		EntityManager.COMPONENT_TYPE_NOT_KNOWN = "The type of component you tried to add is not known. Component type: "
+		EntityManager.ENTITY_TYPE_NOT_KNOWN    = "The type of entity you tried to create is not known. Entity type: "
+
+
+		EntityManager.prototype = {
+			createEntity: function( entityType, args ) {
+				var constructor = this.entityConstructors[ entityType ]
+
+				if ( constructor === undefined ) {
+					throw EntityManager.ENTITY_TYPE_NOT_KNOWN + entityType
+				}
+
+				var entityId = getNextId( this )
+				var entity   = create( constructor, args )
+				entity.id    = entityId
+
+				// WORKAROUND: until the state synchronization gets refactored entity type and creation arguments must be saved
+				entity.type  = entityType
+				entity.args  = args
+
+				return entity
+			},
+
+			addComponent: function( entity, componentType, args ) {
+				var constructor = this.componentConstructors[ componentType ]
+
+				if ( constructor === undefined ) {
+					throw EntityManager.COMPONENT_TYPE_NOT_KNOWN + componentType
+				}
+
+				var component = create( constructor, args )
+				entity[ componentType ] = component
+
+				return component
+			},
+
+			removeComponent: function( entity, componentType ) {
+				var component = entity[ componentType ]
+
+				delete entity[ componentType ]
+
+				return component
+			}
+		}
+
+
+		function getNextId( self ) {
+			var id = self.nextId
+
+			self.nextId += 1
+
+			return id
+		}
+
+
+		return EntityManager
 	}
 )
 
 define(
 	"spell/shared/util/zones/ZoneManager",
 	[
-		"underscore"
+		"spell/shared/util/Events"
 	],
 	function(
-		_
+		Events
 	) {
 		"use strict"
 
+
+		/**
+		 * private
+		 */
+
+		var zoneId = 0
+
+
+		/**
+		 * public
+		 */
 
 		var ZoneManager = function( eventManager, zoneTemplates, globals ) {
 			this.eventManager   = eventManager
@@ -10483,13 +10690,14 @@ define(
 				}
 
 				var zone = {
-					templateId: templateId
+					id         : zoneId++,
+					templateId : templateId
 				}
 
 				zoneTemplate.onCreate.apply( zone, [ this.globals, args ] )
 				this.theActiveZones.push( zone )
 
-				this.eventManager.publish( [ "createZone" ], [ this, zone ] )
+				this.eventManager.publish( Events.CREATE_ZONE, [ this, zone ] )
 
 				return zone
 			},
@@ -10508,7 +10716,7 @@ define(
 				if ( wasRemoved ) {
 					this.zoneTemplates[ zone.templateId ].onDestroy.apply( zone, [ this.globals, args ] )
 
-					this.eventManager.publish( [ "destroyZone" ], [ this, zone ] )
+					this.eventManager.publish( Events.DESTROY_ZONE, [ this, zone ] )
 				}
 				else {
 					throw ZoneManager.IS_NO_ACTIVE_ZONE_ERROR + zone
@@ -10795,12 +11003,12 @@ define(
 )
 
 define(
-	"spell/shared/util/EventManager",
+	'spell/shared/util/EventManager',
 	[
-		"spell/shared/util/forestMultiMap",
-		"spell/shared/util/Events",
+		'spell/shared/util/forestMultiMap',
+		'spell/shared/util/Events',
 
-		"underscore"
+		'underscore'
 	],
 	function(
 		forestMultiMap,
@@ -10808,12 +11016,46 @@ define(
 
 		_
 	) {
-		"use strict"
+		'use strict'
 
+
+		/**
+		 * private
+		 */
+
+		var normalize = function( scope ) {
+			return ( _.isArray( scope ) ? scope : [ scope ] )
+		}
+
+		var waitForChainConfig = false
+
+		var registerWaitForChain = function( eventManager, config ) {
+			var callback = config.callback
+
+			// the lock is released after the n-th call ( n := config.events.length )
+			var lock = _.after(
+				config.events.length,
+				function() {
+					callback()
+				}
+			)
+
+			// wire up all events to probe the lock
+			_.each(
+				config.events,
+				function( scope ) {
+					eventManager.subscribe( scope, lock )
+				}
+			)
+		}
+
+
+		/**
+		 * public
+		 */
 
 		function EventManager() {
 			this.subscribers = forestMultiMap.create()
-			this.eventQueue = []
 		}
 
 		EventManager.prototype = {
@@ -10821,17 +11063,7 @@ define(
 				scope,
 				subscriber
 			) {
-				if( _.size( this.eventQueue ) > 0 ) {
-					this.eventQueue = _.reject(
-						this.eventQueue,
-						_.bind(
-							function( event ) {
-								return this.publish( event[ 0 ], event[ 1] )
-							},
-							this
-						)
-					)
-				}
+				scope = normalize( scope )
 
 				forestMultiMap.add(
 					this.subscribers,
@@ -10839,49 +11071,72 @@ define(
 					subscriber
 				)
 
-				this.publish( [ "subscribe" ], [ scope, subscriber ] )
+				this.publish( Events.SUBSCRIBE, [ scope, subscriber ] )
 			},
 
 			unsubscribe: function(
 				scope,
 				subscriber
 			) {
+				scope = normalize( scope )
+
 				forestMultiMap.remove(
 					this.subscribers,
 					scope,
 					subscriber
 				)
 
-				this.publish( [ "unsubscribe" ], [ scope, subscriber ] )
+				this.publish( Events.UNSUBSCRIBE, [ scope, subscriber ] )
 			},
 
 			publish: function(
 				scope,
 				eventArgs
 			) {
+				scope = normalize( scope )
+
 				var subscribersInScope = forestMultiMap.get(
 					this.subscribers,
 					scope
 				)
 
-				// WORKAROUND: at the moment only the event "setName" is queued
-				if( _.size( subscribersInScope ) === 0 &&
-					scope[ 1 ] === "setName" ) {
-					this.eventQueue.push( [ scope, eventArgs ] )
-
-
-					return false
-				}
-
 				_.each( subscribersInScope, function( subscriber ) {
 					subscriber.apply( undefined, eventArgs )
 				} )
 
-
 				return true
+			},
+
+			waitFor: function( scope ) {
+				waitForChainConfig = {
+					events : [ scope ]
+				}
+
+				return this
+			},
+
+			and: function( scope ) {
+				// check if pending chain call exists
+				if( !waitForChainConfig ) throw 'A call to the method "and" must be chained to a previous call to "waitFor".'
+
+
+				waitForChainConfig.events.push( scope )
+
+				return this
+			},
+
+			resume: function( callback ) {
+				// check if pending chain call exists, return otherwise
+				if( !waitForChainConfig ) throw 'A call to the method "resume" must be chained to a previous call to "waitFor" or "and".'
+
+
+				waitForChainConfig.callback = callback
+
+				registerWaitForChain( this, waitForChainConfig )
+
+				waitForChainConfig = false
 			}
 		}
-
 
 		return EventManager
 	}
@@ -11142,7 +11397,7 @@ define(
 				_.bind(
 					function( resourceName ) {
 						if( isResourceInCache( this.resources, resourceName ) ) {
-							updateProgress( resourceBundle )
+							updateProgress.call( this, resourceBundle )
 
 							return
 						}
@@ -11292,7 +11547,7 @@ define(
 			addSeries : function( id, name, unit ) {
 				if( !id ) return
 
-				if( _.has( this.series, id ) ) throw 'Series with id "' + id + '" already exists'
+				if( _.has( this.series, id ) ) return
 
 				this.series[ id ] = createSeries( id, name, unit )
 			},
@@ -11380,7 +11635,7 @@ define(
 	[
 		'funkysnakes/client/entities',
 		'funkysnakes/client/zones/game',
-		'funkysnakes/client/zones/lobby',
+		'funkysnakes/client/zones/init',
 		'funkysnakes/shared/config/constants',
 		'funkysnakes/shared/util/createMainLoop',
 		'funkysnakes/shared/components/position',
@@ -11401,6 +11656,7 @@ define(
 		'spell/shared/util/Events',
 		'spell/shared/util/Logger',
 		'spell/shared/util/math',
+		"spell/shared/util/platform/Types",
 		'spell/client/main',
 
 		'underscore'
@@ -11408,7 +11664,7 @@ define(
 	function(
 		entities,
 		game,
-		lobby,
+		init,
 		constants,
 		createMainLoop,
 		position,
@@ -11429,6 +11685,7 @@ define(
 		Events,
 		Logger,
 		math,
+		Types,
 		spellMain,
 
 		_
@@ -11436,77 +11693,7 @@ define(
 		'use strict'
 
 
-		var resourceUris = [
-			'images/4.2.04_256.png',
-			'images/web/tile.jpg',
-			'images/web/menu.png',
-			'images/web/logo.png',
-			'images/html5_logo_64x64.png',
-			'images/flash_logo_64x64.png',
-			'images/help_controls.png',
-			'images/environment/cloud_dark_02.png',
-			'images/environment/cloud_dark_07.png',
-			'images/environment/cloud_light_05.png',
-			'images/environment/cloud_light_07.png',
-			'images/environment/cloud_dark_03.png',
-			'images/environment/cloud_light_04.png',
-			'images/environment/arena.png',
-			'images/environment/cloud_dark_05.png',
-			'images/environment/cloud_dark_06.png',
-			'images/environment/cloud_dark_01.png',
-			'images/environment/cloud_light_01.png',
-			'images/environment/ground.jpg',
-			'images/environment/cloud_light_06.png',
-			'images/environment/cloud_light_03.png',
-			'images/environment/cloud_dark_04.png',
-			'images/environment/cloud_light_02.png',
-			'images/items/neutral_container.png',
-			'images/items/object_energy.png',
-			'images/items/player4_container.png',
-			'images/items/dropped_container_1.png',
-			'images/items/player3_container.png',
-			'images/items/player1_container.png',
-			'images/items/dropped_container_0.png',
-			'images/items/invincible.png',
-			'images/items/player2_container.png',
-			'images/shadows/object_energy.png',
-			'images/shadows/invincible.png',
-			'images/shadows/container.png',
-			'images/shadows/vehicle.png',
-			'images/tile_cloud.png',
-			'images/tile_cloud2.png',
-			'images/vehicles/ship_player1.png',
-			'images/vehicles/ship_player1_speed.png',
-			'images/vehicles/ship_player1_invincible.png',
-			'images/vehicles/ship_player2.png',
-			'images/vehicles/ship_player2_speed.png',
-			'images/vehicles/ship_player2_invincible.png',
-			'images/vehicles/ship_player3.png',
-			'images/vehicles/ship_player3_speed.png',
-			'images/vehicles/ship_player3_invincible.png',
-			'images/vehicles/ship_player4.png',
-			'images/vehicles/ship_player4_speed.png',
-			'images/vehicles/ship_player4_invincible.png',
-			'images/effects/shield.png',
-			'images/arrow_left.png',
-			'images/arrow_left_pressed.png',
-			'images/arrow_right.png',
-			'images/arrow_right_pressed.png',
-            'images/speaker_mute.png',
-            'images/speaker.png',
-			'images/space.png',
-			'images/space_pressed.png',
-            'images/ttf/batang_0.png',
-            'images/ttf/BelloPro_0.png',
-            'sounds/sets/set1.json'
-		]
-
-
 		Logger.setLogLevel( Logger.LOG_LEVEL_DEBUG )
-
-
-
-
 
 		// compute new color buffer dimensions when screen is resized
 		var onScreenResized = function( eventManager, width, height ) {
@@ -11524,10 +11711,7 @@ define(
 				width = Math.floor( height * 4 / 3 )
 			}
 
-			eventManager.publish(
-				[ Events.SCREEN_RESIZED ],
-				[ width, height ]
-			)
+			eventManager.publish( Events.SCREEN_RESIZED, [ width, height ] )
 		}
 
 		var main = function( globals ) {
@@ -11540,113 +11724,66 @@ define(
 
 			PlatformKit.registerOnScreenResize( _.bind( onScreenResized, onScreenResized, eventManager ) )
 
+			// creating entityManager
+			var componentConstructors = {
+				'markedForDestruction' : markedForDestruction,
+				'position'             : position,
+				'orientation'          : orientation,
+				'collisionCircle'      : collisionCircle,
+				'shield'               : shield,
+				'tailElement'          : tailElement,
+				'amountTailElements'   : amountTailElements
+			}
 
-			resourceLoader.addResourceBundle( 'bundle1', resourceUris )
-
-			eventManager.subscribe(
-				[ Events.RESOURCE_LOADING_COMPLETED, 'bundle1' ],
-				function( event ) {
-					Logger.debug( 'completed loading resources' )
+			globals.entityManager = new EntityManager( entities, componentConstructors )
 
 
-					var componentConstructors = {
-						'markedForDestruction': markedForDestruction,
-						'position'            : position,
-						'orientation'         : orientation,
-						'collisionCircle'     : collisionCircle,
-						'shield'              : shield,
-						'tailElement'         : tailElement,
-						'amountTailElements'  : amountTailElements
+			var renderingContext       = globals.renderingContext
+			var renderingContextConfig = renderingContext.getConfiguration()
+
+			Logger.debug( 'created rendering context: type=' + renderingContextConfig.type + '; size=' + renderingContextConfig.width + 'x' + renderingContextConfig.height )
+
+
+			// TODO: the resource loader should create spell texture object instances instead of raw html images
+
+			// HACK: creating textures out of images
+			var resources = resourceLoader.getResources()
+			var textures = {}
+
+			_.each(
+				resources,
+				function( resource, resourceId ) {
+					var extension =  _.last( resourceId.split( '.' ) )
+					if( extension === 'png' || extension === 'jpg' ) {
+						textures[ resourceId.replace(/images\//g, '') ] = renderingContext.createTexture( resource )
 					}
-
-					var entityManager = new EntityManager( entities, componentConstructors )
-
-
-					Logger.debug( 'connecting to game-server "' + configurationManager.gameServer.host + '"' )
-
-					var connection = createServerConnection(
-						eventManager,
-						statisticsManager,
-						configurationManager.gameServer.host,
-						networkProtocol
-					)
-
-
-					var renderingContext       = globals.renderingContext
-					var renderingContextConfig = renderingContext.getConfiguration()
-
-					Logger.debug( 'created rendering context: type=' + renderingContextConfig.type + '; size=' + renderingContextConfig.width + 'x' + renderingContextConfig.height )
-
-
-					// TODO: the resource loader should create spell texture object instances instead of raw html images
-
-					// HACK: creating textures out of images
-					var resources = resourceLoader.getResources()
-					var textures = {}
-
-					_.each(
-						resources,
-						function( resource, resourceId ) {
-							var extension =  _.last( resourceId.split( '.' ) )
-							if( extension === 'png' || extension === 'jpg' ) {
-								textures[ resourceId.replace(/images\//g, '') ] = renderingContext.createTexture( resource )
-							}
-						}
-					)
-
-
-					_.extend(
-						globals,
-						{
-							connection       : connection,
-							entityManager    : entityManager,
-							eventManager     : eventManager,
-							textures         : textures,
-							sounds           : resources
-						}
-					)
-
-
-					var zones = {
-						game : game,
-						lobby: lobby
-					}
-
-					var zoneManager = new ZoneManager( eventManager, zones, globals )
-
-					globals.zoneManager = zoneManager
-
-
-					eventManager.subscribe( [ 'messageReceived', 'zoneChange' ],
-						function( messageType, messageData ) {
-							// discard entity updates from the previous zone
-							connection.messages[ 'entityUpdate' ] = []
-
-							var currentZone = zoneManager.activeZones()[ 0 ]
-							var newZone     = messageData
-
-							zoneManager.destroyZone( currentZone )
-							zoneManager.createZone( newZone )
-						}
-					)
-
-					eventManager.subscribe( [ 'clockSyncEstablished' ], function( remoteGameTimeInMs ) {
-						var mainLoop = createMainLoop(
-							eventManager,
-							statisticsManager,
-							remoteGameTimeInMs
-						)
-
-						zoneManager.createZone( 'lobby' )
-
-						PlatformKit.callNextFrame( mainLoop )
-					} )
-
-					network.initializeClockSync( eventManager, statisticsManager, connection )
 				}
 			)
 
-			resourceLoader.start()
+
+			var zones = {
+				game  : game,
+				init  : init
+			}
+
+			var zoneManager = new ZoneManager( eventManager, zones, globals )
+
+			_.extend(
+				globals,
+				{
+					configurationManager : configurationManager,
+					eventManager         : eventManager,
+					textures             : textures,
+					sounds               : resources,
+					zoneManager          : zoneManager
+				}
+			)
+
+			zoneManager.createZone( 'init' )
+
+			var mainLoop = createMainLoop( eventManager, statisticsManager )
+
+			PlatformKit.callNextFrame( mainLoop )
 		}
 
 		spellMain( 'funkysnakes', main )

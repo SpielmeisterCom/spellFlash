@@ -12,19 +12,17 @@ package Spielmeister.Spell.Platform.Private.Socket {
 	public class WebSocketAdapter {
 		private var socket : WebSocket
 		private var onMessageCallback : Function
+		private var setOnConnectedCallback : Function
 
 
 		public function WebSocketAdapter( url : String, origin : String, protocol : String ) {
-//			trace( 'Creating socket...' )
-
 			socket = new WebSocket( url, origin, protocol )
 			socket.connect()
-
 
 			socket.addEventListener(
 				WebSocketEvent.OPEN,
 				function( event : WebSocketEvent ) : void {
-//					trace( 'Socket opened connection.' )
+					setOnConnectedCallback()
 				}
 			)
 
@@ -77,6 +75,10 @@ package Spielmeister.Spell.Platform.Private.Socket {
 
 		public function setOnMessage( callback : Function ) : void {
 			onMessageCallback = callback
+		}
+
+		public function setOnConnected( callback : Function ) : void {
+			setOnConnectedCallback = callback
 		}
 	}
 }

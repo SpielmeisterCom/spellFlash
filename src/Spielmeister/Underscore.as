@@ -226,6 +226,18 @@ package Spielmeister {
 			return getQualifiedClassName( object ) === 'Function'
 		}
 
+		public function after( times : int, callback : Function ) : Object {
+			if( times <= 0 ) return callback()
+
+			return function() : Object {
+				if( --times < 1 ) {
+					return callback.apply( this, arguments )
+				}
+
+				return undefined
+			}
+		}
+
 
 		public function runTests() : void {
 			trace( 'testing...' )
