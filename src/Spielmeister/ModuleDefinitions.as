@@ -2744,6 +2744,7 @@ define(
 			this.textureId = args.textureId
 			this.offset    = ( args.offset !== undefined ? [ args.offset[ 0 ], args.offset[ 1 ], 0 ] : [ 0, 0, 0 ] )
 			this.scale     = ( args.scale !== undefined ? [ args.scale[ 0 ], args.scale[ 1 ], 0 ] : [ 1, 1, 0 ] )
+			this.color     = args.color || [ 1.0, 0.0, 1.0 ]
 			this.opacity   = 1.0
 		}
 	}
@@ -2859,6 +2860,29 @@ define(
 			} )
 
 			this.position = new position( args.position )
+		}
+	}
+)
+
+define(
+	'funkysnakes/client/entities/coloredRectangle',
+	[
+		'funkysnakes/client/components/appearance',
+		'funkysnakes/shared/components/position',
+		'funkysnakes/client/components/renderData'
+	],
+	function(
+		appearance,
+		position,
+		renderData
+	) {
+		'use strict'
+
+
+		return function( args ) {
+			this.appearance = new appearance( args.appearance )
+			this.position   = new position( args.position )
+			this.renderData = new renderData( {} )
 		}
 	}
 )
@@ -3893,6 +3917,7 @@ define(
 	[
 		"funkysnakes/client/entities/arena",
 		"funkysnakes/client/entities/cloud",
+		"funkysnakes/client/entities/coloredRectangle",
 		"funkysnakes/client/entities/head",
 		"funkysnakes/client/entities/invincibilityPowerup",
 		"funkysnakes/client/entities/shieldPowerup",
@@ -3911,6 +3936,7 @@ define(
 	function(
 		arena,
 		cloud,
+		coloredRectangle,
 		head,
 		invincibilityPowerup,
 		shieldPowerup,
@@ -3932,6 +3958,7 @@ define(
 		return {
 			"arena"               : arena,
 			"cloud"               : cloud,
+			"coloredRectangle"    : coloredRectangle,
 			"head"                : head,
 			"invincibilityPowerup": invincibilityPowerup,
 			"shieldPowerup"       : shieldPowerup,
@@ -6981,26 +7008,41 @@ define(
 									renderDataOpacity = entityRenderData.opacity,
 									appearanceOpacity = entityAppearance.opacity
 
-								texture = textures[ entityAppearance.textureId ]
+								// appearances without a texture id are drawn as colored rectangles
+								if( !entityAppearance.textureId &&
+									entityAppearance.color ) {
 
-								if( texture === undefined ) throw "The textureId '" + entityAppearance.textureId + "' could not be resolved."
+									context.translate( entityRenderData.position )
+									context.setFillStyleColor( entityAppearance.color )
+									context.fillRect(
+										0,
+										0,
+										entityAppearance.scale[ 0 ],
+										entityAppearance.scale[ 1 ]
+									)
+
+								} else {
+									texture = textures[ entityAppearance.textureId ]
+
+									if( texture === undefined ) throw "The textureId '" + entityAppearance.textureId + "' could not be resolved."
 
 
-								if( appearanceOpacity !== 1.0 ||
-									renderDataOpacity !== 1.0 ) {
+									if( appearanceOpacity !== 1.0 ||
+											renderDataOpacity !== 1.0 ) {
 
-									context.setGlobalAlpha( appearanceOpacity * renderDataOpacity )
+										context.setGlobalAlpha( appearanceOpacity * renderDataOpacity )
+									}
+
+									// object to world space transformation go here
+									context.translate( entityRenderData.position )
+									context.rotate( entityRenderData.orientation )
+
+									// "appearance" transformations go here
+									context.translate( entityAppearance.offset )
+									context.scale( [ texture.width, texture.height, 1 ] )
+
+									context.drawTexture( texture, 0, 0, 1, 1 )
 								}
-
-								// object to world space transformation go here
-								context.translate( entityRenderData.position )
-								context.rotate( entityRenderData.orientation )
-
-								// "appearance" transformations go here
-								context.translate( entityAppearance.offset )
-								context.scale( [ texture.width, texture.height, 1 ] )
-
-								context.drawTexture( texture, 0, 0, 1, 1 )
 							}
 							context.restore()
 						}
@@ -9603,6 +9645,106 @@ define(
 )
 
 define(
+	'funkysnakes/client/systems/ProgressPatternUpdater',
+	[
+		'spell/shared/util/Events',
+		'spell/shared/util/math',
+		'spell/shared/util/random/XorShift32',
+
+		'glmatrix/vec3',
+		'underscore'
+	],
+	function(
+		Events,
+		math,
+		XorShift32,
+
+		vec3,
+		_
+	) {
+		'use strict'
+
+
+		/**
+		 * private
+		 */
+
+		var progress = 0,
+			lastProgress = 0,
+			lastCreatedIndex = 0,
+			amountRectanglesPerLine = 6,
+			amountRectangles = amountRectanglesPerLine * amountRectanglesPerLine,
+			sizeRectangle   = 25,
+			gapRectangle    = 15,
+			offsetRectangle = sizeRectangle + gapRectangle,
+			posXPattern     = 400,
+			posYPattern     = 300,
+			minColor        = 0.2,
+			maxColor        = 0.95,
+			prng            = new XorShift32( 3497589 )
+
+
+		var createRectangle = function( entityManager, index ) {
+			var x = Math.floor( index / amountRectanglesPerLine ),
+				y = index % amountRectanglesPerLine
+
+			entityManager.createEntity(
+				'coloredRectangle',
+				[ {
+					appearance: {
+						color : [ prng.nextBetween( minColor, maxColor ),prng.nextBetween( minColor, maxColor ), prng.nextBetween( minColor, maxColor ), 1.0 ],
+						scale : [ sizeRectangle, sizeRectangle ]
+					},
+					position : [ posXPattern + x * offsetRectangle, posYPattern + y * offsetRectangle, 0 ]
+				} ]
+			)
+		}
+
+
+		/**
+		 * public
+		 */
+
+		var ProgressPatternUpdater = function( eventManager, entityManager ) {
+			this.eventManager  = eventManager
+			this.entityManager = entityManager
+
+			eventManager.subscribe(
+				[ Events.RESOURCE_PROGRESS, 'gameZoneResources' ],
+				function( value ) {
+					progress = value
+				}
+			)
+		}
+
+		var process = function() {
+			if( progress === lastProgress ) return
+
+			var index = Math.round( progress * ( amountRectangles ) )
+
+			_.each(
+				_.range( lastCreatedIndex, index ),
+				_.bind(
+					function( indexToCreate ) {
+						createRectangle( this.entityManager, indexToCreate )
+					},
+					this
+				)
+			)
+
+			lastProgress = progress
+			lastCreatedIndex = index
+		}
+
+		ProgressPatternUpdater.prototype = {
+			process : process
+		}
+
+		return ProgressPatternUpdater
+	}
+)
+
+define(
 	'spell/shared/util/Logger',
 	[
 		'spell/shared/util/platform/log'
@@ -9996,6 +10138,7 @@ define(
 	[
 		'funkysnakes/shared/util/networkProtocol',
 		"funkysnakes/client/systems/updateRenderData",
+		'funkysnakes/client/systems/ProgressPatternUpdater',
 		'funkysnakes/client/systems/Renderer',
 
 		'spell/shared/util/entities/Entities',
@@ -10012,6 +10155,7 @@ define(
 	function(
 		networkProtocol,
 		updateRenderData,
+		ProgressPatternUpdater,
 		Renderer,
 
 		Entities,
@@ -10032,8 +10176,10 @@ define(
 		 * private
 		 */
 
+		var loadingTextImage = 'calibrating_holomatrix.png'
+
 		var initZoneResources = [
-			'images/loading.png'
+			'images/' + loadingTextImage
 		]
 
 		var gameZoneResources = [
@@ -10120,25 +10266,21 @@ define(
 		}
 
 		function addLoadingIcon( entityManager, position ) {
-			var textureId = 'loading.png'
-
-			if( !textureId ) return
-
 			entityManager.createEntity(
 				"widget",
 				[ {
 					position  : position,
-					textureId : textureId
+					textureId : loadingTextImage
 				} ]
 			)
 		}
+
 
 		function update(
 			globals,
 			timeInMs,
 			dtInS
 		) {
-
 		}
 
 		function render(
@@ -10148,6 +10290,8 @@ define(
 		) {
 			var entities = this.entities,
 				queryIds = this.queryIds
+
+			this.progressPatternUpdater.process()
 
 			updateRenderData(
 				entities.executeQuery( queryIds[ "updateRenderData" ][ 0 ] ).elements
@@ -10177,11 +10321,15 @@ define(
 
 				this.renderer = new Renderer( eventManager, globals.textures, globals.renderingContext )
 
-//				// WORKAROUND: manually triggering SCREEN_RESIZED event to force the renderer to reinitialize the canvas
-//				eventManager.publish(
-//					Events.SCREEN_RESIZED,
-//					[ globals.configurationManager.screenSize.width, globals.configurationManager.screenSize.height ]
-//				)
+				// WORKAROUND: manually triggering SCREEN_RESIZED event to force the renderer to reinitialize the canvas
+				eventManager.publish(
+					Events.SCREEN_RESIZED,
+					[ globals.configurationManager.screenSize.width, globals.configurationManager.screenSize.height ]
+				)
+
+
+				this.progressPatternUpdater = new ProgressPatternUpdater( eventManager, entityManager )
+
 
 				this.queryIds = {
 					render: [
@@ -10240,8 +10388,6 @@ define(
 
 							updateTextures( globals.renderingContext, resourceLoader.getResources(), globals.textures )
 
-							addLoadingIcon( entityManager, [ 768, 704, 0 ] )
-
 							connection.send( Messages.JOIN_ANY_GAME )
 						} )
 
@@ -10249,7 +10395,7 @@ define(
 						updateTextures( globals.renderingContext, resourceLoader.getResources(), globals.textures )
 
 						// TODO: add animation
-						addLoadingIcon( entityManager, [ 0, 0, 0 ] )
+						addLoadingIcon( entityManager, [ 384, 96, 0 ] )
 
 						// trigger loading of game zone resources
 						resourceLoader.addResourceBundle( 'gameZoneResources', gameZoneResources )
