@@ -81,15 +81,6 @@ package Spielmeister.Spell.Platform {
 			return renderingFactory
 		}
 
-		public function log( message : String ) : void {
-			var now : Date = new Date()
-			var formattedMessage : String = "[" + now.toDateString() + " " + now.toLocaleTimeString() + "] " +  message
-
-			trace( formattedMessage )
-
-//			logDebug( formattedMessage )
-		}
-
 		public function createSocket( host : String ) : Object {
 			var serverUrl : String = 'ws://' + host
 			var protocol: String = 'socketrocket-0.1'

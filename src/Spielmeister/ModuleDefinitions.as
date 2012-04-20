@@ -134,7 +134,6 @@ package Spielmeister {
 				}
 			)
 
-
 			define(
 				"underscore",
 				function() : Underscore {
@@ -142,17 +141,27 @@ package Spielmeister {
 				}
 			)
 
-
 			define(
 				"spell/shared/util/platform/PlatformKit",
 				createPlatformKit
 			)
 
-
 			define(
 				"spell/shared/util/platform/Types",
 				function() : Types {
 					return new Types()
+				}
+			)
+
+			define(
+				"spell/shared/util/platform/log",
+				function() : Function {
+					return function( message : String ) : void {
+						var now : Date = new Date()
+						var formattedMessage : String = "[" + now.toDateString() + " " + now.toLocaleTimeString() + "] " +  message
+
+						trace( formattedMessage )
+					}
 				}
 			)
 
@@ -9594,14 +9603,14 @@ define(
 )
 
 define(
-	"spell/shared/util/Logger",
+	'spell/shared/util/Logger',
 	[
-		"spell/shared/util/platform/PlatformKit"
+		'spell/shared/util/platform/log'
 	],
 	function(
-		PlatformKit
+		log
 	) {
-		"use strict"
+		'use strict'
 
 
 		/**
@@ -9614,10 +9623,10 @@ define(
 		var LOG_LEVEL_ERROR = 3
 
 		var logLevels = [
-			"DEBUG",
-			"INFO",
-			"WARN",
-			"ERROR"
+			'DEBUG',
+			'INFO',
+			'WARN',
+			'ERROR'
 		]
 
 		var currentLogLevel = LOG_LEVEL_INFO
@@ -9627,33 +9636,33 @@ define(
 			currentLogLevel = level
 		}
 
-		var log = function( level, message ) {
+		var logWrapper = function( level, message ) {
 			if( level < 0 ||
 				level > 3 ) {
 
-				throw "Log level '" + level + "' is not supported."
+				throw 'Log level ' + logLevels[ level ] + ' is not supported.'
 			}
 
 			if( level < currentLogLevel ) return
 
 
-			PlatformKit.log( logLevels[ level ] + " " + message )
+			log( logLevels[ level ] + ' - ' + message )
 		}
 
 		var debug = function( message ) {
-			log( LOG_LEVEL_DEBUG, message )
+			logWrapper( LOG_LEVEL_DEBUG, message )
 		}
 
 		var info = function( message ) {
-			log( LOG_LEVEL_INFO, message )
+			logWrapper( LOG_LEVEL_INFO, message )
 		}
 
 		var warn = function( message ) {
-			log( LOG_LEVEL_WARN, message )
+			logWrapper( LOG_LEVEL_WARN, message )
 		}
 
 		var error = function( message ) {
-			log( LOG_LEVEL_ERROR, message )
+			logWrapper( LOG_LEVEL_ERROR, message )
 		}
 
 
@@ -9667,7 +9676,7 @@ define(
 			LOG_LEVEL_WARN  : LOG_LEVEL_WARN,
 			LOG_LEVEL_ERROR : LOG_LEVEL_ERROR,
 			setLogLevel     : setLogLevel,
-			log             : log,
+			log             : logWrapper,
 			debug           : debug,
 			info            : info,
 			warn            : warn,
