@@ -118,11 +118,7 @@ package Spielmeister {
 		}
 
 		public function range( ... arguments ) : Array {
-			if( arguments.length == 0 ||
-				arguments[ 0 ] == 0 ) {
-
-				return []
-			}
+			if( arguments.length === 0 ) return []
 
 			var start : int,
 				stop : int,
