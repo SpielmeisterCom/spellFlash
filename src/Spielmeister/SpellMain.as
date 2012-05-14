@@ -25,8 +25,8 @@ package Spielmeister {
 			var enterMain : Function = needjs.createEnterMain()
 
 //			enterMain( "spell/client/renderingTestMain" )
-//			enterMain( 'spell/client/renderingCoordinateTestMain' )
-			enterMain( "funkysnakes/client/main" )
+			enterMain( 'spell/client/renderingCoordinateTestMain' )
+//			enterMain( "funkysnakes/client/main" )
 		}
 	}
 }
