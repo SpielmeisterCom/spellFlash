@@ -1,7 +1,5 @@
 package Spielmeister.Spell.Platform.Private.Loader {
 
-	import Spielmeister.Spell.Platform.Private.Loader.Loader
-
 	import flash.display.Bitmap
 	import flash.display.Loader
 	import flash.events.Event

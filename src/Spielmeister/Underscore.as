@@ -234,6 +234,19 @@ package Spielmeister {
 			}
 		}
 
+		public function contains( collection : *, target : String ) : Boolean {
+			if( collection === null ) return false
+
+			if( isArray( collection ) ) {
+				return collection.indexOf( target ) !== -1
+			}
+
+			for each( var value : Object in collection ) {
+				if( value === target ) return true
+			}
+
+			return false
+		}
 
 		public function runTests() : void {
 			trace( 'testing...' )

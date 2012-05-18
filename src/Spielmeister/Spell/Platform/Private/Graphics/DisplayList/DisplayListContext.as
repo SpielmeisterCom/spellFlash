@@ -6,19 +6,18 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 	import flash.display.Bitmap
 	import flash.display.BitmapData
 	import flash.display.Shape
+	import flash.display.Stage
 	import flash.geom.ColorTransform
 	import flash.geom.Matrix
 	import flash.geom.Point
 	import flash.geom.Rectangle
-
-	import mx.core.IChildList
 
 	import net.richardlord.coral.Matrix3d
 	import net.richardlord.coral.Vector3d
 
 
 	public class DisplayListContext {
-		private var container : IChildList
+		private var stage : Stage
 		private var width : uint
 		private var height : uint
 		private var colorBuffer : Bitmap
@@ -43,8 +42,8 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		private var tmpMatrix : Matrix3d = new Matrix3d()
 
 
-		public function DisplayListContext( container : IChildList, width : uint, height: uint ) {
-			this.container = container
+		public function DisplayListContext( stage : Stage, width : uint, height: uint ) {
+			this.stage = stage
 			this.width = width
 			this.height = height
 			clearColor = 0x000000
@@ -58,7 +57,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 				clearColor
 			)
 
-			container.addChild( colorBuffer )
+			this.stage.addChild( colorBuffer )
 
 			this.stateStack.pushState()
 			this.currentState = this.stateStack.popState()
@@ -369,8 +368,8 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		}
 
 		public function resizeColorBuffer ( newWidth : Number, newHeight : Number ) : void {
-			while( container.numChildren ) {
-				container.removeChildAt( 0 )
+			while( stage.numChildren ) {
+				stage.removeChildAt( 0 )
 			}
 
 			// setting up the color buffer
@@ -382,7 +381,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 				clearColor
 			)
 
-			container.addChild( colorBuffer )
+			stage.addChild( colorBuffer )
 		}
 
 

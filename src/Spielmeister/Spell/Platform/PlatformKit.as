@@ -3,7 +3,6 @@ package Spielmeister.Spell.Platform {
 	import Spielmeister.Spell.Platform.Private.Graphics.*
 	import Spielmeister.Spell.Platform.Private.Input
 	import Spielmeister.Spell.Platform.Private.Loader.*
-	import Spielmeister.Spell.Platform.Private.Lobby
 	import Spielmeister.Spell.Platform.Private.Socket.WebSocketAdapter
 	import Spielmeister.Spell.Platform.Private.Sound.SoundManager
 
@@ -19,11 +18,8 @@ package Spielmeister.Spell.Platform {
 	import flash.text.TextFieldAutoSize
 	import flash.utils.Timer
 
-	import mx.core.IChildList
-
 
 	public class PlatformKit {
-		private var container : IChildList
 		private var stage : Stage
 		private var root : DisplayObject
 		private var host : String
@@ -35,14 +31,13 @@ package Spielmeister.Spell.Platform {
 		private var debugConsoleContent : String = ""
 
 
-		public function PlatformKit( stage : Stage, root : DisplayObject, container : IChildList, loaderUrl : String, urlParameters : Object ) {
+		public function PlatformKit( stage : Stage, root : DisplayObject, loaderUrl : String, urlParameters : Object ) {
 			this.stage            = stage
 			this.root             = root
-			this.container        = container
 			this.host             = createHost( loaderUrl )
 			this.loaderUrl        = loaderUrl
 			this.urlParameters    = urlParameters
-			this.renderingFactory = new RenderingFactoryImpl( container )
+			this.renderingFactory = new RenderingFactoryImpl( stage )
 
 			// initializing stage
 			this.stage.quality   = StageQuality.MEDIUM
@@ -152,10 +147,6 @@ package Spielmeister.Spell.Platform {
 				resourceUri,
 				loadingCompletedCallback
 			)
-		}
-
-		public function createLobby( eventManager : Object, connection : Object ) : Lobby {
-			return new Lobby( root, eventManager, connection, stage.width, stage.height )
 		}
 
 		public function getHost() : String {

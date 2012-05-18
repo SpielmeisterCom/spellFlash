@@ -5,7 +5,6 @@ package Spielmeister.Spell.Platform.Private.Socket {
 	import com.worlize.websocket.WebSocketEvent
 	import com.worlize.websocket.WebSocketMessage
 
-	import flash.events.IOErrorEvent
 	import flash.events.SecurityErrorEvent
 
 

@@ -1,32 +1,40 @@
 package Spielmeister {
-	import Spielmeister.ModuleDefinitions
+	import Spielmeister.PlatformAdapter
 	import Spielmeister.Needjs
 
-	import mx.core.Application
+	import flash.display.Sprite
+	import flash.text.TextField
 
+	public class SpellMain extends Sprite {
 
-	public class SpellMain extends Application {
-
-		public function run() : void {
+		public function SpellMain() : void {
 			var needjs : Needjs = new Needjs()
 
-			var moduleDefinitions : ModuleDefinitions = new ModuleDefinitions(
+			var spellEngine : SpellEngine = new SpellEngine()
+			spellEngine.load( needjs.createDefine(), needjs.createRequire() )
+
+			var runtimeModule : RuntimeModule = new RuntimeModule()
+			runtimeModule.load( needjs.createDefine(), needjs.createRequire() )
+
+			var platformAdapter : PlatformAdapter = new PlatformAdapter(
 				this.stage,
 				this.root,
-				this.rawChildren,
 				this.loaderInfo.loaderURL,
-				this.loaderInfo.parameters,
-				needjs.createDefine(),
-				needjs.createRequire()
+				this.loaderInfo.parameters
 			)
 
-			moduleDefinitions.loadModuleDefinitions()
+			platformAdapter.load( needjs.createDefine(), needjs.createRequire() )
 
 			var enterMain : Function = needjs.createEnterMain()
 
 //			enterMain( "spell/client/renderingTestMain" )
-			enterMain( 'spell/client/renderingCoordinateTestMain' )
-//			enterMain( "funkysnakes/client/main" )
+//			enterMain( 'spell/client/renderingCoordinateTestMain' )
+			enterMain( 'spell/client/main' )
+
+
+			var display_txt:TextField = new TextField();
+			display_txt.text = "Hello World!";
+			addChild(display_txt);
 		}
 	}
 }
