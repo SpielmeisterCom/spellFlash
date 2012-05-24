@@ -5,16 +5,18 @@ package Spielmeister {
 
 		public function SpellMain() : void {
 			var needjs : Needjs = new Needjs()
+			var define : Function = needjs.createDefine()
+			var require : Function = needjs.createRequire()
 			var enterMain : Function = needjs.createEnterMain()
 
 			var spellEngine : SpellEngine = new SpellEngine()
-			spellEngine.load( needjs.createDefine(), needjs.createRequire() )
+			spellEngine.load( define, require )
 
 			var runtimeModule : RuntimeModule = new RuntimeModule()
-			runtimeModule.load( needjs.createDefine(), needjs.createRequire() )
+			runtimeModule.load( define, require )
 
 			var platformAdapter : PlatformAdapter = new PlatformAdapter( this.stage, this.root, this.loaderInfo.loaderURL )
-			platformAdapter.load( needjs.createDefine(), needjs.createRequire() )
+			platformAdapter.load( define, require )
 
 
 //			enterMain( "spell/client/renderingTestMain" )

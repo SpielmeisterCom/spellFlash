@@ -12,7 +12,7 @@ package Spielmeister {
 		}
 
 
-		private function resolveDependencies ( moduleName : String ) : Object {
+		private function resolveDependencies ( moduleName : String, config : Object ) : Object {
 			if( moduleName === "" ) {
 				throw "No module name was provided."
 			}
@@ -40,7 +40,7 @@ package Spielmeister {
 				}
 
 				if( need.modules[ name ].instance === undefined ) {
-					need.modules[ name ].instance = resolveDependencies( dependencies[ i ] )
+					need.modules[ name ].instance = resolveDependencies( dependencies[ i ], null )
 				}
 
 				args.push(
@@ -48,6 +48,9 @@ package Spielmeister {
 				)
 			}
 
+			if( config ) {
+				args.push( config )
+			}
 
 			return callback.apply( null, args )
 		}
@@ -91,7 +94,7 @@ package Spielmeister {
 
 				for( var i = 0; i < dependencies.length; i++ ) {
 					args.push(
-						resolveDependencies( dependencies[ i ] )
+						resolveDependencies( dependencies[ i ], null )
 					)
 				}
 
@@ -102,8 +105,8 @@ package Spielmeister {
 
 
 		public function createEnterMain() {
-			return function( mainModuleName ) {
-				resolveDependencies( mainModuleName )
+			return function( mainModuleName, args ) {
+				resolveDependencies( mainModuleName, args )
 			}
 		}
 	}
