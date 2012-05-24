@@ -17,7 +17,6 @@ package Spielmeister {
 			platformAdapter.load( needjs.createDefine(), needjs.createRequire() )
 
 
-
 //			enterMain( "spell/client/renderingTestMain" )
 //			enterMain( 'spell/client/renderingCoordinateTestMain' )
 			enterMain( 'spell/client/main', this.loaderInfo.parameters )
