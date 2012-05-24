@@ -8,8 +8,8 @@ package Spielmeister {
 	public class PlatformAdapter implements ModuleDefinition {
 		private var platformKit : PlatformKit
 
-		public function PlatformAdapter ( stage : Stage, root : DisplayObject, loaderURL : String, urlParameters : Object ) {
-			this.platformKit = new PlatformKit( stage, root, loaderURL, urlParameters )
+		public function PlatformAdapter ( stage : Stage, root : DisplayObject, loaderURL : String ) {
+			this.platformKit = new PlatformKit( stage, root, loaderURL )
 			this.platformKit.init()
 		}
 

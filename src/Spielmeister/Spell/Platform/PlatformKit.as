@@ -24,19 +24,17 @@ package Spielmeister.Spell.Platform {
 		private var root : DisplayObject
 		private var host : String
 		private var loaderUrl : String
-		private var urlParameters : Object
 		private var renderingFactory : RenderingFactoryImpl
 		private var registeredNextFrame : Boolean = false
 		private var debugConsole : TextField
 		private var debugConsoleContent : String = ""
 
 
-		public function PlatformKit( stage : Stage, root : DisplayObject, loaderUrl : String, urlParameters : Object ) {
+		public function PlatformKit( stage : Stage, root : DisplayObject, loaderUrl : String ) {
 			this.stage            = stage
 			this.root             = root
 			this.host             = createHost( loaderUrl )
 			this.loaderUrl        = loaderUrl
-			this.urlParameters    = urlParameters
 			this.renderingFactory = new RenderingFactoryImpl( stage )
 
 			// initializing stage
@@ -151,10 +149,6 @@ package Spielmeister.Spell.Platform {
 
 		public function getHost() : String {
 			return host
-		}
-
-		public function getUrlParameters() : Object {
-			return urlParameters
 		}
 
 		public function get configurationOptions() : Object {
