@@ -99,14 +99,15 @@ package Spielmeister.Spell.Platform {
 			resourceUri : String,
 			loadingCompletedCallback : Function,
 			timedOutCallback : Function,
-			... arguments
+			renderingContext : Object
 		) : ImageLoader {
 			return new ImageLoader(
 				eventManager,
 				host,
 				resourceBundleName,
 				resourceUri,
-				loadingCompletedCallback
+				loadingCompletedCallback,
+				renderingContext
 			)
 		}
 
