@@ -12,11 +12,14 @@ package Spielmeister {
 		}
 
 
-		private function resolveDependencies ( moduleName : String, config : Object ) : Object {
+		private function resolveDependencies ( moduleName : String, ... variableArguments ) : Object {
 			if( moduleName === "" ) {
 				throw "No module name was provided."
 			}
 
+			if( variableArguments.length === 1 ) {
+				var config : Object = variableArguments[ 0 ]
+			}
 
 			var module : Object = need.modules[ moduleName ]
 
@@ -82,24 +85,20 @@ package Spielmeister {
 
 
 		public function createRequire() {
-			return function( dependencies, callback ) {
-				if( dependencies === undefined ||
-					callback === undefined ) {
+			return function( moduleName ) {
+				if( !moduleName ) throw 'No module name provided.'
 
-					throw "The provided arguments do not match."
+
+				var module = need.modules[ moduleName ]
+
+				if( !module ) throw 'Could not resolve module name \'' + moduleName + '\' to module instance.'
+
+
+				if( !module.instance ) {
+					module.instance = resolveDependencies( moduleName )
 				}
 
-
-				var args = []
-
-				for( var i = 0; i < dependencies.length; i++ ) {
-					args.push(
-						resolveDependencies( dependencies[ i ], null )
-					)
-				}
-
-
-				callback.apply( null, args )
+				return module.instance
 			}
 		}
 
