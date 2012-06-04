@@ -118,7 +118,7 @@ package Spielmeister {
 			)
 
 			define(
-				"spell/shared/util/platform/underscore",
+				"spell/shared/util/platform/private/underscore",
 				function() : Underscore {
 					return new Underscore()
 				}
