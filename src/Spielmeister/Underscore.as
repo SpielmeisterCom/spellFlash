@@ -64,8 +64,9 @@ package Spielmeister {
 		}
 
 		public function any( collection : *, iterator : Function, context : * = null ) : Boolean {
-			for each( var value : Object in collection ) {
-				if( iterator.call( context, value ) ) return true
+			for( var key : String in collection ) {
+				var value : Object = collection[ key ]
+				if( iterator.call( context, value, key ) ) return true
 			}
 
 			return false
@@ -76,8 +77,8 @@ package Spielmeister {
 
 			any(
 				collection,
-				function( value : Object ) : Boolean {
-					if( iterator.call( context, value ) ) {
+				function( value : Object, key : String ) : Boolean {
+					if( iterator.call( context, value, key ) ) {
 						result = value
 
 						return true
