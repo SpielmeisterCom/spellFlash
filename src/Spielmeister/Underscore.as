@@ -249,6 +249,15 @@ package Spielmeister {
 			return false
 		}
 
+		public function invoke( collection : *, method : *, ... args ) : * {
+			return map(
+				collection,
+				function( value ) {
+					return ( isFunction( method ) ? method || value : value[ method ] ).apply( value, args )
+				}
+			)
+		}
+
 		public function runTests() : void {
 			trace( 'testing...' )
 
