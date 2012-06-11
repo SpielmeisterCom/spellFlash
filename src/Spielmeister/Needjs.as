@@ -85,7 +85,7 @@ package Spielmeister {
 
 
 		public function createRequire() {
-			return function( moduleName ) {
+			return function( moduleName, args ) {
 				if( !moduleName ) throw 'No module name provided.'
 
 
@@ -95,17 +95,10 @@ package Spielmeister {
 
 
 				if( !module.instance ) {
-					module.instance = resolveDependencies( moduleName )
+					module.instance = resolveDependencies( moduleName, args )
 				}
 
 				return module.instance
-			}
-		}
-
-
-		public function createEnterMain() {
-			return function( mainModuleName, args ) {
-				resolveDependencies( mainModuleName, args )
 			}
 		}
 	}

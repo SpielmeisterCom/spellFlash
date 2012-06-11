@@ -7,7 +7,6 @@ package Spielmeister {
 			var needjs : Needjs = new Needjs()
 			var define : Function = needjs.createDefine()
 			var require : Function = needjs.createRequire()
-			var enterMain : Function = needjs.createEnterMain()
 
 			var spellEngine : SpellEngine = new SpellEngine()
 			spellEngine.load( define, require )
@@ -18,10 +17,10 @@ package Spielmeister {
 			var platformAdapter : PlatformAdapter = new PlatformAdapter( this.stage, this.root, this.loaderInfo.loaderURL )
 			platformAdapter.load( define, require )
 
-
 //			enterMain( "spell/client/renderingTestMain" )
 //			enterMain( 'spell/client/renderingCoordinateTestMain' )
-			enterMain( 'spell/client/main', this.loaderInfo.parameters )
+			var main = require( 'spell/client/main', this.loaderInfo.parameters )
+			main.start()
 		}
 	}
 }
