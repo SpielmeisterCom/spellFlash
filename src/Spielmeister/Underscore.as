@@ -2,7 +2,6 @@ package Spielmeister {
 
 	import flash.utils.getQualifiedClassName
 
-
 	public class Underscore {
 		public function Underscore() {
 		}
@@ -12,7 +11,10 @@ package Spielmeister {
 		}
 
 		public function isObject( object : * ) : Boolean {
-			return getQualifiedClassName( object ) == 'Object'
+			var className = getQualifiedClassName( object )
+
+			return className == 'Object' ||
+				className == 'Array'
 		}
 
 		public function size( collection : * ) : int {
