@@ -260,6 +260,53 @@ package Spielmeister {
 			)
 		}
 
+//		// Return a completely flattened version of an array.
+//		_.flatten = function(array, shallow) {
+//			return _.reduce(array, function(memo, value) {
+//				if (_.isArray(value)) return memo.concat(shallow ? value : _.flatten(value));
+//				memo[memo.length] = value;
+//				return memo;
+//			}, []);
+//		};
+
+		public function flatten( collection : Array, shallow : Boolean = false ) : Array {
+			return reduce(
+				collection,
+				function( memo, value ) {
+					return memo.concat(
+						( isArray( value ) ?
+							( shallow ?
+								value :
+								flatten( value ) ) :
+							value )
+					)
+				},
+				[]
+			)
+		}
+
+//		// Return a copy of the object only containing the whitelisted properties.
+//		_.pick = function(obj) {
+//			var result = {};
+//			each(_.flatten(slice.call(arguments, 1)), function(key) {
+//				if (key in obj) result[key] = obj[key];
+//			});
+//			return result;
+//		};
+
+		public function pick( object : Object, ... args ) : Object {
+			return reduce(
+				flatten( args ),
+				function( memo, key ) {
+					if( key in object ) memo[ key ] = object[ key ]
+
+					return memo
+				},
+				{}
+			)
+		}
+
+
 		public function runTests() : void {
 			trace( 'testing...' )
 
