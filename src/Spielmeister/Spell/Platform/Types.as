@@ -9,8 +9,20 @@ package Spielmeister.Spell.Platform {
 
 		public function Types() {}
 
-		public function createNativeFloatArray( length : uint ) : Array {
+		public function createFloatArray( length : uint ) : Array {
 			return new Array( length )
+		}
+
+		public function createIntegerArray( length : uint ) : Array {
+			return new Array( length )
+		}
+
+		public function hasFloatArraySupport() : Boolean {
+			return false
+		}
+
+		public function hasIntegerArraySupport() : Boolean {
+			return false
 		}
 
 		public function get Time() : TimeImpl {
