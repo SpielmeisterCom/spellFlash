@@ -256,9 +256,9 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 			/**
 			 * Yes, your are eyes are not deceiving you. This method creates a temporary BitmapData instance in order to perform source texture cropping
-			 * a.k.a. "a texture matrix". This is how it's done on htrae!
+			 * a.k.a. "a poor copy of a texture matrix". This is how it's done on htrae!
 			 */
-			var tmpBitmapData : BitmapData = new BitmapData( sw, sh, false )
+			var tmpBitmapData : BitmapData = new BitmapData( sw, sh, true, 0x00000000 )
 			tmpBitmapData.copyPixels( texture.privateBitmapDataResource, new Rectangle( sx, sy, sw, sh ), new Point( 0, 0 ) )
 
 			colorBuffer.bitmapData.draw(
