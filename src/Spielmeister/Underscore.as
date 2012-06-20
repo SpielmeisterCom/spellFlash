@@ -162,7 +162,7 @@ package Spielmeister {
 
 		public function bind( func : Function, context : * = null, ... arguments1 ) {
 			return function( ... arguments2 ) : * {
-				func.apply( context, arguments1.concat( arguments2 ) )
+				return func.apply( context, arguments1.concat( arguments2 ) )
 			}
 		}
 
