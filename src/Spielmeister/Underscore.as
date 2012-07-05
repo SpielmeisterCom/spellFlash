@@ -260,15 +260,6 @@ package Spielmeister {
 			)
 		}
 
-//		// Return a completely flattened version of an array.
-//		_.flatten = function(array, shallow) {
-//			return _.reduce(array, function(memo, value) {
-//				if (_.isArray(value)) return memo.concat(shallow ? value : _.flatten(value));
-//				memo[memo.length] = value;
-//				return memo;
-//			}, []);
-//		};
-
 		public function flatten( collection : Array, shallow : Boolean = false ) : Array {
 			return reduce(
 				collection,
@@ -285,15 +276,6 @@ package Spielmeister {
 			)
 		}
 
-//		// Return a copy of the object only containing the whitelisted properties.
-//		_.pick = function(obj) {
-//			var result = {};
-//			each(_.flatten(slice.call(arguments, 1)), function(key) {
-//				if (key in obj) result[key] = obj[key];
-//			});
-//			return result;
-//		};
-
 		public function pick( object : Object, ... args ) : Object {
 			return reduce(
 				flatten( args ),
@@ -305,6 +287,88 @@ package Spielmeister {
 				{}
 			)
 		}
+
+		public function unique( collection : Array, isSorted : Boolean = false, ... args ) : Array {
+			var iterator = args[ 0 ]
+
+			var initial : Object = iterator ? map( collection, iterator ) : collection
+			var results : Array = []
+
+			if( collection.length < 3 ) isSorted = true
+
+			reduce(
+				initial,
+				function( memo, value, index ) {
+					if( isSorted ? last( memo ) !== value || !memo.length : contains( memo, value ) ) {
+						memo.push( value )
+						results.push( collection[ index ] )
+					}
+					return memo
+				},
+				[]
+			)
+
+			return results
+		}
+
+		public function union() : Object {
+			return unique( flatten( arguments, true ) )
+		}
+
+		public function difference( collection : Array, ... args ) : Array{
+			var rest : Array = flatten( args, true )
+
+			return filter(
+				collection,
+				function( value : String ) {
+					return !contains( rest, value )
+				}
+			)
+		}
+
+		public function values( object : Object ) : Array {
+			var result : Array = []
+
+			for each( var value : Object in object ) {
+				result.push( value )
+			}
+
+			return result
+		}
+
+		public function initial( collection : Array, n : Number = 0, guard : * = false ) : Array {
+			return collection.slice(
+				0,
+				collection.length - ( ( ( n === 0 ) || guard ) ? 1 : n )
+			)
+		}
+
+		public function pluck( object : Object, key : String ) : Array {
+			return map(
+				object,
+				function( value ) {
+					return value[ key ]
+				}
+			)
+		}
+
+		public function zip( ... args ) : Array {
+			var length : Number = 0
+
+			for each( var arg : Object in args ) {
+				var argLength : Number = arg.length
+				if( length < argLength ) length = argLength
+			}
+
+			var results : Array = new Array( length )
+
+			for( var i : Number = 0; i < length; i++ ) {
+				results[ i ] = pluck( args, "" + i )
+			}
+
+			return results
+		}
+
 
 
 		public function runTests() : void {
