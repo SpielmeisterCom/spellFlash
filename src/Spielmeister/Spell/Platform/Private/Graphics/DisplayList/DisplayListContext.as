@@ -406,8 +406,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 				/**
 				 * public
 				 */
-				width  : bitmapData.width,
-				height : bitmapData.height,
+				dimensions : [ bitmapData.width, bitmapData.height ],
 
 				/**
 				 * private

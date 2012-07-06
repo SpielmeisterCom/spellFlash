@@ -343,11 +343,11 @@ package Spielmeister {
 			)
 		}
 
-		public function pluck( object : Object, key : String ) : Array {
+		public function pluck( object : Object, key : * ) : Array {
 			return map(
 				object,
 				function( value ) {
-					return value[ key ]
+					return !isString( value ) ? value[ key ] : value.charAt( key )
 				}
 			)
 		}
