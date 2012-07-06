@@ -75,8 +75,6 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 				cameraWidth / 2,
 				-cameraHeight / 2,
 				cameraHeight / 2,
-				0,
-				1000,
 				worldToView
 			)
 
@@ -102,10 +100,9 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		}
 
 
-		private function ortho( left : Number, right : Number, bottom : Number, top : Number, near : Number, far : Number, dest : Matrix3d ) : void {
+		private function ortho( left : Number, right : Number, bottom : Number, top : Number, dest : Matrix3d ) : void {
 			var rl : Number = ( right - left ),
-				tb : Number = ( top - bottom ),
-				fn : Number = ( far - near )
+				tb : Number = ( top - bottom )
 
 			dest.n11 = 2 / rl
 			dest.n21 = 0
@@ -117,11 +114,11 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			dest.n32 = 0
 			dest.n13 = 0
 			dest.n23 = 0
-			dest.n33 = -2 / fn
+			dest.n33 = 1
 			dest.n43 = 0
 			dest.n14 = -( left + right ) / rl
 			dest.n24 = -( top + bottom ) / tb
-			dest.n34 = -( far + near ) / fn
+			dest.n34 = 0
 			dest.n44 = 1
 		}
 
@@ -191,7 +188,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			tmpMatrix.prependTranslation( 0, -dh, 0 )
 
 			// correcting scale
-			tmpMatrix.prependScale( dw / texture.width, dh / texture.height, 1 )
+			tmpMatrix.prependScale( dw / texture.dimensions[ 0 ], dh / texture.dimensions[ 1 ], 1 )
 
 			transferMatrix.a  = tmpMatrix.n11
 			transferMatrix.b  = tmpMatrix.n21
@@ -239,7 +236,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			tmpMatrix.prependTranslation( 0, -dh, 0 )
 
 			// correcting scale
-			tmpMatrix.prependScale( dw / texture.width * ( texture.width / sw ), dh / texture.height * ( texture.height / sh ), 1 )
+			tmpMatrix.prependScale( dw / sw, dh / sh, 1 )
 
 			transferMatrix.a  = tmpMatrix.n11
 			transferMatrix.b  = tmpMatrix.n21
@@ -308,20 +305,20 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 				new Matrix3d(
 					matrix[ 0 ],
 					matrix[ 1 ],
+					0,
 					matrix[ 2 ],
 					matrix[ 3 ],
 					matrix[ 4 ],
+					0,
 					matrix[ 5 ],
+					0,
+					0,
+					1,
+					0,
 					matrix[ 6 ],
 					matrix[ 7 ],
-					matrix[ 8 ],
-					matrix[ 9 ],
-					matrix[ 10 ],
-					matrix[ 11 ],
-					matrix[ 12 ],
-					matrix[ 13 ],
-					matrix[ 14 ],
-					matrix[ 15 ]
+					0,
+					matrix[ 8 ]
 				)
 			)
 		}
@@ -331,29 +328,22 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 			destination.n11 = matrix[ 0 ]
 			destination.n21 = matrix[ 1 ]
-			destination.n31 = matrix[ 2 ]
-			destination.n41 = matrix[ 3 ]
-			destination.n12 = matrix[ 4 ]
-			destination.n22 = matrix[ 5 ]
-			destination.n32 = matrix[ 6 ]
-			destination.n32 = matrix[ 7 ]
-			destination.n13 = matrix[ 8 ]
-			destination.n23 = matrix[ 9 ]
-			destination.n33 = matrix[ 10 ]
-			destination.n43 = matrix[ 11 ]
-			destination.n14 = matrix[ 12 ]
-			destination.n24 = matrix[ 13 ]
-			destination.n34 = matrix[ 14 ]
-			destination.n44 = matrix[ 15 ]
+			destination.n41 = matrix[ 2 ]
+			destination.n12 = matrix[ 3 ]
+			destination.n22 = matrix[ 4 ]
+			destination.n42 = matrix[ 5 ]
+			destination.n14 = matrix[ 6 ]
+			destination.n24 = matrix[ 7 ]
+			destination.n44 = matrix[ 8 ]
 		}
 
 		public function setViewMatrix( matrix : Array ) : void {
 			worldToView.n11 = matrix[ 0 ]
 			worldToView.n21 = matrix[ 1 ]
-			worldToView.n12 = matrix[ 4 ]
-			worldToView.n22 = matrix[ 5 ]
-			worldToView.n14 = matrix[ 12 ]
-			worldToView.n24 = matrix[ 13 ]
+			worldToView.n12 = matrix[ 3 ]
+			worldToView.n22 = matrix[ 4 ]
+			worldToView.n14 = matrix[ 6 ]
+			worldToView.n24 = matrix[ 7 ]
 
 			resetAndPrependToMatrix( worldToScreen, viewToScreen, worldToView )
 		}
