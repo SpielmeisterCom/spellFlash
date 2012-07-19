@@ -125,6 +125,13 @@ package Spielmeister {
 			)
 
 			define(
+				"spell/shared/util/platform/private/initDebugEnvironment",
+				function() : Function {
+					return function() : void {}
+				}
+			)
+
+			define(
 				"spell/shared/util/platform/PlatformKit",
 				createPlatformKit
 			)
