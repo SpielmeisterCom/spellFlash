@@ -3,22 +3,21 @@ package Spielmeister {
 
 	public class SpellMain extends Sprite {
 
+		private static const anonymizeModuleIdentifiers : Boolean = CONFIG::anonymizeModuleIdentifiers
+
 		public function SpellMain() : void {
 			var needjs : Needjs = new Needjs()
-			var define : Function = needjs.createDefine()
 			var require : Function = needjs.createRequire()
 
 			var spellEngine : SpellEngine = new SpellEngine()
-			spellEngine.load( define, require )
+			spellEngine.load( needjs.createDefine() )
 
 			var runtimeModule : RuntimeModule = new RuntimeModule()
-			runtimeModule.load( define, require )
+			runtimeModule.load( needjs.createDefine() )
 
 			var platformAdapter : PlatformAdapter = new PlatformAdapter( this.stage, this.root, this.loaderInfo.loaderURL )
-			platformAdapter.load( define, require )
+			platformAdapter.load( needjs.createDefine( anonymizeModuleIdentifiers ) )
 
-//			enterMain( "spell/client/renderingTestMain" )
-//			enterMain( 'spell/client/renderingCoordinateTestMain' )
 			var main = require( 'spell/client/main', this.loaderInfo.parameters )
 			main.start()
 		}

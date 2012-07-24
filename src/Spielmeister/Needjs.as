@@ -1,5 +1,8 @@
 package Spielmeister {
 
+	import com.hurlant.crypto.hash.SHA256
+	import com.hurlant.util.Base64
+
 	public class Needjs {
 
 		private var need : Object
@@ -12,7 +15,18 @@ package Spielmeister {
 		}
 
 
-		private function resolveDependencies ( moduleName : String, ... variableArguments ) : Object {
+		private function hashModuleIdentifier( id : String ) : String {
+			var sha256 : SHA256 = new SHA256()
+
+			return Base64.encodeByteArray(
+				sha256.hash(
+					Base64.decodeToByteArray( id )
+				)
+			)
+		}
+
+
+		private function resolveDependencies( moduleName : String, ... variableArguments ) : Object {
 			if( moduleName === "" ) {
 				throw "No module name was provided."
 			}
@@ -59,7 +73,13 @@ package Spielmeister {
 		}
 
 
-		public function createDefine() {
+		/**
+		 * Creates a define function. If anonymizeModuleIdentifiers is set to true all module names are anonymized. The dependency module identifiers are left
+		 * unchanged.
+		 *
+		 * @param {Boolean} anonymizeModuleIdentifiers
+		 */
+		public function createDefine( anonymizeModuleIdentifiers : Boolean = false ) {
 			return function( name, dependencies, callback ) {
 				if( arguments.length < 2 ||
 					arguments.length > 3 ) {
@@ -77,6 +97,10 @@ package Spielmeister {
 
 				var module = {
 					definition: [ dependencies, callback ]
+				}
+
+				if( anonymizeModuleIdentifiers ) {
+					name = hashModuleIdentifier( name )
 				}
 
 				need.modules[ name ] = module
