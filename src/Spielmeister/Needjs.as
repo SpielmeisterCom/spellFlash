@@ -2,6 +2,7 @@ package Spielmeister {
 
 	import com.hurlant.crypto.hash.SHA256
 	import com.hurlant.util.Base64
+	import flash.utils.ByteArray
 
 	public class Needjs {
 
@@ -17,12 +18,10 @@ package Spielmeister {
 
 		private function hashModuleIdentifier( id : String ) : String {
 			var sha256 : SHA256 = new SHA256()
+			var bytes : ByteArray = new ByteArray()
+			bytes.writeUTFBytes( id )
 
-			return Base64.encodeByteArray(
-				sha256.hash(
-					Base64.decodeToByteArray( id )
-				)
-			)
+			return Base64.encodeByteArray( sha256.hash( bytes ) )
 		}
 
 
