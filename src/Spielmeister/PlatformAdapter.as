@@ -17,7 +17,7 @@ package Spielmeister {
 			return platformKit
 		}
 
-		public function load( define : Function ) : void {
+		public function load( define : Function, require : Function ) : void {
 			define(
 				"spell/shared/util/platform/private/functions",
 				function() : Underscore {

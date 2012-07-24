@@ -10,13 +10,13 @@ package Spielmeister {
 			var require : Function = needjs.createRequire()
 
 			var spellEngine : SpellEngine = new SpellEngine()
-			spellEngine.load( needjs.createDefine() )
+			spellEngine.load( needjs.createDefine(), require )
 
 			var runtimeModule : RuntimeModule = new RuntimeModule()
-			runtimeModule.load( needjs.createDefine() )
+			runtimeModule.load( needjs.createDefine(), require )
 
 			var platformAdapter : PlatformAdapter = new PlatformAdapter( this.stage, this.root, this.loaderInfo.loaderURL )
-			platformAdapter.load( needjs.createDefine( anonymizeModuleIdentifiers ) )
+			platformAdapter.load( needjs.createDefine( anonymizeModuleIdentifiers ), require )
 
 			var main = require( 'spell/client/main', this.loaderInfo.parameters )
 			main.start()
