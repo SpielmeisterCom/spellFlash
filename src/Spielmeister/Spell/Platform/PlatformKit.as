@@ -192,11 +192,11 @@ package Spielmeister.Spell.Platform {
 			}
 		}
 
-		public function registerOnScreenResize( callback : Function ) : void {
+		public function registerOnScreenResize( id : String, callback : Function ) : void {
 			this.stage.addEventListener(
 				Event.RESIZE,
 				function( event : Event ) : void {
-					callback( event.target.stageWidth, event.target.stageHeight )
+					callback( [ event.target.stageWidth, event.target.stageHeight ] )
 				}
 			)
 		}
