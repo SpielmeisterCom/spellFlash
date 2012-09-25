@@ -34,11 +34,7 @@ package Spielmeister.Spell.Platform.Private.Loader {
 		}
 
 		private function onLoad( event : Event ) : void {
-			var bmp : Bitmap = loader.content as Bitmap
-			var resources : Object = new Object()
-			resources[ resourceUri ] = this.renderingContext.createTexture( bmp.bitmapData )
-
-			this.onCompleteCallback( resources )
+			this.onCompleteCallback( ( loader.content as Bitmap ).bitmapData )
 		}
 	}
 }

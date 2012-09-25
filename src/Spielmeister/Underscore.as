@@ -299,7 +299,7 @@ package Spielmeister {
 			reduce(
 				initial,
 				function( memo, value, index ) {
-					if( isSorted ? last( memo ) !== value || !memo.length : contains( memo, value ) ) {
+					if( isSorted ? last( memo ) !== value || !memo.length : !contains( memo, value ) ) {
 						memo.push( value )
 						results.push( collection[ index ] )
 					}
@@ -367,6 +367,24 @@ package Spielmeister {
 			}
 
 			return results
+		}
+
+		public function intersection( array : Array, ... rest ) {
+			return filter(
+				unique( array ),
+				function( item ) {
+					return all(
+						rest,
+						function( other ) {
+							return indexOf( other, item ) >= 0
+						}
+					)
+				}
+			)
+		}
+
+		public function isNaN( value : Number ) : Boolean {
+			return value != value
 		}
 
 

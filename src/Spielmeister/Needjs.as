@@ -5,25 +5,26 @@ package Spielmeister {
 	import flash.utils.ByteArray
 
 	public class Needjs {
+		private var modules : Object = {}
+		private var require : Function
 
-		private var need : Object
+		public function getModuleInstanceById( id : String, anonymizeModuleIds : Boolean = false ) : Object {
+			id = anonymizeModuleIds ? hashModuleId( id ) : id
 
+			var module = modules[ id ]
 
-		public function Needjs() {
-			need = {
-				modules: {}
-			}
+			if( !module ) throw 'Could not resolve module name \'' + id + '\' to module instance.'
+
+			return module.instance
 		}
 
-
-		private function hashModuleIdentifier( id : String ) : String {
+		private function hashModuleId( id : String ) : String {
 			var sha256 : SHA256 = new SHA256()
 			var bytes : ByteArray = new ByteArray()
 			bytes.writeUTFBytes( id )
 
 			return Base64.encodeByteArray( sha256.hash( bytes ) )
 		}
-
 
 		private function resolveDependencies( moduleName : String, ... variableArguments ) : Object {
 			if( moduleName === "" ) {
@@ -34,7 +35,7 @@ package Spielmeister {
 				var config : Object = variableArguments[ 0 ]
 			}
 
-			var module : Object = need.modules[ moduleName ]
+			var module : Object = modules[ moduleName ]
 
 			if( module === null ||
 				module.definition === undefined ) {
@@ -51,16 +52,16 @@ package Spielmeister {
 			for( var i = 0; i < dependencies.length; i++ ) {
 				var name = dependencies[ i ]
 
-				if( need.modules[ name ] === undefined ) {
+				if( modules[ name ] === undefined ) {
 					throw 'Could not find module definition for dependency "' + name + '" of module "' + moduleName + '" . Is it included and registered via define?'
 				}
 
-				if( need.modules[ name ].instance === undefined ) {
-					need.modules[ name ].instance = resolveDependencies( dependencies[ i ], null )
+				if( modules[ name ].instance === undefined ) {
+					modules[ name ].instance = resolveDependencies( dependencies[ i ], null )
 				}
 
 				args.push(
-					need.modules[ name ].instance
+					modules[ name ].instance
 				)
 			}
 
@@ -71,14 +72,13 @@ package Spielmeister {
 			return callback.apply( null, args )
 		}
 
-
 		/**
-		 * Creates a define function. If anonymizeModuleIdentifiers is set to true all module names are anonymized. The dependency module identifiers are left
+		 * Creates a define function. If anonymizeModuleIds is set to true all module names are anonymized. The dependency module identifiers are left
 		 * unchanged.
 		 *
-		 * @param {Boolean} anonymizeModuleIdentifiers
+		 * @param {Boolean} anonymizeModuleIds
 		 */
-		public function createDefine( anonymizeModuleIdentifiers : Boolean = false ) {
+		private function createDefine( anonymizeModuleIds : Boolean = false ) {
 			return function( name, dependencies, callback ) {
 				if( arguments.length < 2 ||
 					arguments.length > 3 ) {
@@ -98,31 +98,41 @@ package Spielmeister {
 					definition: [ dependencies, callback ]
 				}
 
-				if( anonymizeModuleIdentifiers ) {
-					name = hashModuleIdentifier( name )
+				if( anonymizeModuleIds ) {
+					name = hashModuleId( name )
 				}
 
-				need.modules[ name ] = module
+				modules[ name ] = module
 			}
 		}
 
-
 		public function createRequire() {
-			return function( moduleName, args ) {
-				if( !moduleName ) throw 'No module name provided.'
+			if( !this.require ) {
+				this.require = function( moduleName, args ) {
+					if( !moduleName ) throw 'No module name provided.'
 
 
-				var module = need.modules[ moduleName ]
+					var module = modules[ moduleName ]
 
-				if( !module ) throw 'Could not resolve module name \'' + moduleName + '\' to module instance.'
+					if( !module ) throw 'Could not resolve module name \'' + moduleName + '\' to module instance.'
 
 
-				if( !module.instance ) {
-					module.instance = resolveDependencies( moduleName, args )
+					if( !module.instance ) {
+						module.instance = resolveDependencies( moduleName, args )
+					}
+
+					return module.instance
 				}
-
-				return module.instance
 			}
+
+			return this.require
+		}
+
+		public function load( moduleDefinition : ModuleDefinition, anonymizeModuleIds : Boolean = false ) {
+			moduleDefinition.load(
+				this.createDefine( anonymizeModuleIds ),
+				this.createRequire()
+			)
 		}
 	}
 }

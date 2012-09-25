@@ -24,18 +24,20 @@ package Spielmeister.Spell.Platform {
 		private var root : DisplayObject
 		private var host : String
 		private var loaderUrl : String
+		private var events : Object
 		private var renderingFactory : RenderingFactoryImpl
 		private var registeredNextFrame : Boolean = false
 		private var debugConsole : TextField
 		private var debugConsoleContent : String = ""
 
 
-		public function PlatformKit( stage : Stage, root : DisplayObject, loaderUrl : String ) {
+		public function PlatformKit( stage : Stage, root : DisplayObject, loaderUrl : String, events : Object ) {
 			this.stage            = stage
 			this.root             = root
 			this.host             = createHost( loaderUrl )
 			this.loaderUrl        = loaderUrl
 			this.renderingFactory = new RenderingFactoryImpl( stage )
+			this.events           = events
 
 			// initializing stage
 			this.stage.quality   = StageQuality.MEDIUM
@@ -178,7 +180,7 @@ package Spielmeister.Spell.Platform {
 			return 'flash'
 		}
 
-		public function getJsonCoder() : Object {
+		public function get jsonCoder() : Object {
 			return JSON
 		}
 
@@ -192,11 +194,13 @@ package Spielmeister.Spell.Platform {
 			}
 		}
 
-		public function registerOnScreenResize( id : String, callback : Function ) : void {
+		public function registerOnScreenResize( eventManager : Object, id : String ) : void {
+			var events = this.events
+
 			this.stage.addEventListener(
 				Event.RESIZE,
 				function( event : Event ) : void {
-					callback( [ event.target.stageWidth, event.target.stageHeight ] )
+					eventManager.publish( events.AVAILABLE_SCREEN_SIZE_CHANGED, [ [ event.target.stageWidth, event.target.stageHeight ] ] )
 				}
 			)
 		}
