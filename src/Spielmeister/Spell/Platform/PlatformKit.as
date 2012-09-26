@@ -1,5 +1,6 @@
 package Spielmeister.Spell.Platform {
 
+	import Spielmeister.Needjs
 	import Spielmeister.Spell.Platform.Private.Graphics.*
 	import Spielmeister.Spell.Platform.Private.Input
 	import Spielmeister.Spell.Platform.Private.Loader.*
@@ -24,20 +25,22 @@ package Spielmeister.Spell.Platform {
 		private var root : DisplayObject
 		private var host : String
 		private var loaderUrl : String
-		private var events : Object
+		private var needjs : Needjs
+		private var anonymizeModuleIds : Boolean
 		private var renderingFactory : RenderingFactoryImpl
 		private var registeredNextFrame : Boolean = false
 		private var debugConsole : TextField
 		private var debugConsoleContent : String = ""
 
 
-		public function PlatformKit( stage : Stage, root : DisplayObject, loaderUrl : String, events : Object ) {
-			this.stage            = stage
-			this.root             = root
-			this.host             = createHost( loaderUrl )
-			this.loaderUrl        = loaderUrl
-			this.renderingFactory = new RenderingFactoryImpl( stage )
-			this.events           = events
+		public function PlatformKit( stage : Stage, root : DisplayObject, loaderUrl : String, needjs : Needjs, anonymizeModuleIds : Boolean = false ) {
+			this.stage              = stage
+			this.root               = root
+			this.host               = createHost( loaderUrl )
+			this.loaderUrl          = loaderUrl
+			this.renderingFactory   = new RenderingFactoryImpl( stage )
+			this.needjs             = needjs
+			this.anonymizeModuleIds = anonymizeModuleIds
 
 			// initializing stage
 			this.stage.quality   = StageQuality.MEDIUM
@@ -194,13 +197,24 @@ package Spielmeister.Spell.Platform {
 			}
 		}
 
-		public function registerOnScreenResize( eventManager : Object, id : String ) : void {
-			var events = this.events
+		public function registerOnScreenResize( eventManager : Object, id : String, initialScreenSize : Array ) : void {
+			var events = this.needjs.getModuleInstanceById(
+				'spell/shared/util/Events',
+				this.anonymizeModuleIds
+			)
+
+			eventManager.publish(
+				events.AVAILABLE_SCREEN_SIZE_CHANGED,
+				[ initialScreenSize ]
+			)
 
 			this.stage.addEventListener(
 				Event.RESIZE,
 				function( event : Event ) : void {
-					eventManager.publish( events.AVAILABLE_SCREEN_SIZE_CHANGED, [ [ event.target.stageWidth, event.target.stageHeight ] ] )
+					eventManager.publish(
+						events.AVAILABLE_SCREEN_SIZE_CHANGED,
+						[ [ event.target.stageWidth, event.target.stageHeight ] ]
+					)
 				}
 			)
 		}

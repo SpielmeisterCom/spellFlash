@@ -8,12 +8,13 @@ package Spielmeister {
 	public class PlatformAdapter implements ModuleDefinition {
 		private var platformKit : PlatformKit
 
-		public function PlatformAdapter ( stage : Stage, root : DisplayObject, loaderURL : String, needjs : Needjs, anonymizeModuleIds : Boolean = false ) {
+		public function PlatformAdapter( stage : Stage, root : DisplayObject, loaderURL : String, needjs : Needjs, anonymizeModuleIds : Boolean = false ) {
 			this.platformKit = new PlatformKit(
 				stage,
 				root,
 				loaderURL,
-				needjs.getModuleInstanceById( 'spell/shared/util/Events', anonymizeModuleIds )
+				needjs,
+				anonymizeModuleIds
 			)
 
 			this.platformKit.init()

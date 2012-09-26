@@ -6,16 +6,15 @@ package Spielmeister {
 
 	public class Needjs {
 		private var modules : Object = {}
-		private var require : Function
 
 		public function getModuleInstanceById( id : String, anonymizeModuleIds : Boolean = false ) : Object {
 			id = anonymizeModuleIds ? hashModuleId( id ) : id
 
-			var module = modules[ id ]
+			var moduleInstance = require( id, null )
 
-			if( !module ) throw 'Could not resolve module name \'' + id + '\' to module instance.'
+			if( !moduleInstance ) throw 'Could not resolve module name \'' + id + '\' to module instance.'
 
-			return module.instance
+			return moduleInstance
 		}
 
 		private function hashModuleId( id : String ) : String {
@@ -106,25 +105,26 @@ package Spielmeister {
 			}
 		}
 
-		public function createRequire() {
-			if( !this.require ) {
-				this.require = function( moduleName, args ) {
-					if( !moduleName ) throw 'No module name provided.'
+		private function require( moduleName : String, ... rest ) {
+			var args   = rest.length >= 1  ? rest[ 0 ] : null
+			var config = rest.length === 2 ? rest[ 1 ] : null
+
+			if( !moduleName ) throw 'No module name provided.'
 
 
-					var module = modules[ moduleName ]
+			var module = modules[ moduleName ]
 
-					if( !module ) throw 'Could not resolve module name \'' + moduleName + '\' to module instance.'
+			if( !module ) throw 'Could not resolve module name \'' + moduleName + '\' to module instance.'
 
 
-					if( !module.instance ) {
-						module.instance = resolveDependencies( moduleName, args )
-					}
-
-					return module.instance
-				}
+			if( !module.instance ) {
+				module.instance = resolveDependencies( moduleName, args )
 			}
 
+			return module.instance
+		}
+
+		public function createRequire() {
 			return this.require
 		}
 
