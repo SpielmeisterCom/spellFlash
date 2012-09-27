@@ -11,6 +11,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 	import flash.geom.Matrix
 	import flash.geom.Point
 	import flash.geom.Rectangle
+	import flash.external.ExternalInterface
 
 	import net.richardlord.coral.Matrix3d
 	import net.richardlord.coral.Vector3d
@@ -20,6 +21,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		private var stage : Stage
 		private var width : uint
 		private var height : uint
+		private var id : String
 		private var colorBuffer : Bitmap
 		private var clearColor : uint
 
@@ -42,11 +44,12 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		private var tmpMatrix : Matrix3d = new Matrix3d()
 
 
-		public function DisplayListContext( stage : Stage, width : uint, height: uint ) {
-			this.stage = stage
-			this.width = width
+		public function DisplayListContext( stage : Stage, id : String, width : uint, height: uint ) {
+			this.stage  = stage
+			this.width  = width
 			this.height = height
-			clearColor = 0x000000
+			this.id     = id
+			clearColor  = 0x000000
 
 			// setting up the color buffer
 			colorBuffer = new Bitmap()
@@ -358,6 +361,8 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		}
 
 		public function resizeColorBuffer ( newWidth : Number, newHeight : Number ) : void {
+			ExternalInterface.call( 'spell_setDimensions', this.id + '-screen', newWidth, newHeight )
+
 			while( stage.numChildren ) {
 				stage.removeChildAt( 0 )
 			}

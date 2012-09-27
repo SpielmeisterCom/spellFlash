@@ -17,7 +17,7 @@ package Spielmeister.Spell.Platform.Private.Graphics {
 		}
 
 		public function createContext2d( eventManager : Object, id : String, width : uint, height : uint, requestedBackEnd : uint = BACK_END_DISPLAY_LIST ) : DisplayListContext {
-			return new DisplayListContext( this.stage, width, height )
+			return new DisplayListContext( this.stage, id, width, height )
 		}
 	}
 }
