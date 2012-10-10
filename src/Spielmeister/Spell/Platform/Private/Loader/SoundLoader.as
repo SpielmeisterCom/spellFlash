@@ -1,21 +1,20 @@
 package Spielmeister.Spell.Platform.Private.Loader {
 
 	public class SoundLoader implements Loader {
-		private var host : String
-		private var onCompleteCallback : Function
+		private var resourcePath : String
+		private var resourceName : String
+		private var onLoadCallback : Function
+		private var onErrorCallback : Function
 
-
-		public function SoundLoader( eventManager : Object, host : String, resourceBundleName : String, resourceUri : String, callback : Function, soundManager : Object ) {
-			this.host               = host
-			this.onCompleteCallback = callback
+		public function SoundLoader( resourcePath : String, resourceName : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) {
+			this.resourcePath    = resourcePath
+			this.resourceName    = resourceName
+			this.onLoadCallback  = onLoadCallback
+			this.onErrorCallback = onErrorCallback
 		}
 
 		public function start() : void {
-//			trace( 'Soundloader.start() - not yet implemented')
-
-			onCompleteCallback( {
-				thisIsAStub: 'sound_loading_is_not_yet_implemented'
-			} )
+			throw 'Error: Sound loading is not yet implemented.'
 		}
 	}
 }

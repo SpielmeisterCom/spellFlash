@@ -97,64 +97,34 @@ package Spielmeister.Spell.Platform {
 			myTimer.addEventListener( TimerEvent.TIMER_COMPLETE, callback )
 		}
 
-		public function createImageLoader(
-			eventManager : Object,
-			host : String,
-			resourceBundleName : String,
-			resourceUri : String,
-			loadingCompletedCallback : Function,
-			timedOutCallback : Function,
-			renderingContext : Object
-		) : ImageLoader {
-			return new ImageLoader(
-				eventManager,
-				host,
-				resourceBundleName,
-				resourceUri,
-				loadingCompletedCallback,
-				renderingContext
-			)
+		public function createImageLoader( resourcePath : String, resourceName : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : ImageLoader {
+			return new ImageLoader( resourcePath, resourceName, onLoadCallback, onErrorCallback, onTimedOutCallback )
 		}
 
-		public function createSoundLoader(
-			eventManager : Object,
-			host : String,
-			resourceBundleName : String,
-			resourceUri : String,
-			loadingCompletedCallback : Function,
-			timedOutCallback : Function,
-			soundManager : Object
-		) : SoundLoader {
-			return new SoundLoader(
-				eventManager,
-				host,
-				resourceBundleName,
-				resourceUri,
-				loadingCompletedCallback,
-				soundManager
-			)
+		public function createSoundLoader( resourcePath : String, resourceName : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : SoundLoader {
+			return new SoundLoader( resourcePath, resourceName, onLoadCallback, onErrorCallback, onTimedOutCallback )
 		}
 
-		public function createTextLoader(
-			eventManager : Object,
-			host : String,
-			resourceBundleName : String,
-			resourceUri : String,
-			loadingCompletedCallback : Function,
-			timedOutCallback : Function,
-			... arguments
-		) : TextLoader {
-			return new TextLoader(
-				eventManager,
-				host,
-				resourceBundleName,
-				resourceUri,
-				loadingCompletedCallback
-			)
+		public function createTextLoader( resourcePath : String, resourceName : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : TextLoader {
+			return new TextLoader( resourcePath, resourceName, onLoadCallback, onErrorCallback, onTimedOutCallback )
 		}
 
 		public function getHost() : String {
 			return host
+		}
+
+		public function get ModuleLoader() : Object {
+			return {
+				createDependentModules : function() {
+					throw 'Error: ModuleLoader.createDependentModules is not yet implemented.'
+				},
+				define : function() {
+					throw 'Error: ModuleLoader.define is not yet implemented.'
+				},
+				require : function() {
+					throw 'Error: ModuleLoader.require is not yet implemented.'
+				}
+			}
 		}
 
 		public function get configurationOptions() : Object {

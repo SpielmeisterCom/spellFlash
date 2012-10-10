@@ -7,34 +7,29 @@ package Spielmeister.Spell.Platform.Private.Loader {
 
 
 	public class ImageLoader implements Spielmeister.Spell.Platform.Private.Loader.Loader {
-		private var eventManager : Object
-		private var host : String
-		private var resourceBundleName : String
-		private var resourceUri : String
-		private var renderingContext : Object
-		private var onCompleteCallback : Function
+		private var resourcePath : String
+		private var resourceName : String
+		private var onLoadCallback : Function
+		private var onErrorCallback : Function
 		private var loader : flash.display.Loader
 
-
-		public function ImageLoader( eventManager : Object, host : String, resourceBundleName : String, resourceUri : String, callback : Function, renderingContext : Object ) {
-			this.eventManager       = eventManager
-			this.host               = host
-			this.resourceBundleName = resourceBundleName
-			this.resourceUri        = resourceUri
-			this.renderingContext   = renderingContext
-			this.onCompleteCallback = callback
+		public function ImageLoader( resourcePath : String, resourceName : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) {
+			this.resourcePath    = resourcePath
+			this.resourceName    = resourceName
+			this.onLoadCallback  = onLoadCallback
+			this.onErrorCallback = onErrorCallback
 		}
 
 		public function start() : void {
 			loader = new flash.display.Loader()
 			loader.contentLoaderInfo.addEventListener( Event.COMPLETE, onLoad )
 
-			var url : String = host + '/' + resourceUri
+			var url : String = resourcePath + '/' + resourceName
 			loader.load( new URLRequest( url ) )
 		}
 
 		private function onLoad( event : Event ) : void {
-			this.onCompleteCallback( ( loader.content as Bitmap ).bitmapData )
+			this.onLoadCallback( ( loader.content as Bitmap ).bitmapData )
 		}
 	}
 }
