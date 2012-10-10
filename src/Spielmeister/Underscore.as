@@ -387,6 +387,10 @@ package Spielmeister {
 			return value != value
 		}
 
+		public function identity( x : * ) : * {
+			return x
+		}
+
 
 
 		public function runTests() : void {
