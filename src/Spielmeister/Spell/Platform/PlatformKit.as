@@ -115,14 +115,14 @@ package Spielmeister.Spell.Platform {
 
 		public function get ModuleLoader() : Object {
 			return {
-				createDependentModules : function() {
-					throw 'Error: ModuleLoader.createDependentModules is not yet implemented.'
+				createDependentModules : function() : void {
+					throw 'Error: ModuleLoader.createDependentModules is not implemented.'
 				},
-				define : function() {
-					throw 'Error: ModuleLoader.define is not yet implemented.'
+				define : function( name : String, ... rest ) : void {
+                    needjs.createDefine( anonymizeModuleIds )( name, rest[ 0 ], rest[ 1 ] )
 				},
-				require : function() {
-					throw 'Error: ModuleLoader.require is not yet implemented.'
+				require : function( name : String, ... rest ) {
+                    return needjs.createRequire()( name, rest[ 0 ], rest[ 1 ] )
 				}
 			}
 		}
@@ -154,7 +154,7 @@ package Spielmeister.Spell.Platform {
 		}
 
 		public function get jsonCoder() : Object {
-			return JSON
+			return com.adobe.serialization.json.JSON
 		}
 
 		public function createInput( configurationManager : Object ) : Input {
