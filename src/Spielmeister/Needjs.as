@@ -25,21 +25,21 @@ package Spielmeister {
 			return Base64.encodeByteArray( sha256.hash( bytes ) )
 		}
 
-		private function resolveDependencies( moduleName : String, ... variableArguments ) : Object {
-			if( moduleName === "" ) {
-				throw "No module name was provided."
+		private function resolveDependencies( name : String, ... variableArguments ) : Object {
+			if( name === '' ) {
+				throw 'No module name was provided.'
 			}
 
 			if( variableArguments.length === 1 ) {
 				var config : Object = variableArguments[ 0 ]
 			}
 
-			var module : Object = modules[ moduleName ]
+			var module : Object = modules[ name ]
 
 			if( module === null ||
 				module.definition === undefined ) {
 
-				throw "Unable to find module definition for module '" + moduleName + "'."
+				throw 'Unable to find module definition for module \'' + name + '\'.'
 			}
 
 
@@ -49,18 +49,19 @@ package Spielmeister {
 			var args = []
 
 			for( var i = 0; i < dependencies.length; i++ ) {
-				var name = dependencies[ i ]
+				var dependencyName   = dependencies[ i ],
+					dependencyModule = modules[ dependencyName ]
 
-				if( modules[ name ] === undefined ) {
-					throw 'Could not find module definition for dependency "' + name + '" of module "' + moduleName + '" . Is it included and registered via define?'
+				if( !dependencyModule ) {
+					throw 'Could not find module definition for dependency "' + dependencyName + '" of module "' + name + '" . Is it included and registered via define?'
 				}
 
-				if( modules[ name ].instance === undefined ) {
-					modules[ name ].instance = resolveDependencies( dependencies[ i ], null )
+				if( !dependencyModule.instance ) {
+					dependencyModule.instance = resolveDependencies( dependencies[ i ], null )
 				}
 
 				args.push(
-					modules[ name ].instance
+					 dependencyModule.instance
 				)
 			}
 
@@ -71,30 +72,54 @@ package Spielmeister {
 			return callback.apply( null, args )
 		}
 
+		var createModuleInstance = function( dependencies, body, args, config ) {
+			var moduleInstanceArgs = []
+
+			if( dependencies ) {
+				for( var i = 0; i < dependencies.length; i++ ) {
+					var dependencyName   = dependencies[ i ],
+						dependencyModule = modules[ dependencyName ]
+
+					if( !dependencyModule && config.hashModuleId ) {
+						dependencyModule = modules[ config.hashModuleId( dependencyName ) ]
+					}
+
+					if( !dependencyModule ) {
+						dependencyModule = modules[ dependencyName ]
+					}
+
+					if( !dependencyModule.instance ) {
+						dependencyModule.instance = createModuleInstance( dependencyModule.dependencies, dependencyModule.body, undefined, config )
+					}
+
+					moduleInstanceArgs.push( dependencyModule.instance )
+				}
+			}
+
+			if( args ) moduleInstanceArgs.push( args )
+
+			return body.apply( null, moduleInstanceArgs )
+		}
+
 		/**
 		 * Creates a define function. If anonymizeModuleIds is set to true all module names are anonymized. The dependency module identifiers are left
 		 * unchanged.
 		 *
 		 * @param {Boolean} anonymizeModuleIds
 		 */
-		private function createDefine( anonymizeModuleIds : Boolean = false ) {
-			return function( name, dependencies, callback ) {
-				if( arguments.length < 2 ||
-					arguments.length > 3 ) {
+		public function createDefine( anonymizeModuleIds : Boolean = false ) {
+			return function( name ) {
+				var numArguments = arguments.length
 
-					throw "Definition is invalid."
-				}
+				if( numArguments < 2 ||
+					numArguments > 3 ) {
 
-
-				if( arguments.length === 2 ) {
-					// No dependencies were provided. Thus arguments looks like this [ name, constructor ].
-
-					callback = dependencies
-					dependencies = []
+					throw 'Error: Module definition is invalid.'
 				}
 
 				var module = {
-					definition: [ dependencies, callback ]
+					body         : ( numArguments === 2 ? arguments[ 1 ] : arguments[ 2 ] ),
+					dependencies : ( numArguments === 2 ? undefined : arguments[ 1 ] )
 				}
 
 				if( anonymizeModuleIds ) {
@@ -105,20 +130,24 @@ package Spielmeister {
 			}
 		}
 
-		private function require( moduleName : String, ... rest ) {
-			var args   = rest.length >= 1  ? rest[ 0 ] : null
-			var config = rest.length === 2 ? rest[ 1 ] : null
+		private function require( name : String, ... rest ) {
+            if( !name ) throw 'No module name provided.'
 
-			if( !moduleName ) throw 'No module name provided.'
+			var args   = rest.length >= 1  ? rest[ 0 ] : null,
+			    config = rest.length === 2 ? rest[ 1 ] : null,
+                module = modules[ name ]
 
+            if( !module && config.hashModuleId ) {
 
-			var module = modules[ moduleName ]
+				trace( 'trying hashed name: ' + config.hashModuleId( name ) )
 
-			if( !module ) throw 'Could not resolve module name \'' + moduleName + '\' to module instance.'
+                module = modules[ config.hashModuleId( name ) ]
+            }
 
+			if( !module ) throw 'Could not resolve module name \'' + name + '\' to module instance.'
 
 			if( !module.instance ) {
-				module.instance = resolveDependencies( moduleName, args )
+				module.instance = createModuleInstance( module.dependencies, module.body, args, config )
 			}
 
 			return module.instance
