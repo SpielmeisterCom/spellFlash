@@ -138,9 +138,6 @@ package Spielmeister {
                 module = modules[ name ]
 
             if( !module && config.hashModuleId ) {
-
-				trace( 'trying hashed name: ' + config.hashModuleId( name ) )
-
                 module = modules[ config.hashModuleId( name ) ]
             }
 
