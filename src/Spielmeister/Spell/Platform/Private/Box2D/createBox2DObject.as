@@ -22,9 +22,17 @@ package Spielmeister.Spell.Platform.Private.Box2D {
 				createB2BodyDef : function() : b2BodyDef {
 					return new b2BodyDef()
 				},
+				b2FilterData : b2FilterData,
+				createB2FilterData : function() : b2FilterData {
+					return new b2FilterData()
+				},
 				b2ContactListener : b2ContactListener,
 				createB2ContactListener : function( beginContact : Function, endContact : Function, preSolve : Function, postSolve : Function ) : b2ContactListener {
 					return new ContactListenerWrapper( beginContact, endContact, preSolve,  postSolve )
+				},
+				b2DebugDraw : b2DebugDraw,
+				createB2DebugDraw : function() : b2DebugDraw {
+					return new b2DebugDraw()
 				},
 				b2FixtureDef : b2FixtureDef,
 				createB2FixtureDef : function() : b2FixtureDef{

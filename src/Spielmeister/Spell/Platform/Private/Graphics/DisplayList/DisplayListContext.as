@@ -140,7 +140,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		}
 
 
-		public function setFillStyleColor( vec : Array ) : void {
+		public function setColor( vec : Array ) : void {
 			currentState.color = createColorValue( vec )
 		}
 
@@ -180,7 +180,12 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		}
 
 
-		public function drawTexture( texture : Object, dx : Number, dy : Number, dw : Number, dh : Number ) : void {
+		public function drawTexture( texture : Object, destinationPosition : Array, destinationDimensions : Array, textureMatrix : Array ) : void {
+			var dx : Number = destinationPosition[ 0 ],
+				dy : Number = destinationPosition[ 1 ],
+				dw : Number = destinationDimensions[ 0 ],
+				dh : Number = destinationDimensions[ 1 ]
+
 			tmpMatrix.assign( worldToScreen )
 			tmpMatrix.prepend( currentState.matrix )
 
@@ -220,15 +225,20 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 		public function drawSubTexture(
 			texture : Object,
-			sx : Number,
-			sy : Number,
-			sw : Number,
-			sh : Number,
-			dx : Number,
-			dy : Number,
-			dw : Number,
-			dh : Number
+			sourcePosition : Array,
+			sourceDimensions : Array,
+			destinationPosition : Array,
+			destinationDimensions : Array
 		) : void {
+			var sx : Number = sourcePosition[ 0 ],
+				sy : Number = sourcePosition[ 1 ],
+				sw : Number = sourceDimensions[ 0 ],
+				sh : Number = sourceDimensions[ 1 ],
+				dx : Number = destinationPosition[ 0 ],
+				dy : Number = destinationPosition[ 1 ],
+				dw : Number = destinationDimensions[ 0 ],
+				dh : Number = destinationDimensions[ 1 ]
+
 			tmpMatrix.assign( worldToScreen )
 			tmpMatrix.prepend( currentState.matrix )
 

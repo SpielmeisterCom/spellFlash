@@ -6,7 +6,7 @@ package Spielmeister.Spell.Platform {
 	import Spielmeister.Spell.Platform.Private.Input
 	import Spielmeister.Spell.Platform.Private.Loader.*
 	import Spielmeister.Spell.Platform.Private.Socket.WebSocketAdapter
-	import Spielmeister.Spell.Platform.Private.Sound.SoundManager
+	import Spielmeister.Spell.Platform.Private.Sound.AudioFactoryImpl
 
 	import com.adobe.serialization.json.JSON
 
@@ -28,6 +28,7 @@ package Spielmeister.Spell.Platform {
 		private var loaderUrl : String
 		private var needjs : Needjs
 		private var anonymizeModuleIds : Boolean
+		private var audioFactory : AudioFactoryImpl
 		private var renderingFactory : RenderingFactoryImpl
 		private var registeredNextFrame : Boolean = false
 		private var debugConsole : TextField
@@ -39,6 +40,7 @@ package Spielmeister.Spell.Platform {
 			this.root               = root
 			this.host               = createHost( loaderUrl )
 			this.loaderUrl          = loaderUrl
+			this.audioFactory       = new AudioFactoryImpl()
 			this.renderingFactory   = new RenderingFactoryImpl( stage )
 			this.needjs             = needjs
 			this.anonymizeModuleIds = anonymizeModuleIds
@@ -74,6 +76,10 @@ package Spielmeister.Spell.Platform {
 
 		public function updateDebugData( localTimeInMs : int ) : void {
 //			trace( "updateDebugData - not yet implemented" )
+		}
+
+		public function get AudioFactory() : AudioFactoryImpl {
+			return audioFactory
 		}
 
 		public function get RenderingFactory() : RenderingFactoryImpl {
@@ -192,10 +198,6 @@ package Spielmeister.Spell.Platform {
 					)
 				}
 			)
-		}
-
-		public function createSoundManager() : SoundManager {
-			return new SoundManager()
 		}
 
 		private function createHost( loaderUrl : String ) : String {
