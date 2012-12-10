@@ -14,7 +14,7 @@ package Spielmeister.Spell.Platform.Private.Loader {
 		}
 
 		public function start() : void {
-			throw 'Error: Sound loading is not yet implemented.'
+			this.onLoadCallback( {} )
 		}
 	}
 }
