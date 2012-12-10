@@ -12,6 +12,10 @@ package Spielmeister.Spell.Platform.Private.Sound {
 
 		public function setVolume( id : String, volume : Number ) : void {}
 
+		public function setAllMuted( muted : Boolean ) : void {}
+
+		public function isAllMuted() : Boolean { return true }
+
 		public function stop( id : String ) : void {}
 
 		public function mute( id : String ) : void {}

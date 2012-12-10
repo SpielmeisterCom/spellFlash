@@ -430,5 +430,10 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 				height : height
 			}
 		}
+
+
+		public function transformScreenToWorld( vec : Array ) : Array {
+			return [ 0, 0 ]
+		}
 	}
 }

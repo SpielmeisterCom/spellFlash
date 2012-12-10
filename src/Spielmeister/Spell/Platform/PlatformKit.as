@@ -168,7 +168,7 @@ package Spielmeister.Spell.Platform {
 			return com.adobe.serialization.json.JSON
 		}
 
-		public function createInput( configurationManager : Object ) : Input {
+		public function createInput( configurationManager : Object, renderingContext : Object ) : Input {
 			return new Input( stage, configurationManager )
 		}
 
