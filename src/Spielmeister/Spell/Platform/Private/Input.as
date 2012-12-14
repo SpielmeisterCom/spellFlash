@@ -33,6 +33,10 @@ package Spielmeister.Spell.Platform.Private {
 					eventName : MouseEvent.MOUSE_MOVE,
 					handler : this.nativeMouseMoveHandler
 				},
+				mousewheel : {
+					eventName : MouseEvent.MOUSE_WHEEL,
+					handler : this.nativeMouseWheelHandler
+				},
 				keydown : {
 					eventName : KeyboardEvent.KEY_DOWN,
 					handler : this.nativeKeyHandler
@@ -79,6 +83,13 @@ package Spielmeister.Spell.Platform.Private {
 			callback( {
 				type : event.type.toLowerCase(),
 				position : [ event.stageX / screenSize[ 0 ], event.stageY / screenSize[ 1 ] ]
+			} )
+		}
+
+		private function nativeMouseWheelHandler( callback : Function, event : MouseEvent ) : void {
+			callback( {
+				type : event.type.toLowerCase(),
+				direction : event.delta > 0 ? 1 : -1
 			} )
 		}
 
