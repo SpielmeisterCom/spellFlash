@@ -40,8 +40,12 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		// accumulated transformation world space to screen space transformation matrix
 		private var worldToScreen : Matrix3d = new Matrix3d()
 
-		// temporary Matrix
+		// transformation from screen space to world space
+		private var screenToWorld : Matrix3d = new Matrix3d()
+
+		// temporaries
 		private var tmpMatrix : Matrix3d = new Matrix3d()
+		private var tmpVector : Vector3d = new Vector3d()
 
 
 		public function DisplayListContext( stage : Stage, id : String, width : uint, height: uint ) {
@@ -83,7 +87,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 			worldToView.prependTranslation( -cameraWidth / 2, -cameraHeight / 2, 0 ) // WATCH OUT: apply inverse translation for camera position
 
-			resetAndPrependToMatrix( worldToScreen, viewToScreen, worldToView )
+			updateWorldToScreen( viewToScreen, worldToView )
 		}
 
 
@@ -127,18 +131,19 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 
 		/**
-		 * Sets the destination matrix to the identity and appends the two transformation matrices to it.
+		 * Updates the world to screen matrix.
 		 *
-		 * @param destination
-		 * @param matrix1
-		 * @param matrix2
+		 * @param viewToScreen
+		 * @param worldToView
 		 */
-		private function resetAndPrependToMatrix( destination : Matrix3d, matrix1 : Matrix3d, matrix2 : Matrix3d ) : void {
-			destination.reset()
-			destination.prepend( matrix1 )
-			destination.prepend( matrix2 )
-		}
+		private function updateWorldToScreen( viewToScreen : Matrix3d, worldToView : Matrix3d ) : void {
+			var worldToScreen = this.worldToScreen
 
+			worldToScreen.reset()
+			worldToScreen.prepend( viewToScreen )
+			worldToScreen.prepend( worldToView )
+			worldToScreen.inverse( this.screenToWorld )
+		}
 
 		public function setColor( vec : Array ) : void {
 			currentState.color = createColorValue( vec )
@@ -358,7 +363,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			worldToView.n14 = matrix[ 6 ]
 			worldToView.n24 = matrix[ 7 ]
 
-			resetAndPrependToMatrix( worldToScreen, viewToScreen, worldToView )
+			updateWorldToScreen( viewToScreen, worldToView )
 		}
 
 		public function viewport( dx : Number, dy : Number, dw : Number, dh : Number ) : void {
@@ -367,7 +372,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			viewToScreen.n14 = dx + dw * 0.5
 			viewToScreen.n24 = dy + dh * 0.5
 
-			resetAndPrependToMatrix( worldToScreen, viewToScreen, worldToView )
+			updateWorldToScreen( viewToScreen, worldToView )
 		}
 
 		public function resizeColorBuffer ( newWidth : Number, newHeight : Number ) : void {
@@ -433,7 +438,15 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 
 		public function transformScreenToWorld( vec : Array ) : Array {
-			return [ 0, 0 ]
+			tmpVector.x = vec[ 0 ]
+			tmpVector.y = vec[ 1 ]
+
+			this.screenToWorld.transformVector( tmpVector, tmpVector )
+
+			return [
+				tmpVector.x - this.width / 2,
+				tmpVector.y + this.height / 2
+			]
 		}
 	}
 }
