@@ -6,7 +6,9 @@ package Spielmeister.Spell.Platform.Private.Sound {
 
 		public function tick() : void {}
 
-		public function play( id : String, audioResource, volume : Number, loop : Boolean ) : void {}
+		public function play( audioResource : Object, ... rest ) : void {
+			// rest : [ id : String, volume : Number, loop : Boolean ]
+		}
 
 		public function setLoop( id : String, loop : Boolean ) : void {}
 
