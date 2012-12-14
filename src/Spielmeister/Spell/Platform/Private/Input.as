@@ -8,7 +8,6 @@ package Spielmeister.Spell.Platform.Private {
 	import flash.ui.Multitouch
 	import flash.ui.MultitouchInputMode
 
-
 	public class Input {
 		private var stage : Stage
 		private var configurationManager : Object
@@ -24,19 +23,23 @@ package Spielmeister.Spell.Platform.Private {
 			this.nativeEventMap = {
 				mousedown : {
 					eventName : MouseEvent.MOUSE_DOWN,
-					handler   : this.nativeMouseHandler
+					handler : this.nativeMouseClickHandler
 				},
 				mouseup : {
 					eventName : MouseEvent.MOUSE_UP,
-					handler   : this.nativeMouseHandler
+					handler : this.nativeMouseClickHandler
+				},
+				mousemove : {
+					eventName : MouseEvent.MOUSE_MOVE,
+					handler : this.nativeMouseMoveHandler
 				},
 				keydown : {
 					eventName : KeyboardEvent.KEY_DOWN,
-					handler   : this.nativeKeyHandler
+					handler : this.nativeKeyHandler
 				},
 				keyup : {
 					eventName : KeyboardEvent.KEY_UP,
-					handler   : this.nativeKeyHandler
+					handler : this.nativeKeyHandler
 				}
 			}
 
@@ -61,18 +64,27 @@ package Spielmeister.Spell.Platform.Private {
 			trace( 'removeInputEventListener(...) - not yet implemented' )
 		}
 
-		private function nativeMouseHandler( callback : Function, event : MouseEvent ) : void {
+		private function nativeMouseClickHandler( callback : Function, event : MouseEvent ) : void {
 			var screenSize : Object = this.configurationManager.screenSize
 
 			callback( {
-				type     : event.type.toLowerCase(),
-				position : [ event.stageX / screenSize.width, event.stageY / screenSize.height ]
+				type : event.type.toLowerCase(),
+				position : [ event.stageX / screenSize[ 0 ], event.stageY / screenSize[ 1 ] ]
+			} )
+		}
+
+		private function nativeMouseMoveHandler( callback : Function, event : MouseEvent ) : void {
+			var screenSize : Object = this.configurationManager.screenSize
+
+			callback( {
+				type : event.type.toLowerCase(),
+				position : [ event.stageX / screenSize[ 0 ], event.stageY / screenSize[ 1 ] ]
 			} )
 		}
 
 		private function nativeKeyHandler( callback : Function, event : KeyboardEvent ) : void {
 			callback( {
-				type    : event.type.toLowerCase(),
+				type : event.type.toLowerCase(),
 				keyCode : event.keyCode
 			} )
 		}
