@@ -181,7 +181,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 
 		public function rotate( u : Number ) : void {
-			currentState.matrix.prependRotation( -u, Vector3d.Z_AXIS )
+			currentState.matrix.prependRotation( u, Vector3d.Z_AXIS )
 		}
 
 
