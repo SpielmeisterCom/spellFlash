@@ -34,13 +34,14 @@ package Spielmeister.Spell.Platform.Private.Graphics {
 		}
 
 		private function createDefaultState() : StateStackElement {
-			return new StateStackElement( 1.0, 0xffffff, new Matrix3d() )
+			return new StateStackElement( 1.0, 0xffffff, new Matrix3d(), new Matrix3d() )
 		}
 
 		private function copyState( source : StateStackElement, destination : StateStackElement ) : void {
-			destination.opacity = source.opacity
-			destination.color   = source.color
-			destination.matrix  = source.matrix.clone()
+			destination.opacity    = source.opacity
+			destination.color      = source.color
+			destination.matrix     = source.matrix.clone()
+			destination.viewMatrix = source.viewMatrix.clone()
 		}
 	}
 }

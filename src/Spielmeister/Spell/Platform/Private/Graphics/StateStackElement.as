@@ -5,11 +5,13 @@ package Spielmeister.Spell.Platform.Private.Graphics {
 		public var opacity : Number
 		public var color : uint
 		public var matrix : Matrix3d = new Matrix3d()
+		public var viewMatrix : Matrix3d = new Matrix3d()
 
-		public function StateStackElement( opacity : Number, color : uint, matrix : Matrix3d ) {
-			this.opacity = opacity
-			this.color   = color
-			this.matrix  = matrix
+		public function StateStackElement( opacity : Number, color : uint, matrix : Matrix3d, viewMatrix : Matrix3d  ) {
+			this.opacity     = opacity
+			this.color       = color
+			this.matrix      = matrix
+			this.viewMatrix  = viewMatrix
 		}
 	}
 }

@@ -14,6 +14,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 	import flash.external.ExternalInterface
 
 	import net.richardlord.coral.Matrix3d
+	import net.richardlord.coral.Point3d
 	import net.richardlord.coral.Vector3d
 
 
@@ -45,7 +46,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 		// temporaries
 		private var tmpMatrix : Matrix3d = new Matrix3d()
-		private var tmpVector : Vector3d = new Vector3d()
+		private var tmpPoint : Point3d = new Point3d()
 
 
 		public function DisplayListContext( stage : Stage, id : String, width : uint, height: uint ) {
@@ -167,6 +168,10 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 		public function restore() : void {
 			currentState = stateStack.popState()
+
+			// restore viewMatrix
+			worldToView.assign( currentState.viewMatrix )
+			updateWorldToScreen( viewToScreen, worldToView )
 		}
 
 
@@ -363,6 +368,8 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			worldToView.n14 = matrix[ 6 ]
 			worldToView.n24 = matrix[ 7 ]
 
+			currentState.viewMatrix.assign( worldToView )
+
 			updateWorldToScreen( viewToScreen, worldToView )
 		}
 
@@ -438,15 +445,12 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 
 		public function transformScreenToWorld( vec : Array ) : Array {
-			tmpVector.x = vec[ 0 ]
-			tmpVector.y = vec[ 1 ]
+			tmpPoint.x = vec[ 0 ]
+			tmpPoint.y = vec[ 1 ]
 
-			this.screenToWorld.transformVector( tmpVector, tmpVector )
+			this.screenToWorld.transformPoint( tmpPoint, tmpPoint )
 
-			return [
-				tmpVector.x - this.width / 2,
-				tmpVector.y + this.height / 2
-			]
+			return [ tmpPoint.x, tmpPoint.y ]
 		}
 	}
 }
