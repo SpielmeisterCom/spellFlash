@@ -222,8 +222,8 @@ public class b2ContactManager
 			var fixtureB:b2Fixture = c.GetFixtureB();
 			var bodyA:b2Body = fixtureA.GetBody();
 			var bodyB:b2Body = fixtureB.GetBody();
-			var activeA:Boolean = bodyA.IsAwake() && bodyA.m_type == b2Body.b2_staticBody;
-			var activeB:Boolean = bodyB.IsAwake() && bodyB.m_type == b2Body.b2_staticBody;
+			var activeA:Boolean = bodyA.IsAwake() && bodyA.m_type != b2Body.b2_staticBody;
+			var activeB:Boolean = bodyB.IsAwake() && bodyB.m_type != b2Body.b2_staticBody;
 			// At least one body must be awake and it must be dynamic or kinematic.
 			if (activeA == false && activeB == false)
 			{
