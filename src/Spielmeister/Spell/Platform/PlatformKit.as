@@ -200,6 +200,19 @@ package Spielmeister.Spell.Platform {
 			)
 		}
 
+		public function createPersistentStorage() : Object {
+			// TODO: implement persistent storage
+			return {
+				set : function( key, value ) {
+				},
+				get : function( key ) {
+					return undefined
+				},
+				clear : function( key ) {
+				}
+			}
+		}
+
 		private function createHost( loaderUrl : String ) : String {
 			var pattern : RegExp = /^(?:http:\/\/)?([^\/]+)/
 			var matches : Array = loaderUrl.match( pattern )
