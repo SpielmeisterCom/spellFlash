@@ -3,7 +3,9 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 	import Spielmeister.Spell.Platform.Private.Graphics.StateStack
 	import Spielmeister.Spell.Platform.Private.Graphics.StateStackElement
 
-	import flash.display.Bitmap
+import flash.debugger.enterDebugger;
+
+import flash.display.Bitmap
 	import flash.display.BitmapData
 	import flash.display.Shape
 	import flash.display.Stage
@@ -47,6 +49,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 		// temporaries
 		private var tmpMatrix : Matrix3d = new Matrix3d()
+		private var tmpMatrix2 : Matrix3d = new Matrix3d()
 		private var tmpPoint : Point3d = new Point3d()
 
 
@@ -93,6 +96,22 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		}
 
 
+		private function modulo( dividend : Number, divisor : Number ) : Number {
+			var tmp : Number = dividend % divisor
+
+			return tmp < 0 ?
+				( tmp + divisor ) % divisor :
+				tmp
+		}
+
+
+		private function normalizeStartTexCoord( tc : Number ) {
+			tc = modulo( tc, 1 )
+
+			return tc * -1
+		}
+
+
 		private function clampToUnit( value : Number ) : Number {
 			return Math.min( 1.0, Math.max( value, 0.0 ) )
 		}
@@ -106,6 +125,16 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			}
 
 			return color
+		}
+
+
+		private function copyMatrix3dToMatrix( matrix3d : Matrix3d, matrix : Matrix ) : void {
+			matrix.a  = matrix3d.n11
+			matrix.b  = matrix3d.n21
+			matrix.c  = matrix3d.n12
+			matrix.d  = matrix3d.n22
+			matrix.tx = matrix3d.n14
+			matrix.ty = matrix3d.n24
 		}
 
 
@@ -195,7 +224,15 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			var dx : Number = destinationPosition[ 0 ],
 				dy : Number = destinationPosition[ 1 ],
 				dw : Number = destinationDimensions[ 0 ],
-				dh : Number = destinationDimensions[ 1 ]
+				dh : Number = destinationDimensions[ 1 ],
+				tw : Number = texture.dimensions[ 0 ],
+				th : Number = texture.dimensions[ 1 ]
+
+			var colorTransform : ColorTransform = null
+
+			if( currentState.opacity < 1 ) {
+				colorTransform = new ColorTransform( 1, 1, 1, currentState.opacity )
+			}
 
 			tmpMatrix.assign( worldToScreen )
 			tmpMatrix.prepend( currentState.matrix )
@@ -203,34 +240,95 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			// rotating the image so that it is not upside down
 			tmpMatrix.prependTranslation( dx, dy, 0 )
 			tmpMatrix.prependRotation( Math.PI, Vector3d.Z_AXIS )
-			tmpMatrix.prependScale( -1, 1, 1 )
-			tmpMatrix.prependTranslation( 0, -dh, 0 )
 
-			// correcting scale
-			tmpMatrix.prependScale( dw / texture.dimensions[ 0 ], dh / texture.dimensions[ 1 ], 1 )
+			if( !textureMatrix ) {
+				tmpMatrix.prependScale( -1, 1, 1 )
+				tmpMatrix.prependTranslation( 0, -dh, 0 )
 
-			transferMatrix.a  = tmpMatrix.n11
-			transferMatrix.b  = tmpMatrix.n21
-			transferMatrix.c  = tmpMatrix.n12
-			transferMatrix.d  = tmpMatrix.n22
-			transferMatrix.tx = tmpMatrix.n14
-			transferMatrix.ty = tmpMatrix.n24
+				// correcting scale
+				tmpMatrix.prependScale( dw / tw, dh / th, 1 )
 
+				copyMatrix3dToMatrix( tmpMatrix, transferMatrix )
 
-			var colorTransform : ColorTransform = null
-			if( currentState.opacity < 1 ) {
-				colorTransform = new ColorTransform( 1, 1, 1, currentState.opacity )
+				colorBuffer.bitmapData.draw(
+					texture.privateBitmapDataResource,
+					transferMatrix,
+					colorTransform,
+					null,
+					null,
+					true
+				)
+
+			} else {
+				var xAxisInverted : Boolean = textureMatrix[ 0 ] < 0,
+					yAxisInverted : Boolean = textureMatrix[ 4 ] < 0
+
+				tmpMatrix.prependScale(
+					xAxisInverted ? 1 : -1,
+					yAxisInverted ? -1 : 1,
+					1
+				)
+
+				tmpMatrix.prependTranslation(
+					xAxisInverted ? -destinationDimensions[ 0 ] : 0,
+					yAxisInverted ? 0 : -destinationDimensions[ 1 ],
+					1
+				)
+
+				// correcting scale
+				tmpMatrix.prependScale( dw / tw, dh / th, 1 )
+
+				mapTexture(
+					colorBuffer.bitmapData,
+					texture,
+					textureMatrix,
+					colorTransform,
+					tmpMatrix
+				)
 			}
+		}
 
 
-			colorBuffer.bitmapData.draw(
-				texture.privateBitmapDataResource,
-				transferMatrix,
-				colorTransform,
-				null,
-				null,
-				true
-			)
+		private function mapTexture( bitmapData : BitmapData, texture : Object, textureMatrix : Array, colorTransform : ColorTransform, matrix : Matrix3d ) {
+			var scaleX         = Math.abs( textureMatrix[ 0 ] ),
+				scaleY         = Math.abs( textureMatrix[ 4 ]),
+				startTexCoordX = normalizeStartTexCoord( textureMatrix[ 6 ] ),
+				startTexCoordY = normalizeStartTexCoord( textureMatrix[ 7 ] ),
+				numIterationsX = Math.round( Math.ceil( scaleX ) - Math.floor( startTexCoordX ) ),
+				numIterationsY = Math.round( Math.ceil( scaleY ) - Math.floor( startTexCoordY ) ),
+				textureWidth   = texture.dimensions[ 0 ],
+				textureHeight  = texture.dimensions[ 1 ]
+
+			matrix.prependScale( 1 / scaleX, 1 / scaleY, 1 )
+
+			for( var y = 0;
+				 y < numIterationsY;
+				 y++ ) {
+
+				for( var x = 0;
+					 x < numIterationsX;
+					 x++ ) {
+
+					tmpMatrix2.assign( matrix )
+
+					tmpMatrix2.prependTranslation(
+						( x + startTexCoordX ) * textureWidth,
+						( y + startTexCoordY ) * textureHeight,
+						0
+					)
+
+					copyMatrix3dToMatrix( tmpMatrix2, transferMatrix )
+
+					bitmapData.draw(
+						texture.privateBitmapDataResource,
+						transferMatrix,
+						colorTransform,
+						null,
+						null,
+						true
+					)
+				}
+			}
 		}
 
 
