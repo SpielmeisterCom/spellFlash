@@ -1,5 +1,11 @@
 package Spielmeister.Spell.Platform.Private.Loader {
 
+import flash.debugger.enterDebugger;
+import flash.events.Event
+	import flash.media.Sound
+	import flash.net.URLRequest
+
+
 	public class SoundLoader implements Loader {
 		private var resourcePath : String
 		private var resourceName : String
@@ -14,7 +20,18 @@ package Spielmeister.Spell.Platform.Private.Loader {
 		}
 
 		public function start() : void {
-			this.onLoadCallback( {} )
+			var resourceParts : Array = resourceName.split( '.' )
+				resourceParts.pop()
+
+			var sound : Sound = new Sound(),
+				url : String  = resourcePath + '/' + resourceParts.join( '/' ) + '.mp3'
+
+			sound.addEventListener( Event.COMPLETE, onLoad )
+			sound.load( new URLRequest( url ) )
+		}
+
+		private function onLoad( event : Event ) : void {
+			this.onLoadCallback( event.target as Sound )
 		}
 	}
 }
