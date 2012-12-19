@@ -1,8 +1,11 @@
 package Spielmeister.Spell.Platform.Private.Sound {
 
+	import Spielmeister.Spell.Platform.Private.Sound.FixedSoundChannel
+
 	import flash.media.Sound
 	import flash.media.SoundChannel
 	import flash.media.SoundMixer
+	import flash.media.SoundTransform
 
 	import flash.debugger.enterDebugger
 
@@ -19,11 +22,11 @@ package Spielmeister.Spell.Platform.Private.Sound {
 			return ( soundId++ ).toString()
 		}
 
-		private function addSoundChannel( id : String, x : SoundChannel ) : void {
+		private function addSoundChannel( id : String, x : FixedSoundChannel ) : void {
 			soundChannels[ id ] = x
 		}
 
-		private function getSoundChannel( id : String ) : SoundChannel {
+		private function getSoundChannel( id : String ) : FixedSoundChannel {
 			return soundChannels[ id ]
 		}
 
@@ -40,15 +43,19 @@ package Spielmeister.Spell.Platform.Private.Sound {
 			if( id ) {
 				trace( 'play: ' + id )
 
-				var soundChannel : SoundChannel = getSoundChannel( id )
+				var soundChannel : FixedSoundChannel = getSoundChannel( id )
 
 				if( !soundChannel )  {
-					addSoundChannel( id, audioResource.sound.play() )
+
+					addSoundChannel(
+						id,
+						new FixedSoundChannel( audioResource.sound, true ).play()
+					)
 
 				} else {
-//					if( !isPlaying( soundChannel ) ) {
-//						// TODO: start from beginning
-//					}
+					if( !soundChannel.isPlaying ) {
+						soundChannel.play()
+					}
 				}
 
 			} else {
@@ -63,10 +70,13 @@ package Spielmeister.Spell.Platform.Private.Sound {
 		public function setVolume( id : String, volume : Number ) : void {
 			trace( 'setVolume: ' + id + ', ' + volume )
 
-			var soundChannel : SoundChannel = getSoundChannel( id )
+			var soundChannel : FixedSoundChannel = getSoundChannel( id )
 			if( !soundChannel ) return
 
-			soundChannel.soundTransform.volume = volume
+//			var soundTransform : SoundTransform = new SoundTransform()
+//			soundTransform.volume = volume
+//
+//			soundChannel.soundTransform = soundTransform
 		}
 
 		public function setAllMuted( muted : Boolean ) : void {
@@ -74,7 +84,10 @@ package Spielmeister.Spell.Platform.Private.Sound {
 
 			allMuted = muted
 
-			SoundMixer.soundTransform.volume = allMuted ? 0 : 1
+			var soundTransform : SoundTransform = new SoundTransform()
+			soundTransform.volume = allMuted ? 0 : 1
+
+			SoundMixer.soundTransform = soundTransform
 		}
 
 		public function isAllMuted() : Boolean {
@@ -86,7 +99,7 @@ package Spielmeister.Spell.Platform.Private.Sound {
 		public function stop( id : String ) : void {
 			trace( 'stop: ' + id )
 
-			var soundChannel : SoundChannel = getSoundChannel( id )
+			var soundChannel : FixedSoundChannel = getSoundChannel( id )
 			if( !soundChannel ) return
 
 			soundChannel.stop()
@@ -98,6 +111,8 @@ package Spielmeister.Spell.Platform.Private.Sound {
 
 		public function destroy( id : String ) : void {
 			trace( 'destroy: ' + id )
+
+			delete soundChannels[ id ]
 		}
 
 		public function createSound( sound : Sound ) : Object {

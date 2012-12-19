@@ -1,7 +1,6 @@
 package Spielmeister.Spell.Platform.Private.Loader {
 
-import flash.debugger.enterDebugger;
-import flash.events.Event
+	import flash.events.Event
 	import flash.media.Sound
 	import flash.net.URLRequest
 
