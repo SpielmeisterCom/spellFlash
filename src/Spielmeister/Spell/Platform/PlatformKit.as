@@ -7,6 +7,7 @@ package Spielmeister.Spell.Platform {
 	import Spielmeister.Spell.Platform.Private.Loader.*
 	import Spielmeister.Spell.Platform.Private.Socket.WebSocketAdapter
 	import Spielmeister.Spell.Platform.Private.Sound.AudioFactoryImpl
+	import Spielmeister.Spell.Platform.Private.Storage.PersistentStorage
 
 	import com.adobe.serialization.json.JSON
 
@@ -201,16 +202,7 @@ package Spielmeister.Spell.Platform {
 		}
 
 		public function createPersistentStorage() : Object {
-			// TODO: implement persistent storage
-			return {
-				set : function( key, value ) {
-				},
-				get : function( key ) {
-					return undefined
-				},
-				clear : function( key ) {
-				}
-			}
+			return new PersistentStorage()
 		}
 
 		private function createHost( loaderUrl : String ) : String {
