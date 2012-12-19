@@ -3,9 +3,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 	import Spielmeister.Spell.Platform.Private.Graphics.StateStack
 	import Spielmeister.Spell.Platform.Private.Graphics.StateStackElement
 
-import flash.debugger.enterDebugger;
-
-import flash.display.Bitmap
+	import flash.display.Bitmap
 	import flash.display.BitmapData
 	import flash.display.Shape
 	import flash.display.Stage
@@ -51,6 +49,8 @@ import flash.display.Bitmap
 		private var tmpMatrix : Matrix3d = new Matrix3d()
 		private var tmpMatrix2 : Matrix3d = new Matrix3d()
 		private var tmpPoint : Point3d = new Point3d()
+		private var tmpVector : Vector3d = new Vector3d()
+		private var tmpRectangle : Rectangle = new Rectangle()
 
 
 		public function DisplayListContext( stage : Stage, id : String, width : uint, height: uint ) {
@@ -260,6 +260,8 @@ import flash.display.Bitmap
 				)
 
 			} else {
+				var clipRect = createClipRect( dx, dy, dw, dh )
+
 				var xAxisInverted : Boolean = textureMatrix[ 0 ] < 0,
 					yAxisInverted : Boolean = textureMatrix[ 4 ] < 0
 
@@ -283,13 +285,39 @@ import flash.display.Bitmap
 					texture,
 					textureMatrix,
 					colorTransform,
-					tmpMatrix
+					tmpMatrix,
+					clipRect
 				)
 			}
 		}
 
 
-		private function mapTexture( bitmapData : BitmapData, texture : Object, textureMatrix : Array, colorTransform : ColorTransform, matrix : Matrix3d ) {
+		private function createClipRect( dx : Number, dy : Number , dw : Number, dh : Number ) : Rectangle {
+			// position
+			tmpPoint.x = dx
+			tmpPoint.y = dy
+
+			tmpMatrix.transformPoint( tmpPoint, tmpPoint )
+
+			// dimensions
+			tmpVector.x = dw
+			tmpVector.y = dh
+
+			tmpMatrix.transformVector( tmpVector, tmpVector )
+
+			var clipRectWidth  = Math.abs( tmpVector.x ),
+				clipRectHeight = Math.abs( tmpVector.y )
+
+			tmpRectangle.x      = tmpPoint.x - clipRectWidth / 2
+			tmpRectangle.y      = tmpPoint.y - clipRectHeight / 2
+			tmpRectangle.width  = clipRectWidth
+			tmpRectangle.height = clipRectHeight
+
+			return tmpRectangle
+		}
+
+
+		private function mapTexture( bitmapData : BitmapData, texture : Object, textureMatrix : Array, colorTransform : ColorTransform, matrix : Matrix3d , clipRect : Rectangle ) {
 			var scaleX         = Math.abs( textureMatrix[ 0 ] ),
 				scaleY         = Math.abs( textureMatrix[ 4 ]),
 				startTexCoordX = normalizeStartTexCoord( textureMatrix[ 6 ] ),
@@ -324,7 +352,7 @@ import flash.display.Bitmap
 						transferMatrix,
 						colorTransform,
 						null,
-						null,
+						clipRect,
 						true
 					)
 				}
