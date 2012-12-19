@@ -50,7 +50,7 @@ package Spielmeister.Spell.Platform {
 			this.stage.quality   = StageQuality.MEDIUM
 			this.stage.scaleMode = StageScaleMode.NO_SCALE
 			this.stage.align     = StageAlign.TOP_LEFT
-			this.stage.frameRate = 30
+			this.stage.frameRate = 60
 
 			// debug "console"
 			this.debugConsole = new TextField()
