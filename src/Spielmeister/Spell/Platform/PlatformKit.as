@@ -8,6 +8,7 @@ package Spielmeister.Spell.Platform {
 	import Spielmeister.Spell.Platform.Private.Socket.WebSocketAdapter
 	import Spielmeister.Spell.Platform.Private.Sound.AudioFactoryImpl
 	import Spielmeister.Spell.Platform.Private.Storage.PersistentStorage
+	import Spielmeister.Spell.Platform.Private.Window
 
 	import com.adobe.serialization.json.JSON
 
@@ -199,6 +200,10 @@ package Spielmeister.Spell.Platform {
 					)
 				}
 			)
+		}
+
+		public function createWindow() : Object {
+			return new Window()
 		}
 
 		public function createPersistentStorage() : Object {
