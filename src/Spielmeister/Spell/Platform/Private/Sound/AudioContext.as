@@ -67,10 +67,7 @@ package Spielmeister.Spell.Platform.Private.Sound {
 		public function setAllMuted( muted : Boolean ) : void {
 			allMuted = muted
 
-			var soundTransform : SoundTransform = new SoundTransform()
-			soundTransform.volume = allMuted ? 0 : 1
-
-			SoundMixer.soundTransform = soundTransform
+			SoundMixer.soundTransform = new SoundTransform( allMuted ? 0 : 1 )
 		}
 
 		public function isAllMuted() : Boolean {
@@ -88,7 +85,9 @@ package Spielmeister.Spell.Platform.Private.Sound {
 			var soundChannel : FixedSoundChannel = getSoundChannel( id )
 			if( !soundChannel ) return
 
-			soundChannel.muted = true
+			// HACK: In order to comply with the reference implementation mute is implemented as an alias to "setVolume(0)".
+//			soundChannel.muted = true
+			soundChannel.setVolume( 0 )
 		}
 
 		public function destroy( id : String ) : void {
