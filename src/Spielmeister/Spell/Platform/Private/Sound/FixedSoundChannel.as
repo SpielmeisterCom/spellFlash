@@ -1,24 +1,45 @@
 package Spielmeister.Spell.Platform.Private.Sound {
 
-import flash.debugger.enterDebugger;
-import flash.events.Event
+	import flash.events.Event
 	import flash.media.Sound
 	import flash.media.SoundChannel
-import flash.media.SoundTransform;
+	import flash.media.SoundTransform
 
 
-public class FixedSoundChannel {
-		public var isPlaying : Boolean = false
-		public var looped : Boolean = false
-		public var muted : Boolean = false
-
+	public class FixedSoundChannel {
+		private var isPlaying : Boolean = false
+		private var isLooped : Boolean = false
+		private var isMuted : Boolean = false
 		private var sound : Sound
 		private var wrappedSoundChannel : SoundChannel
 		private var volume : Number = 1
 
-		public function FixedSoundChannel( sound : Sound, looped : Boolean ) {
+		public function FixedSoundChannel( sound : Sound, volume : Number, isLooped : Boolean ) {
 			this.sound  = sound
-			this.looped = looped
+			this.volume = volume
+			this.loop   = isLooped
+		}
+
+		public function get playing() : Boolean {
+			return isPlaying
+		}
+
+		public function set loop( v : Boolean ) : void {
+			isLooped = v
+		}
+
+		public function get loop() : Boolean {
+			return isLooped
+		}
+
+		public function set muted( v : Boolean ) : void {
+			isMuted = v
+
+			wrappedSoundChannel.soundTransform = new SoundTransform( isMuted ? 0 : volume )
+		}
+
+		public function get muted() : Boolean {
+			return isMuted
 		}
 
 		public function play() : FixedSoundChannel {
@@ -27,7 +48,7 @@ public class FixedSoundChannel {
 			wrappedSoundChannel = sound.play()
 			wrappedSoundChannel.addEventListener( Event.SOUND_COMPLETE, onComplete )
 
-			setMuted( muted )
+			muted = isMuted
 
 			return this
 		}
@@ -38,19 +59,16 @@ public class FixedSoundChannel {
 			isPlaying = false
 		}
 
-		public function setMuted( muted : Boolean ) : void {
-			this.muted = muted
+		public function setVolume( v : Number ) : void {
+			volume = v
 
-			var soundTransform : SoundTransform = new SoundTransform()
-			soundTransform.volume = muted ? 0 : volume
-
-			wrappedSoundChannel.soundTransform = soundTransform
+			wrappedSoundChannel.soundTransform = new SoundTransform( isMuted ? 0 : volume )
 		}
 
 		private function onComplete( event : Event ) : void {
 			event.currentTarget.removeEventListener( Event.SOUND_COMPLETE, onComplete )
 
-			if( looped ) {
+			if( isLooped ) {
 				play()
 
 			} else {

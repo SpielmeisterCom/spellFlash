@@ -3,23 +3,15 @@ package Spielmeister.Spell.Platform.Private.Sound {
 	import Spielmeister.Spell.Platform.Private.Sound.FixedSoundChannel
 
 	import flash.media.Sound
-	import flash.media.SoundChannel
 	import flash.media.SoundMixer
 	import flash.media.SoundTransform
 
-	import flash.debugger.enterDebugger
-
 
 	public class AudioContext {
-		private var soundId : uint = 1
 		private var soundChannels : Object = {}
 		private var allMuted : Boolean = false
 
 		public function AudioContext() {
-		}
-
-		private function createSoundId() : String {
-			return ( soundId++ ).toString()
 		}
 
 		private function addSoundChannel( id : String, x : FixedSoundChannel ) : void {
@@ -30,30 +22,25 @@ package Spielmeister.Spell.Platform.Private.Sound {
 			return soundChannels[ id ]
 		}
 
-
 		public function tick() : void {}
 
 		public function play( audioResource : Object, ... rest ) : void {
-			var numRest = rest.length
-
-			var loop : Boolean  = numRest > 2 ? rest[ 2 ] : false,
+			var numRest : uint  = rest.length,
+				loop : Boolean  = numRest > 2 ? rest[ 2 ] : false,
 				volume : Number = numRest > 1 ? rest[ 1 ] : 1,
 				id : String     = numRest > 0 ? rest[ 0 ] : undefined
 
 			if( id ) {
-				trace( 'play: ' + id )
-
 				var soundChannel : FixedSoundChannel = getSoundChannel( id )
 
 				if( !soundChannel )  {
-
 					addSoundChannel(
 						id,
-						new FixedSoundChannel( audioResource.sound, true ).play()
+						new FixedSoundChannel( audioResource.sound, volume, loop ).play()
 					)
 
 				} else {
-					if( !soundChannel.isPlaying ) {
+					if( !soundChannel.playing ) {
 						soundChannel.play()
 					}
 				}
@@ -64,24 +51,20 @@ package Spielmeister.Spell.Platform.Private.Sound {
 		}
 
 		public function setLoop( id : String, loop : Boolean ) : void {
-			trace( 'setLoop: ' + id + ', ' + loop )
-		}
-
-		public function setVolume( id : String, volume : Number ) : void {
-			trace( 'setVolume: ' + id + ', ' + volume )
-
 			var soundChannel : FixedSoundChannel = getSoundChannel( id )
 			if( !soundChannel ) return
 
-//			var soundTransform : SoundTransform = new SoundTransform()
-//			soundTransform.volume = volume
-//
-//			soundChannel.soundTransform = soundTransform
+			soundChannel.loop = loop
+		}
+
+		public function setVolume( id : String, volume : Number ) : void {
+			var soundChannel : FixedSoundChannel = getSoundChannel( id )
+			if( !soundChannel ) return
+
+			soundChannel.setVolume( volume )
 		}
 
 		public function setAllMuted( muted : Boolean ) : void {
-			trace( 'setAllMuted: ' + muted )
-
 			allMuted = muted
 
 			var soundTransform : SoundTransform = new SoundTransform()
@@ -91,14 +74,10 @@ package Spielmeister.Spell.Platform.Private.Sound {
 		}
 
 		public function isAllMuted() : Boolean {
-			trace( 'isAllMuted' )
-
 			return allMuted
 		}
 
 		public function stop( id : String ) : void {
-			trace( 'stop: ' + id )
-
 			var soundChannel : FixedSoundChannel = getSoundChannel( id )
 			if( !soundChannel ) return
 
@@ -106,11 +85,17 @@ package Spielmeister.Spell.Platform.Private.Sound {
 		}
 
 		public function mute( id : String ) : void {
-			trace( 'mute: ' + id )
+			var soundChannel : FixedSoundChannel = getSoundChannel( id )
+			if( !soundChannel ) return
+
+			soundChannel.muted = true
 		}
 
 		public function destroy( id : String ) : void {
-			trace( 'destroy: ' + id )
+			var soundChannel : FixedSoundChannel = getSoundChannel( id )
+			if( !soundChannel ) return
+
+			soundChannel.stop()
 
 			delete soundChannels[ id ]
 		}
