@@ -35,7 +35,9 @@ package Spielmeister.Spell.Platform.Private.Sound {
 		public function set muted( v : Boolean ) : void {
 			isMuted = v
 
-			wrappedSoundChannel.soundTransform = new SoundTransform( isMuted ? 0 : volume )
+			if( wrappedSoundChannel ) {
+				wrappedSoundChannel.soundTransform = new SoundTransform( isMuted ? 0 : volume )
+			}
 		}
 
 		public function get muted() : Boolean {
@@ -46,7 +48,10 @@ package Spielmeister.Spell.Platform.Private.Sound {
 			isPlaying = true
 
 			wrappedSoundChannel = sound.play()
-			wrappedSoundChannel.addEventListener( Event.SOUND_COMPLETE, onComplete )
+
+			if( wrappedSoundChannel ) {
+				wrappedSoundChannel.addEventListener( Event.SOUND_COMPLETE, onComplete )
+			}
 
 			muted = isMuted
 
@@ -54,7 +59,9 @@ package Spielmeister.Spell.Platform.Private.Sound {
 		}
 
 		public function stop() : void {
-			wrappedSoundChannel.stop()
+			if( wrappedSoundChannel ) {
+				wrappedSoundChannel.stop()
+			}
 
 			isPlaying = false
 		}
@@ -62,7 +69,9 @@ package Spielmeister.Spell.Platform.Private.Sound {
 		public function setVolume( v : Number ) : void {
 			volume = v
 
-			wrappedSoundChannel.soundTransform = new SoundTransform( isMuted ? 0 : volume )
+			if( wrappedSoundChannel ) {
+				wrappedSoundChannel.soundTransform = new SoundTransform( isMuted ? 0 : volume )
+			}
 		}
 
 		private function onComplete( event : Event ) : void {
