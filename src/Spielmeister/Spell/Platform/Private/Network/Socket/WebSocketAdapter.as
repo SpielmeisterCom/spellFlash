@@ -1,4 +1,4 @@
-package Spielmeister.Spell.Platform.Private.Socket {
+package Spielmeister.Spell.Platform.Private.Network.Socket {
 
 	import com.worlize.websocket.WebSocket
 	import com.worlize.websocket.WebSocketErrorEvent

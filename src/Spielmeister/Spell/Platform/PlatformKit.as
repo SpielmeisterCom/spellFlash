@@ -5,7 +5,8 @@ package Spielmeister.Spell.Platform {
 	import Spielmeister.Spell.Platform.Private.Graphics.*
 	import Spielmeister.Spell.Platform.Private.Input
 	import Spielmeister.Spell.Platform.Private.Loader.*
-	import Spielmeister.Spell.Platform.Private.Socket.WebSocketAdapter
+	import Spielmeister.Spell.Platform.Private.Network.*
+	import Spielmeister.Spell.Platform.Private.Network.Socket.WebSocketAdapter
 	import Spielmeister.Spell.Platform.Private.Sound.AudioFactoryImpl
 	import Spielmeister.Spell.Platform.Private.Storage.PersistentStorage
 	import Spielmeister.Spell.Platform.Private.Window
@@ -15,6 +16,8 @@ package Spielmeister.Spell.Platform {
 	import flash.display.*
 	import flash.events.Event
 	import flash.events.TimerEvent
+	import flash.net.URLRequest
+	import flash.net.URLLoader
 	import flash.system.Capabilities
 	import flash.system.Security
 	import flash.system.TouchscreenType
@@ -88,16 +91,51 @@ package Spielmeister.Spell.Platform {
 			return renderingFactory
 		}
 
-		public function createSocket( host : String ) : Object {
-			var serverUrl : String = 'ws://' + host
-			var protocol: String = 'socketrocket-0.1'
+		public function get network() : Object {
+			return {
+				createHttpRequest : function( url : String, type : String, onLoad : Function, onError : Function ) {
+					if( !url ) {
+						throw '"url" is undefined.'
+					}
 
-			return new WebSocketAdapter(
-				serverUrl,
-				// see https://github.com/Worlize/WebSocket-Node/wiki/Documentation - "origin"
-				loaderUrl,
-				protocol
-			)
+					if( type !== 'get' ) {
+						throw '"type" is undefined.'
+					}
+
+					if( type !== 'get' ) {
+						throw 'The provided type is not supported.'
+					}
+
+					if( !onLoad ) {
+						throw '"onLoad" is undefined.'
+					}
+
+					var request : URLRequest = new URLRequest( url )
+					var loader : URLLoader = new URLLoader()
+
+					loader.addEventListener(
+						Event.COMPLETE,
+						function( event : Event ) : void {
+							var loader : URLLoader = URLLoader( event.target )
+
+							onLoad( loader.data )
+						}
+					)
+
+					loader.load( request )
+				},
+				createSocket : function( host : String ) : Object {
+					var serverUrl : String = 'ws://' + host
+					var protocol: String = 'socketrocket-0.1'
+
+					return new WebSocketAdapter(
+						serverUrl,
+						// see https://github.com/Worlize/WebSocket-Node/wiki/Documentation - "origin"
+						loaderUrl,
+						protocol
+					)
+				}
+			}
 		}
 
 		public function registerTimer( callback : Function, timeInMs : uint ) : void {
