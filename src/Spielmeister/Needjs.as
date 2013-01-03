@@ -134,7 +134,7 @@ package Spielmeister {
             if( !name ) throw 'No module name provided.'
 
 			var args   = rest.length >= 1  ? rest[ 0 ] : null,
-			    config = rest.length === 2 ? rest[ 1 ] : null,
+			    config = rest.length === 2 ? rest[ 1 ] : {},
                 module = modules[ name ]
 
             if( !module && config.hashModuleId ) {
