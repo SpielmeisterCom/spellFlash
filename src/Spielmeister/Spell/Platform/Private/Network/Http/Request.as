@@ -18,7 +18,7 @@ package Spielmeister.Spell.Platform.Private.Network.Http {
 			return variables
 		}
 
-		public static function create( method : String,  url : String, ... rest ) : void {
+		public static function perform( method : String,  url : String, ... rest ) : void {
 			if( !url ) {
 				throw 'url is undefined.'
 			}
@@ -44,7 +44,7 @@ package Spielmeister.Spell.Platform.Private.Network.Http {
 
 			var request : URLRequest = new URLRequest( url )
 
-			request.method = method === 'get' ?
+			request.method = method === 'GET' ?
 				URLRequestMethod.GET :
 				URLRequestMethod.POST
 

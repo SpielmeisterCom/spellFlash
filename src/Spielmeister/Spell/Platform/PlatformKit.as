@@ -91,7 +91,7 @@ package Spielmeister.Spell.Platform {
 
 		public function get network() : Object {
 			return {
-				createHttpRequest : Request.create,
+				performHttpRequest : Request.perform,
 				createSocket : function( host : String ) : Object {
 					var serverUrl : String = 'ws://' + host
 					var protocol: String = 'socketrocket-0.1'
