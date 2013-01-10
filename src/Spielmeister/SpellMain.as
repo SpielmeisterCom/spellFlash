@@ -17,7 +17,7 @@ package Spielmeister {
 			var require : Function = needjs.createRequire()
 			var applicationData : ApplicationData = new ApplicationData()
 
-			var main = require( 'spell/client/main', this.loaderInfo.parameters )
+			var main : Object = require( 'spell/client/main', this.loaderInfo.parameters )
 			main.start( applicationData.getRuntimeModule(), applicationData.getCacheContent() )
 		}
 	}
