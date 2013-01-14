@@ -20,82 +20,82 @@ package Spielmeister.Spell.Platform.Private {
 			this.configurationManager = configurationManager
 			this._ = new Underscore()
 
-			this.nativeEventMap = {
-				mousedown : {
-					eventName : MouseEvent.MOUSE_DOWN,
-					handler : this.nativeMouseClickHandler
-				},
-				mouseup : {
-					eventName : MouseEvent.MOUSE_UP,
-					handler : this.nativeMouseClickHandler
-				},
-				mousemove : {
-					eventName : MouseEvent.MOUSE_MOVE,
-					handler : this.nativeMouseMoveHandler
-				},
-				mousewheel : {
-					eventName : MouseEvent.MOUSE_WHEEL,
-					handler : this.nativeMouseWheelHandler
-				},
-				keydown : {
-					eventName : KeyboardEvent.KEY_DOWN,
-					handler : this.nativeKeyHandler
-				},
-				keyup : {
-					eventName : KeyboardEvent.KEY_UP,
-					handler : this.nativeKeyHandler
-				}
-			}
-
-			Multitouch.inputMode = MultitouchInputMode.NONE
+    		Multitouch.inputMode = MultitouchInputMode.NONE
 		}
 
-		public function setInputEventListener( eventName : String, callback : Function ) : void {
-			if( !isEventSupported( eventName ) ) return
-
-			var nativeEvent : Object = nativeEventMap[ eventName ]
+		public function setInputEventListener( callback : Function ) : void {
 
 			stage.addEventListener(
-				nativeEvent.eventName,
-				_.bind( nativeEvent.handler, null, callback ),
+                MouseEvent.MOUSE_DOWN,
+				_.bind( this.nativeMouseClickHandler, null, callback ),
 				false
 			)
-		}
 
-		public function removeInputEventListener( eventName : String ) : void {
-			if( !isEventSupported( eventName ) ) return
+            stage.addEventListener(
+                    MouseEvent.MOUSE_UP,
+                    _.bind( this.nativeMouseClickHandler, null, callback ),
+                    false
+            )
 
+            //TODO: Listen to MouseEvent.RIGHT_CLICK
+
+            stage.addEventListener(
+                    MouseEvent.MOUSE_MOVE,
+                    _.bind( this.nativeMouseMoveHandler, null, callback ),
+                    false
+            )
+
+            stage.addEventListener(
+                    MouseEvent.MOUSE_WHEEL,
+                    _.bind( this.nativeMouseWheelHandler, null, callback ),
+                    false
+            )
+
+            stage.addEventListener(
+                    KeyboardEvent.KEY_DOWN,
+                    _.bind( this.nativeKeyHandler, null, callback ),
+                    false
+            )
+
+            stage.addEventListener(
+                    KeyboardEvent.KEY_UP,
+                    _.bind( this.nativeKeyHandler, null, callback ),
+                    false
+            )
+        }
+
+		public function removeInputEventListener( ) : void {
 			trace( 'removeInputEventListener(...) - not yet implemented' )
 		}
 
 		private function nativeMouseClickHandler( callback : Function, event : MouseEvent ) : void {
-			var screenSize : Object = this.configurationManager.screenSize
-
 			callback( {
-				type : event.type.toLowerCase(),
-				position : [ event.stageX / screenSize[ 0 ], event.stageY / screenSize[ 1 ] ]
+				type        : event.type.toLowerCase() == 'mousedown' ? 'pointerDown' : 'pointerUp',
+                pointerId   : 1,
+                button      : event.buttonDown ? 0 : 1,
+				position    : [ event.stageX, event.stageY ]
 			} )
 		}
 
 		private function nativeMouseMoveHandler( callback : Function, event : MouseEvent ) : void {
-			var screenSize : Object = this.configurationManager.screenSize
-
 			callback( {
-				type : event.type.toLowerCase(),
-				position : [ event.stageX / screenSize[ 0 ], event.stageY / screenSize[ 1 ] ]
+				type        : 'pointerMove',
+                pointerId   : 1,
+                button      : -1,
+				position    : [ event.stageX, event.stageY ]
 			} )
 		}
 
 		private function nativeMouseWheelHandler( callback : Function, event : MouseEvent ) : void {
 			callback( {
-				type : event.type.toLowerCase(),
+				type : 'mouseWheel',
 				direction : event.delta > 0 ? 1 : -1
 			} )
 		}
 
 		private function nativeKeyHandler( callback : Function, event : KeyboardEvent ) : void {
 			callback( {
-				type : event.type.toLowerCase(),
+				type    : ( event.type.toLowerCase() == 'keyup' ) ? 'keyUp' : 'keyDown',
 				keyCode : event.keyCode
 			} )
 		}
