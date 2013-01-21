@@ -49,7 +49,7 @@ package Spielmeister.Spell.Platform {
 			this.anonymizeModuleIds = anonymizeModuleIds
 
 			// initializing stage
-			this.stage.quality   = StageQuality.LOW
+			this.stage.quality   = StageQuality.MEDIUM
 			this.stage.scaleMode = StageScaleMode.NO_SCALE
 			this.stage.align     = StageAlign.TOP_LEFT
 			this.stage.frameRate = 60
