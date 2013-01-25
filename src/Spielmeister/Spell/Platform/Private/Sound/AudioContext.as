@@ -5,6 +5,8 @@ package Spielmeister.Spell.Platform.Private.Sound {
 	import flash.media.Sound
 	import flash.media.SoundMixer
 	import flash.media.SoundTransform
+	import flash.events.Event
+	import flash.net.URLRequest
 
 
 	public class AudioContext {
@@ -113,6 +115,24 @@ package Spielmeister.Spell.Platform.Private.Sound {
 				 */
 				sound : sound
 			}
+		}
+
+		public function loadBuffer( src : String, onLoadCallback : Function ) : void {
+			var srcParts : Array = src.split( '.' )
+
+			srcParts.pop()
+
+			var sound : Sound = new Sound(),
+				url : String  = srcParts.join( '/' ) + '.mp3'
+
+			sound.addEventListener(
+				Event.COMPLETE,
+				function( event : Event ) : void {
+					onLoadCallback( event.target as Sound )
+				}
+			)
+
+			sound.load( new URLRequest( url ) )
 		}
 	}
 }

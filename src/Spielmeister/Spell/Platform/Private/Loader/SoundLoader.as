@@ -1,17 +1,21 @@
 package Spielmeister.Spell.Platform.Private.Loader {
 
-	import flash.events.Event
-	import flash.media.Sound
-	import flash.net.URLRequest
+	import Spielmeister.Spell.Platform.Private.Sound.AudioContext
+
+import flash.debugger.enterDebugger;
+
+import flash.media.Sound
 
 
 	public class SoundLoader implements Loader {
+		private var audioContext : AudioContext
 		private var resourcePath : String
 		private var resourceName : String
 		private var onLoadCallback : Function
 		private var onErrorCallback : Function
 
-		public function SoundLoader( resourcePath : String, resourceName : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) {
+		public function SoundLoader( audioContext : AudioContext, resourcePath : String, resourceName : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) {
+			this.audioContext    = audioContext
 			this.resourcePath    = resourcePath
 			this.resourceName    = resourceName
 			this.onLoadCallback  = onLoadCallback
@@ -19,18 +23,16 @@ package Spielmeister.Spell.Platform.Private.Loader {
 		}
 
 		public function start() : void {
-			var resourceParts : Array = resourceName.split( '.' )
-				resourceParts.pop()
+			var audioContext : AudioContext = this.audioContext,
+				onLoadCallback : Function   = this.onLoadCallback
 
-			var sound : Sound = new Sound(),
-				url : String  = resourcePath + '/' + resourceParts.join( '/' ) + '.mp3'
+			var onLoad : Function = function( sound : Sound ) : void {
+				onLoadCallback(
+					audioContext.createSound( sound )
+				)
+			}
 
-			sound.addEventListener( Event.COMPLETE, onLoad )
-			sound.load( new URLRequest( url ) )
-		}
-
-		private function onLoad( event : Event ) : void {
-			this.onLoadCallback( event.target as Sound )
+			this.audioContext.loadBuffer( resourcePath + '/' + this.resourceName, onLoad )
 		}
 	}
 }

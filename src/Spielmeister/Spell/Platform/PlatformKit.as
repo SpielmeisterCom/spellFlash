@@ -3,10 +3,12 @@ package Spielmeister.Spell.Platform {
 	import Spielmeister.Needjs
 	import Spielmeister.Spell.Platform.Private.Box2D.createBox2DObject
 	import Spielmeister.Spell.Platform.Private.Graphics.*
+	import Spielmeister.Spell.Platform.Private.Graphics.DisplayList.DisplayListContext
 	import Spielmeister.Spell.Platform.Private.Input
 	import Spielmeister.Spell.Platform.Private.Loader.*
 	import Spielmeister.Spell.Platform.Private.Network.Http.Request
 	import Spielmeister.Spell.Platform.Private.Network.Socket.WebSocketAdapter
+	import Spielmeister.Spell.Platform.Private.Sound.AudioContext
 	import Spielmeister.Spell.Platform.Private.Sound.AudioFactoryImpl
 	import Spielmeister.Spell.Platform.Private.Storage.PersistentStorage
 	import Spielmeister.Spell.Platform.Private.Window
@@ -112,12 +114,12 @@ package Spielmeister.Spell.Platform {
 			myTimer.addEventListener( TimerEvent.TIMER_COMPLETE, callback )
 		}
 
-		public function createImageLoader( resourcePath : String, resourceName : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : ImageLoader {
-			return new ImageLoader( resourcePath, resourceName, onLoadCallback, onErrorCallback, onTimedOutCallback )
+		public function createImageLoader( renderingContext : DisplayListContext, resourcePath : String, resourceName : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : ImageLoader {
+			return new ImageLoader( renderingContext, resourcePath, resourceName, onLoadCallback, onErrorCallback, onTimedOutCallback )
 		}
 
-		public function createSoundLoader( resourcePath : String, resourceName : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : SoundLoader {
-			return new SoundLoader( resourcePath, resourceName, onLoadCallback, onErrorCallback, onTimedOutCallback )
+		public function createSoundLoader( audioContext : AudioContext, resourcePath : String, resourceName : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : SoundLoader {
+			return new SoundLoader( audioContext, resourcePath, resourceName, onLoadCallback, onErrorCallback, onTimedOutCallback )
 		}
 
 		public function createTextLoader( resourcePath : String, resourceName : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : TextLoader {
@@ -172,8 +174,11 @@ package Spielmeister.Spell.Platform {
 			}
 		}
 
-		public function getPlatformInfo() : String {
-			return 'flash'
+		public function getPlatformInfo() : Object {
+			return {
+				id : 'flash',
+				hasPlentyRAM : true
+			}
 		}
 
 		public function get jsonCoder() : Object {
