@@ -191,7 +191,7 @@ package Spielmeister.Spell.Platform {
 
 		public function get features() : Object {
 			return {
-				touch : ( Capabilities.touchscreenType != TouchscreenType.NONE )
+				hasTouchSupport : function() : Boolean { return false }
 			}
 		}
 
