@@ -134,5 +134,9 @@ package Spielmeister.Spell.Platform.Private.Sound {
 
 			sound.load( new URLRequest( url ) )
 		}
+
+		public function getConfiguration() : Object {
+			return { type : 'flash' }
+		}
 	}
 }
