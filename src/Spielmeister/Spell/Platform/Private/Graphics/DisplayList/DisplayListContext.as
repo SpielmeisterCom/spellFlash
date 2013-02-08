@@ -566,7 +566,8 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			return {
 				type   : "display-list",
 				width  : width,
-				height : height
+				height : height,
+				info   : ''
 			}
 		}
 
