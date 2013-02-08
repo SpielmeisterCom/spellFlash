@@ -184,23 +184,29 @@ package Spielmeister.Spell.Platform {
 
 		public function get platformDetails() : Object {
 			return {
-				platformId : 'flash',
-				hasPlentyRAM : function() : Boolean { return true },
-				hasTouchSupport : function() : Boolean { return false },
-				getScreenHeight : function() : int {
+				hasPlentyRAM : function() : Boolean {
+					return true
+				},
+				hasTouchSupport : function() : Boolean {
+					return false
+				},
+				getColorDepth : function() : Number {
 					return 0
 				},
-				getScreenWidth : function() : int {
-					return 0
+				getOS : function() : String {
+					return Capabilities.os
 				},
-				getColorDepth : function() : int {
-					return 0
+				getPlatformAdapter : function() : String {
+					return 'flash'
 				},
-				getRuntime : function() : Object {
-					return  {
-						version : 'FLASH_VERSION',
-						name : 'FLASH_PLUGIN_NAME'
-					}
+				getPlatform : function() : String {
+					return Capabilities.version
+				},
+				getScreenHeight : function() : Number {
+					return Capabilities.screenResolutionY
+				},
+				getScreenWidth : function() : Number {
+					return Capabilities.screenResolutionX
 				}
 			}
 		}
