@@ -174,13 +174,6 @@ package Spielmeister.Spell.Platform {
 			}
 		}
 
-		public function getPlatformInfo() : Object {
-			return {
-				id : 'flash',
-				hasPlentyRAM : true
-			}
-		}
-
 		public function get jsonCoder() : Object {
 			return com.adobe.serialization.json.JSON
 		}
@@ -189,9 +182,26 @@ package Spielmeister.Spell.Platform {
 			return new Input( stage, configurationManager )
 		}
 
-		public function get features() : Object {
+		public function get platformDetails() : Object {
 			return {
-				hasTouchSupport : function() : Boolean { return false }
+				platformId : 'flash',
+				hasPlentyRAM : function() : Boolean { return true },
+				hasTouchSupport : function() : Boolean { return false },
+				getScreenHeight : function() : int {
+					return 0
+				},
+				getScreenWidth : function() : int {
+					return 0
+				},
+				getColorDepth : function() : int {
+					return 0
+				},
+				getRuntime : function() : Object {
+					return  {
+						version : 'FLASH_VERSION',
+						name : 'FLASH_PLUGIN_NAME'
+					}
+				}
 			}
 		}
 
