@@ -118,12 +118,8 @@ package Spielmeister.Spell.Platform.Private.Sound {
 		}
 
 		public function loadBuffer( src : String, onLoadCallback : Function ) : void {
-			var srcParts : Array = src.split( '.' )
-
-			srcParts.pop()
-
 			var sound : Sound = new Sound(),
-				url : String  = srcParts.join( '/' ) + '.mp3'
+				url : String  = src.substr( 0, src.lastIndexOf( '.' ) ) + '.mp3'
 
 			sound.addEventListener(
 				Event.COMPLETE,
