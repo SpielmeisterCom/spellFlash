@@ -11,7 +11,6 @@ package Spielmeister.Spell.Platform {
 	import Spielmeister.Spell.Platform.Private.Sound.AudioContext
 	import Spielmeister.Spell.Platform.Private.Sound.AudioFactoryImpl
 	import Spielmeister.Spell.Platform.Private.Storage.PersistentStorage
-	import Spielmeister.Spell.Platform.Private.Window
 
 	import com.adobe.serialization.json.JSON
 
@@ -24,6 +23,7 @@ package Spielmeister.Spell.Platform {
 	import flash.text.TextField
 	import flash.text.TextFieldAutoSize
 	import flash.utils.Timer
+	import flash.net.*
 
 
 	public class PlatformKit {
@@ -233,8 +233,8 @@ package Spielmeister.Spell.Platform {
 			)
 		}
 
-		public function createWindow() : Object {
-			return new Window()
+		public function openURL( url : String, message : String ) : void {
+			navigateToURL( new URLRequest( url ) , '_blank' )
 		}
 
 		public function createPersistentStorage() : Object {
