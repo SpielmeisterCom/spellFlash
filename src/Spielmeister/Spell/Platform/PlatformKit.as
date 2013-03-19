@@ -190,9 +190,6 @@ package Spielmeister.Spell.Platform {
 				hasTouchSupport : function() : Boolean {
 					return false
 				},
-				getColorDepth : function() : Number {
-					return 0
-				},
 				getOS : function() : String {
 					return Capabilities.os
 				},
@@ -201,6 +198,9 @@ package Spielmeister.Spell.Platform {
 				},
 				getPlatform : function() : String {
 					return Capabilities.version
+				},
+				getDevice : function() : String {
+					return 'unknown'
 				},
 				getScreenHeight : function() : Number {
 					return Capabilities.screenResolutionY
