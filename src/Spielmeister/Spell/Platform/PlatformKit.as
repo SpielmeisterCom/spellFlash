@@ -207,6 +207,9 @@ package Spielmeister.Spell.Platform {
 				},
 				getScreenWidth : function() : Number {
 					return Capabilities.screenResolutionX
+				},
+				isMobileDevice : function() : Boolean {
+					return false
 				}
 			}
 		}
@@ -247,5 +250,8 @@ package Spielmeister.Spell.Platform {
 
 			return matches[ 1 ]
 		}
+
+		public function loadInterstitial() : void {}
+		public function showInterstitial() : void {}
 	}
 }
