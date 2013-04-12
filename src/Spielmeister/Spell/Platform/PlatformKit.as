@@ -253,5 +253,12 @@ package Spielmeister.Spell.Platform {
 
 		public function loadInterstitial() : void {}
 		public function showInterstitial() : void {}
+
+		public function get flurry() : Object {
+			return {
+				logEvent : function( eventName : String, timed : Boolean ) : void {},
+				endTimedEvent : function() : void {}
+			}
+		}
 	}
 }
