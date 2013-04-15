@@ -165,7 +165,7 @@ package Spielmeister.Spell.Platform {
 
 			var defaultOptions : Object = {
 				renderingBackEnd : 'display-list',
-				baseUrlPrefix : '../'
+				libraryUrl : '../'
 			}
 
 			return {

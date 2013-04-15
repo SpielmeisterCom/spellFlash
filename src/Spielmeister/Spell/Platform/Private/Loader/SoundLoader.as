@@ -9,15 +9,15 @@ import flash.media.Sound
 
 	public class SoundLoader implements Loader {
 		private var audioContext : AudioContext
-		private var resourcePath : String
-		private var resourceName : String
+		private var libraryUrl : String
+		private var libraryPath : String
 		private var onLoadCallback : Function
 		private var onErrorCallback : Function
 
-		public function SoundLoader( audioContext : AudioContext, resourcePath : String, resourceName : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) {
+		public function SoundLoader( audioContext : AudioContext, libraryUrl : String, libraryPath : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) {
 			this.audioContext    = audioContext
-			this.resourcePath    = resourcePath
-			this.resourceName    = resourceName
+			this.libraryUrl    = libraryUrl
+			this.libraryPath    = libraryPath
 			this.onLoadCallback  = onLoadCallback
 			this.onErrorCallback = onErrorCallback
 		}
@@ -32,7 +32,9 @@ import flash.media.Sound
 				)
 			}
 
-			this.audioContext.loadBuffer( resourcePath + '/' + this.resourceName, onLoad )
+			var url : String = libraryUrl ? libraryUrl + '/' + libraryPath : libraryPath
+
+			this.audioContext.loadBuffer( url, onLoad )
 		}
 	}
 }

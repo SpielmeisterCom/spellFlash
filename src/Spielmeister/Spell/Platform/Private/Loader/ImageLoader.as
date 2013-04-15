@@ -10,16 +10,16 @@ package Spielmeister.Spell.Platform.Private.Loader {
 
 	public class ImageLoader implements Spielmeister.Spell.Platform.Private.Loader.Loader {
 		private var renderingContext : DisplayListContext
-		private var resourcePath : String
-		private var resourceName : String
+		private var libraryUrl : String
+		private var libraryPath : String
 		private var onLoadCallback : Function
 		private var onErrorCallback : Function
 		private var loader : flash.display.Loader
 
-		public function ImageLoader( renderinContext : DisplayListContext, resourcePath : String, resourceName : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) {
+		public function ImageLoader( renderinContext : DisplayListContext, libraryUrl : String, libraryPath : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) {
 			this.renderingContext = renderinContext
-			this.resourcePath     = resourcePath
-			this.resourceName     = resourceName
+			this.libraryUrl       = libraryUrl
+			this.libraryPath      = libraryPath
 			this.onLoadCallback   = onLoadCallback
 			this.onErrorCallback  = onErrorCallback
 		}
@@ -28,7 +28,8 @@ package Spielmeister.Spell.Platform.Private.Loader {
 			loader = new flash.display.Loader()
 			loader.contentLoaderInfo.addEventListener( Event.COMPLETE, onLoad )
 
-			var url : String = resourcePath + '/' + resourceName
+			var url : String = libraryUrl ? libraryUrl + '/' + libraryPath : libraryPath
+
 			loader.load( new URLRequest( url ) )
 		}
 
