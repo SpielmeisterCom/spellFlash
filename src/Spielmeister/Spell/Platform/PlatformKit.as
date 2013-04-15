@@ -158,14 +158,14 @@ package Spielmeister.Spell.Platform {
 					validValues : [ 'display-list' ],
 					extractor   : extractRenderingBackEnd
 				},
-				baseUrlPrefix : {
+				libraryUrl : {
 					configurable : true
 				}
 			}
 
 			var defaultOptions : Object = {
 				renderingBackEnd : 'display-list',
-				libraryUrl : '../'
+				libraryUrl : '../library'
 			}
 
 			return {
