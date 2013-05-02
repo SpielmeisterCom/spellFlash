@@ -22,6 +22,7 @@ package Spielmeister.Spell.Platform {
 	import flash.system.TouchscreenType
 	import flash.text.TextField
 	import flash.text.TextFieldAutoSize
+	import flash.utils.getDefinitionByName
 	import flash.utils.Timer
 	import flash.net.*
 
@@ -138,7 +139,7 @@ package Spielmeister.Spell.Platform {
 				define : function( name : String, ... rest ) : void {
                     needjs.createDefine( anonymizeModuleIds )( name, rest[ 0 ], rest[ 1 ] )
 				},
-				require : function( name : String, ... rest ) {
+				require : function( name : String, ... rest ) : * {
                     return needjs.createRequire()( name, rest[ 0 ], rest[ 1 ] )
 				}
 			}
@@ -259,6 +260,13 @@ package Spielmeister.Spell.Platform {
 				logEvent : function( eventName : String, timed : Boolean ) : void {},
 				endTimedEvent : function() : void {}
 			}
+		}
+
+		public function createComponentType( moduleLoader : Object, componentId : String, spell : Object ) : * {
+			var className : String     = 'Spielmeister.ComponentType.' + componentId,
+				classReference : Class = getDefinitionByName( className ) as Class
+
+			return new classReference( spell )
 		}
 	}
 }
