@@ -580,5 +580,14 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 			return [ tmpPoint.x, tmpPoint.y ]
 		}
+
+
+		public function drawRect( dx : Number, dy : Number, dw : Number, dh : Number, lineWidth : Number = 1 ) : void {}
+
+		public function drawCircle( dx : Number, dy : Number, radius : Number, lineWidth : Number = 1 ) : void {}
+
+		public function drawLine( ax : Number, ay : Number, bx : Number, by : Number, lineWidth : Number = 1 ) : void {}
+
+		public function setLineColor( vec : Array ) : void {}
 	}
 }
