@@ -262,7 +262,7 @@ package Spielmeister.Spell.Platform {
 			}
 		}
 
-		public function createComponentType( moduleLoader : Object, componentId : String, spell : Object ) : * {
+		public function createComponentType( moduleLoader : Object, spell : Object, componentId : String ) : * {
 			var className : String     = 'Spielmeister.ComponentType.' + componentId,
 				classReference : Class = getDefinitionByName( className ) as Class
 
