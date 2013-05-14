@@ -20,7 +20,6 @@ package Spielmeister.Spell.Platform {
 	import flash.system.ApplicationDomain;
 	import flash.system.Capabilities
 	import flash.system.Security
-	import flash.system.TouchscreenType
 	import flash.text.TextField
 	import flash.text.TextFieldAutoSize
 	import flash.utils.getDefinitionByName
