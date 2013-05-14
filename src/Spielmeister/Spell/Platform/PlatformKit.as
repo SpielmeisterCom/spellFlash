@@ -17,6 +17,7 @@ package Spielmeister.Spell.Platform {
 	import flash.display.*
 	import flash.events.Event
 	import flash.events.TimerEvent
+	import flash.system.ApplicationDomain;
 	import flash.system.Capabilities
 	import flash.system.Security
 	import flash.system.TouchscreenType
@@ -263,8 +264,13 @@ package Spielmeister.Spell.Platform {
 		}
 
 		public function createComponentType( moduleLoader : Object, spell : Object, componentId : String ) : * {
-			var className : String     = 'Spielmeister.ComponentType.' + componentId,
-				classReference : Class = getDefinitionByName( className ) as Class
+			var className : String = 'Spielmeister.ComponentType.' + componentId
+
+			if( !ApplicationDomain.currentDomain.hasDefinition( className ) ) {
+				return
+			}
+
+			var classReference : Class = getDefinitionByName( className ) as Class
 
 			return new classReference( spell )
 		}
