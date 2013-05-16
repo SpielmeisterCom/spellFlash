@@ -18,7 +18,7 @@ package Spielmeister {
 			var applicationData : ApplicationData = new ApplicationData()
 
 			var main : Object = require( 'spell/client/main', this.loaderInfo.parameters )
-			main.start( applicationData.getRuntimeModule(), applicationData.getCacheContent() )
+			main.start( applicationData.getApplicationModule(), applicationData.getCacheContent() )
 		}
 	}
 }
