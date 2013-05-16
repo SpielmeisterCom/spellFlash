@@ -6,8 +6,8 @@ package Spielmeister.Spell.Platform.Private.Graphics {
 
 
 	public class RenderingFactoryImpl {
-		public const BACK_END_DISPLAY_LIST : uint = 0
-		public const BACK_END_STAGE_3D : uint = 1
+		public const BACK_END_DISPLAY_LIST : String = 'display-list'
+		public const BACK_END_STAGE_3D : String = 'stage3d'
 
 		private var stage : Stage
 
@@ -16,7 +16,7 @@ package Spielmeister.Spell.Platform.Private.Graphics {
 			this.stage = stage
 		}
 
-		public function createContext2d( eventManager : Object, id : String, width : uint, height : uint, requestedBackEnd : uint = BACK_END_DISPLAY_LIST ) : DisplayListContext {
+		public function createContext2d( eventManager : Object, id : String, width : uint, height : uint, requestedBackEnd : String = BACK_END_DISPLAY_LIST ) : DisplayListContext {
 			return new DisplayListContext( this.stage, id, width, height )
 		}
 	}

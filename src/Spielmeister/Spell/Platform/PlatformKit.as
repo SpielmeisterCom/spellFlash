@@ -150,14 +150,14 @@ package Spielmeister.Spell.Platform {
 		}
 
 		public function get configurationOptions() : Object {
-			var extractRenderingBackEnd : Function = function( validValues : Object, value : String ) : Object {
-				return ( value === 'display-list' ? RenderingFactory.BACK_END_DISPLAY_LIST : false )
-			}
-
 			var validOptions : Object = {
+				audioBackEnd : {
+					validValues : [ 'flash-media' ],
+					configurable : true
+				},
 				renderingBackEnd : {
 					validValues : [ 'display-list' ],
-					extractor   : extractRenderingBackEnd
+					configurable : true
 				},
 				screenMode : {
 					configurable : false
@@ -168,6 +168,7 @@ package Spielmeister.Spell.Platform {
 			}
 
 			var defaultOptions : Object = {
+				audioBackEnd : 'flash-media',
 				renderingBackEnd : 'display-list',
 				screenMode : 'fixed',
 				libraryUrl : '../library'
@@ -175,7 +176,7 @@ package Spielmeister.Spell.Platform {
 
 			return {
 				defaultOptions : defaultOptions,
-				validOptions   : validOptions
+				validOptions : validOptions
 			}
 		}
 
