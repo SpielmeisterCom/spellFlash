@@ -263,7 +263,13 @@ package Spielmeister.Spell.Platform {
 		}
 
 		public function createComponentType( moduleLoader : Object, spell : Object, componentId : String ) : * {
-			var className : String = 'Spielmeister.ComponentType.' + componentId
+			var className : String = 'Spielmeister.ComponentType.'
+
+			for( var i = 0, n = componentId.length, charCode; i < n; i++ ) {
+				charCode = componentId.charCodeAt( i )
+
+				className += String.fromCharCode( charCode > 47 && charCode < 58 ? charCode + 17 : charCode )
+			}
 
 			if( !ApplicationDomain.currentDomain.hasDefinition( className ) ) {
 				return
