@@ -159,6 +159,9 @@ package Spielmeister.Spell.Platform {
 					validValues : [ 'display-list' ],
 					extractor   : extractRenderingBackEnd
 				},
+				screenMode : {
+					configurable : false
+				},
 				libraryUrl : {
 					configurable : true
 				}
@@ -166,6 +169,7 @@ package Spielmeister.Spell.Platform {
 
 			var defaultOptions : Object = {
 				renderingBackEnd : 'display-list',
+				screenMode : 'fixed',
 				libraryUrl : '../library'
 			}
 
@@ -278,6 +282,11 @@ package Spielmeister.Spell.Platform {
 			var classReference : Class = getDefinitionByName( className ) as Class
 
 			return new classReference( spell )
+		}
+
+		public function getAvailableScreenSize( id : String ) : Array {
+			// This is not trivial to implement properly. For compatibility this method returns an array with bogus values.
+			return [ 0, 0 ]
 		}
 	}
 }
