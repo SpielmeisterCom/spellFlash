@@ -25,7 +25,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		private var id : String
 		private var colorBuffer : Bitmap
 		private var clearColor : uint
-		private var magiScale : Number = 1.01
+		private var magicScale : Number = 1.01
 
 		private var stateStack : StateStack = new StateStack( 32 )
 		private var currentState : StateStackElement
@@ -382,7 +382,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			// rotating the image so that it is not upside down
 			tmpMatrix.prependTranslation( dx, dy, 0 )
 			tmpMatrix.prependRotation( Math.PI, Vector3d.Z_AXIS )
-			tmpMatrix.prependScale( -magiScale, magiScale, 1 )
+			tmpMatrix.prependScale( -magicScale, magicScale, 1 )
 			tmpMatrix.prependTranslation( 0, -dh, 0 )
 
 			// correcting scale
