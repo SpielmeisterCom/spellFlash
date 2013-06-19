@@ -37,6 +37,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 		private var transferMatrix : Matrix = new Matrix()
 		private var tmpShape : Shape        = new Shape()
+		private var tmpGraphics : Graphics
 
 		// view space to screen space transformation matrix
 		private var viewToScreen : Matrix3d = new Matrix3d()
@@ -64,6 +65,8 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			this.height = height
 			this.id     = id
 			clearColor  = 0x000000
+
+			tmpGraphics = tmpShape.graphics
 
 			// setting up the color buffer
 			colorBuffer = new Bitmap()
@@ -402,23 +405,22 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			transferMatrix.tx = tmpMatrix.n14
 			transferMatrix.ty = tmpMatrix.n24
 
-
-			var colorTransform : ColorTransform = null
-			if( currentState.opacity < 1 ) {
-				colorTransform = new ColorTransform( 1, 1, 1, currentState.opacity )
-			}
-
 			/**
-			 * Yes, your are eyes are not deceiving you. This method creates a temporary BitmapData instance in order to perform source texture cropping
-			 * a.k.a. "a poor copy of a texture matrix". This is how it's done on htrae!
+			 * Yes, your are eyes are not deceiving you. This method creates a temporary BitmapData instance in order to
+			 * perform source texture cropping a.k.a. "a poor copy of a texture matrix". This is how it's done on htrae!
 			 */
 			var tmpBitmapData : BitmapData = new BitmapData( sw, sh, true, 0x00000000 )
-			tmpBitmapData.copyPixels( texture.privateBitmapDataResource, new Rectangle( sx, sy, sw, sh ), new Point( 0, 0 ) )
+
+			tmpBitmapData.copyPixels(
+				texture.privateBitmapDataResource,
+				new Rectangle( sx, sy, sw, sh ),
+				new Point( 0, 0 )
+			)
 
 			colorBuffer.bitmapData.draw(
 				tmpBitmapData,
 				transferMatrix,
-				colorTransform,
+				currentState.opacity < 1 ? new ColorTransform( 1, 1, 1, currentState.opacity ) : null,
 				null,
 				null,
 				true
@@ -443,17 +445,11 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			transferMatrix.tx = tmpMatrix.n14
 			transferMatrix.ty = tmpMatrix.n24
 
+			tmpGraphics.clear()
+			tmpGraphics.beginFill( currentState.color )
+			tmpGraphics.drawRect( 0, 0, dw, dh )
 
-			tmpShape.graphics.clear()
-			tmpShape.graphics.beginFill( currentState.color )
-			tmpShape.graphics.drawRect( 0, 0, dw, dh )
-
-
-			colorBuffer.bitmapData.draw(
-				tmpShape,
-				transferMatrix,
-				null
-			)
+			colorBuffer.bitmapData.draw( tmpShape, transferMatrix )
 		}
 
 		public function transform( matrix : Array ) : void {
@@ -524,29 +520,20 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 			// setting up the color buffer
 			colorBuffer = new Bitmap()
-			colorBuffer.bitmapData = new BitmapData(
-				newWidth,
-				newHeight,
-				false,
-				clearColor
-			)
+			colorBuffer.bitmapData = new BitmapData( newWidth, newHeight, false, clearColor )
 
 			stage.addChild( colorBuffer )
 		}
 
 
 		public function clear() : void {
-			tmpShape.graphics.clear()
-			tmpShape.graphics.beginFill( clearColor )
-			tmpShape.graphics.drawRect( 0, 0, colorBuffer.width, colorBuffer.height )
+			tmpGraphics.clear()
+			tmpGraphics.beginFill( clearColor )
+			tmpGraphics.drawRect( 0, 0, colorBuffer.width, colorBuffer.height )
 
 			transferMatrix.identity()
 
-			colorBuffer.bitmapData.draw(
-				tmpShape,
-				transferMatrix,
-				null
-			)
+			colorBuffer.bitmapData.draw( tmpShape, transferMatrix )
 		}
 
 
@@ -588,11 +575,6 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 
 		public function drawRect( dx : Number, dy : Number, dw : Number, dh : Number, lineWidth : Number = 1 ) : void {
-			var left : Number   = dx,
-				right : Number  = dx + dw,
-				bottom : Number = dy,
-				top : Number    = dy + dh
-
 			tmpMatrix.assign( worldToScreen )
 			tmpMatrix.prepend( currentState.matrix )
 
@@ -603,13 +585,16 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			transferMatrix.tx = tmpMatrix.n14
 			transferMatrix.ty = tmpMatrix.n24
 
-			tmpShape.graphics.clear()
-			tmpShape.graphics.lineStyle( pixelScale * lineWidth, lineColor )
-			tmpShape.graphics.moveTo( left, bottom )
-			tmpShape.graphics.lineTo( left, top )
-			tmpShape.graphics.lineTo( right, top )
-			tmpShape.graphics.lineTo( right, bottom )
-			tmpShape.graphics.lineTo( left, bottom )
+			var right : Number = dx + dw,
+				top : Number   = dy + dh
+
+			tmpGraphics.clear()
+			tmpGraphics.lineStyle( pixelScale * lineWidth, lineColor )
+			tmpGraphics.moveTo( dx, dy )
+			tmpGraphics.lineTo( dx, top )
+			tmpGraphics.lineTo( right, top )
+			tmpGraphics.lineTo( right, dy )
+			tmpGraphics.lineTo( dx, dy )
 
 			colorBuffer.bitmapData.draw( tmpShape, transferMatrix, null )
 		}
@@ -625,9 +610,9 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			transferMatrix.tx = tmpMatrix.n14
 			transferMatrix.ty = tmpMatrix.n24
 
-			tmpShape.graphics.clear()
-			tmpShape.graphics.lineStyle( pixelScale * lineWidth, lineColor )
-			tmpShape.graphics.drawCircle( dx, dy, radius )
+			tmpGraphics.clear()
+			tmpGraphics.lineStyle( pixelScale * lineWidth, lineColor )
+			tmpGraphics.drawCircle( dx, dy, radius )
 
 			colorBuffer.bitmapData.draw( tmpShape, transferMatrix, null )
 		}
@@ -643,10 +628,10 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			transferMatrix.tx = tmpMatrix.n14
 			transferMatrix.ty = tmpMatrix.n24
 
-			tmpShape.graphics.clear()
-			tmpShape.graphics.lineStyle( pixelScale * lineWidth, lineColor )
-			tmpShape.graphics.moveTo( ax, ay )
-			tmpShape.graphics.lineTo( bx, by )
+			tmpGraphics.clear()
+			tmpGraphics.lineStyle( pixelScale * lineWidth, lineColor )
+			tmpGraphics.moveTo( ax, ay )
+			tmpGraphics.lineTo( bx, by )
 
 			colorBuffer.bitmapData.draw( tmpShape, transferMatrix, null )
 		}
