@@ -5,6 +5,9 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 
 	import flash.display.Bitmap
 	import flash.display.BitmapData
+	import flash.display.CapsStyle
+	import flash.display.Graphics
+	import flash.display.LineScaleMode
 	import flash.display.Shape
 	import flash.display.Stage
 	import flash.geom.ColorTransform
@@ -25,7 +28,9 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		private var id : String
 		private var colorBuffer : Bitmap
 		private var clearColor : uint
+		private var lineColor : uint
 		private var magicScale : Number = 1.01
+		private var pixelScale : Number = 0
 
 		private var stateStack : StateStack = new StateStack( 32 )
 		private var currentState : StateStackElement
@@ -169,6 +174,8 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		 */
 		private function updateWorldToScreen( viewToScreen : Matrix3d, worldToView : Matrix3d ) : void {
 			var worldToScreen = this.worldToScreen
+
+			pixelScale = Math.abs( 1 / worldToScreen.n11 )
 
 			worldToScreen.reset()
 			worldToScreen.prepend( viewToScreen )
@@ -440,7 +447,6 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			tmpShape.graphics.clear()
 			tmpShape.graphics.beginFill( currentState.color )
 			tmpShape.graphics.drawRect( 0, 0, dw, dh )
-			tmpShape.graphics.endFill()
 
 
 			colorBuffer.bitmapData.draw(
@@ -533,7 +539,6 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 			tmpShape.graphics.clear()
 			tmpShape.graphics.beginFill( clearColor )
 			tmpShape.graphics.drawRect( 0, 0, colorBuffer.width, colorBuffer.height )
-			tmpShape.graphics.endFill()
 
 			transferMatrix.identity()
 
@@ -582,12 +587,72 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		}
 
 
-		public function drawRect( dx : Number, dy : Number, dw : Number, dh : Number, lineWidth : Number = 1 ) : void {}
+		public function drawRect( dx : Number, dy : Number, dw : Number, dh : Number, lineWidth : Number = 1 ) : void {
+			var left : Number   = dx,
+				right : Number  = dx + dw,
+				bottom : Number = dy,
+				top : Number    = dy + dh
 
-		public function drawCircle( dx : Number, dy : Number, radius : Number, lineWidth : Number = 1 ) : void {}
+			tmpMatrix.assign( worldToScreen )
+			tmpMatrix.prepend( currentState.matrix )
 
-		public function drawLine( ax : Number, ay : Number, bx : Number, by : Number, lineWidth : Number = 1 ) : void {}
+			transferMatrix.a  = tmpMatrix.n11
+			transferMatrix.b  = tmpMatrix.n21
+			transferMatrix.c  = tmpMatrix.n12
+			transferMatrix.d  = tmpMatrix.n22
+			transferMatrix.tx = tmpMatrix.n14
+			transferMatrix.ty = tmpMatrix.n24
 
-		public function setLineColor( vec : Array ) : void {}
+			tmpShape.graphics.clear()
+			tmpShape.graphics.lineStyle( pixelScale * lineWidth, lineColor )
+			tmpShape.graphics.moveTo( left, bottom )
+			tmpShape.graphics.lineTo( left, top )
+			tmpShape.graphics.lineTo( right, top )
+			tmpShape.graphics.lineTo( right, bottom )
+			tmpShape.graphics.lineTo( left, bottom )
+
+			colorBuffer.bitmapData.draw( tmpShape, transferMatrix, null )
+		}
+
+		public function drawCircle( dx : Number, dy : Number, radius : Number, lineWidth : Number = 1 ) : void {
+			tmpMatrix.assign( worldToScreen )
+			tmpMatrix.prepend( currentState.matrix )
+
+			transferMatrix.a  = tmpMatrix.n11
+			transferMatrix.b  = tmpMatrix.n21
+			transferMatrix.c  = tmpMatrix.n12
+			transferMatrix.d  = tmpMatrix.n22
+			transferMatrix.tx = tmpMatrix.n14
+			transferMatrix.ty = tmpMatrix.n24
+
+			tmpShape.graphics.clear()
+			tmpShape.graphics.lineStyle( pixelScale * lineWidth, lineColor )
+			tmpShape.graphics.drawCircle( dx, dy, radius )
+
+			colorBuffer.bitmapData.draw( tmpShape, transferMatrix, null )
+		}
+
+		public function drawLine( ax : Number, ay : Number, bx : Number, by : Number, lineWidth : Number = 1 ) : void {
+			tmpMatrix.assign( worldToScreen )
+			tmpMatrix.prepend( currentState.matrix )
+
+			transferMatrix.a  = tmpMatrix.n11
+			transferMatrix.b  = tmpMatrix.n21
+			transferMatrix.c  = tmpMatrix.n12
+			transferMatrix.d  = tmpMatrix.n22
+			transferMatrix.tx = tmpMatrix.n14
+			transferMatrix.ty = tmpMatrix.n24
+
+			tmpShape.graphics.clear()
+			tmpShape.graphics.lineStyle( pixelScale * lineWidth, lineColor )
+			tmpShape.graphics.moveTo( ax, ay )
+			tmpShape.graphics.lineTo( bx, by )
+
+			colorBuffer.bitmapData.draw( tmpShape, transferMatrix, null )
+		}
+
+		public function setLineColor( vec : Array ) : void {
+			lineColor = createColorValue( vec )
+		}
 	}
 }
