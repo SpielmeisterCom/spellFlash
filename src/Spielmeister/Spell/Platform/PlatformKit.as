@@ -289,5 +289,11 @@ package Spielmeister.Spell.Platform {
 			// This is not trivial to implement properly. For compatibility this method returns an array with bogus values.
 			return [ 0, 0 ]
 		}
+
+		public function get Application() : Object {
+			return {
+				close : function() : void {}
+			}
+		}
 	}
 }
