@@ -28,6 +28,9 @@ package Spielmeister.Spell.Platform {
 
 
 	public class PlatformKit {
+		[Embed(source="splash.png")]
+		private var Splash:Class;
+
 		private var stage : Stage
 		private var root : DisplayObject
 		private var host : String
@@ -294,6 +297,12 @@ package Spielmeister.Spell.Platform {
 			return {
 				close : function() : void {}
 			}
+		}
+
+		public function createSplashScreenImage() : BitmapData {
+			var splashImage : Bitmap = new Splash()
+
+			return splashImage.bitmapData
 		}
 	}
 }
