@@ -28,7 +28,7 @@ package Spielmeister.Spell.Platform {
 
 
 	public class PlatformKit {
-		[Embed(source="splash.png")]
+		[Embed(source="/splash.png")]
 		private var Splash:Class;
 
 		private var stage : Stage
