@@ -1,5 +1,5 @@
 FLEX_SDK_DIR     = vendor/flex_sdk_4.8.0
-OUT_DIR          = build/spellFlash
+OUT_DIR          = build
 FLEX_SDK_OUT_DIR = $(OUT_DIR)/vendor/flex_sdk
 
 .PHONY: flash clean all
