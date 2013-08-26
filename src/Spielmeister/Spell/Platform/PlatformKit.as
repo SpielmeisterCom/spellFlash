@@ -118,16 +118,16 @@ package Spielmeister.Spell.Platform {
 			myTimer.addEventListener( TimerEvent.TIMER_COMPLETE, callback )
 		}
 
-		public function createImageLoader( renderingContext : DisplayListContext, invalidateCache : Boolean, resourcePath : String, resourceName : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : ImageLoader {
-			return new ImageLoader( renderingContext, resourcePath, resourceName, onLoadCallback, onErrorCallback, onTimedOutCallback )
+		public function createImageLoader( renderingContext : DisplayListContext, url : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : ImageLoader {
+			return new ImageLoader( renderingContext, url, onLoadCallback, onErrorCallback, onTimedOutCallback )
 		}
 
-		public function createSoundLoader( audioContext : AudioContext, invalidateCache : Boolean, resourcePath : String, resourceName : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : SoundLoader {
-			return new SoundLoader( audioContext, resourcePath, resourceName, onLoadCallback, onErrorCallback, onTimedOutCallback )
+		public function createSoundLoader( audioContext : AudioContext, url : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : SoundLoader {
+			return new SoundLoader( audioContext, url, onLoadCallback, onErrorCallback, onTimedOutCallback )
 		}
 
-		public function createTextLoader( resourcePath : String, invalidateCache : Boolean, resourceName : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : TextLoader {
-			return new TextLoader( resourcePath, resourceName, onLoadCallback, onErrorCallback, onTimedOutCallback )
+		public function createTextLoader( url : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : TextLoader {
+			return new TextLoader( url, onLoadCallback, onErrorCallback, onTimedOutCallback )
 		}
 
 		public function getHost() : String {
