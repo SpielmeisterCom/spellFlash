@@ -224,13 +224,8 @@ package Spielmeister.Spell.Platform {
 		}
 
 		public function registerOnScreenResize( eventManager : Object, id : String, initialScreenSize : Array ) : void {
-			var events = this.needjs.getModuleInstanceById(
-				'spell/Events',
-				this.anonymizeModuleIds
-			)
-
 			eventManager.publish(
-				events.AVAILABLE_SCREEN_SIZE_CHANGED,
+				eventManager.EVENT.AVAILABLE_SCREEN_SIZE_CHANGED,
 				[ initialScreenSize ]
 			)
 
@@ -238,7 +233,7 @@ package Spielmeister.Spell.Platform {
 				Event.RESIZE,
 				function( event : Event ) : void {
 					eventManager.publish(
-						events.AVAILABLE_SCREEN_SIZE_CHANGED,
+						eventManager.EVENT.AVAILABLE_SCREEN_SIZE_CHANGED,
 						[ [ event.target.stageWidth, event.target.stageHeight ] ]
 					)
 				}
