@@ -199,6 +199,9 @@ package Spielmeister.Spell.Platform {
 				hasTouchSupport : function() : Boolean {
 					return false
 				},
+				hasDeviceOrientationSupport : function() : Boolean {
+					return false
+				},
 				getOS : function() : String {
 					return Capabilities.os
 				},
