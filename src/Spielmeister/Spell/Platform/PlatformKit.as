@@ -118,16 +118,16 @@ package Spielmeister.Spell.Platform {
 			myTimer.addEventListener( TimerEvent.TIMER_COMPLETE, callback )
 		}
 
-		public function createImageLoader( renderingContext : DisplayListContext, resourcePath : String, resourceName : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : ImageLoader {
-			return new ImageLoader( renderingContext, resourcePath, resourceName, onLoadCallback, onErrorCallback, onTimedOutCallback )
+		public function createImageLoader( renderingContext : DisplayListContext, url : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : ImageLoader {
+			return new ImageLoader( renderingContext, url, onLoadCallback, onErrorCallback, onTimedOutCallback )
 		}
 
-		public function createSoundLoader( audioContext : AudioContext, resourcePath : String, resourceName : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : SoundLoader {
-			return new SoundLoader( audioContext, resourcePath, resourceName, onLoadCallback, onErrorCallback, onTimedOutCallback )
+		public function createSoundLoader( audioContext : AudioContext, url : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : SoundLoader {
+			return new SoundLoader( audioContext, url, onLoadCallback, onErrorCallback, onTimedOutCallback )
 		}
 
-		public function createTextLoader( resourcePath : String, resourceName : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : TextLoader {
-			return new TextLoader( resourcePath, resourceName, onLoadCallback, onErrorCallback, onTimedOutCallback )
+		public function createTextLoader( url : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : TextLoader {
+			return new TextLoader( url, onLoadCallback, onErrorCallback, onTimedOutCallback )
 		}
 
 		public function getHost() : String {
@@ -199,6 +199,9 @@ package Spielmeister.Spell.Platform {
 				hasTouchSupport : function() : Boolean {
 					return false
 				},
+				hasDeviceOrientationSupport : function() : Boolean {
+					return false
+				},
 				getOS : function() : String {
 					return Capabilities.os
 				},
@@ -224,13 +227,8 @@ package Spielmeister.Spell.Platform {
 		}
 
 		public function registerOnScreenResize( eventManager : Object, id : String, initialScreenSize : Array ) : void {
-			var events = this.needjs.getModuleInstanceById(
-				'spell/Events',
-				this.anonymizeModuleIds
-			)
-
 			eventManager.publish(
-				events.AVAILABLE_SCREEN_SIZE_CHANGED,
+				eventManager.EVENT.AVAILABLE_SCREEN_SIZE_CHANGED,
 				[ initialScreenSize ]
 			)
 
@@ -238,7 +236,7 @@ package Spielmeister.Spell.Platform {
 				Event.RESIZE,
 				function( event : Event ) : void {
 					eventManager.publish(
-						events.AVAILABLE_SCREEN_SIZE_CHANGED,
+						eventManager.EVENT.AVAILABLE_SCREEN_SIZE_CHANGED,
 						[ [ event.target.stageWidth, event.target.stageHeight ] ]
 					)
 				}

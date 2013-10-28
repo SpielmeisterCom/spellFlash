@@ -1,14 +1,12 @@
 package Spielmeister.Spell.Platform.Private.Loader {
 
 	public class TextLoader implements Loader {
-		private var libraryUrl : String
-		private var libraryPath : String
+		private var url : String
 		private var onLoadCallback : Function
 		private var onErrorCallback : Function
 
-		public function TextLoader( libraryUrl : String, libraryPath : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) {
-			this.libraryUrl      = libraryUrl
-			this.libraryPath     = libraryPath
+		public function TextLoader( url : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) {
+			this.url             = url
 			this.onLoadCallback  = onLoadCallback
 			this.onErrorCallback = onErrorCallback
 		}
