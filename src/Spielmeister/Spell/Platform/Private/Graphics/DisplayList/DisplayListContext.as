@@ -639,5 +639,7 @@ package Spielmeister.Spell.Platform.Private.Graphics.DisplayList {
 		public function setLineColor( vec : Array ) : void {
 			lineColor = createColorValue( vec )
 		}
+
+		public function flush() : void {}
 	}
 }
