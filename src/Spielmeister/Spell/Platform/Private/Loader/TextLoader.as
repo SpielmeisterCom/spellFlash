@@ -5,7 +5,7 @@ package Spielmeister.Spell.Platform.Private.Loader {
 		private var onLoadCallback : Function
 		private var onErrorCallback : Function
 
-		public function TextLoader( url : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) {
+		public function TextLoader( postProcess : Function, url : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) {
 			this.url             = url
 			this.onLoadCallback  = onLoadCallback
 			this.onErrorCallback = onErrorCallback

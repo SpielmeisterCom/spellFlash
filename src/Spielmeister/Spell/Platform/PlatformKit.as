@@ -128,8 +128,8 @@ package Spielmeister.Spell.Platform {
 			return new SoundLoader( audioContext, asset, url, onLoadCallback, onErrorCallback, onTimedOutCallback )
 		}
 
-		public function createTextLoader( assetManager : Object, libraryId : String, url : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : TextLoader {
-			return new TextLoader( url, onLoadCallback, onErrorCallback, onTimedOutCallback )
+		public function createTextLoader( postProcess : Function, assetManager : Object, libraryId : String, url : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : TextLoader {
+			return new TextLoader( postProcess, url, onLoadCallback, onErrorCallback, onTimedOutCallback )
 		}
 
 		public function getHost() : String {
