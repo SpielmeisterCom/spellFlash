@@ -118,15 +118,17 @@ package Spielmeister.Spell.Platform {
 			myTimer.addEventListener( TimerEvent.TIMER_COMPLETE, callback )
 		}
 
-		public function createImageLoader( renderingContext : DisplayListContext, url : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : ImageLoader {
+		public function createImageLoader( renderingContext : DisplayListContext, assetManager : Object, libraryId : String, url : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : ImageLoader {
 			return new ImageLoader( renderingContext, url, onLoadCallback, onErrorCallback, onTimedOutCallback )
 		}
 
-		public function createSoundLoader( audioContext : AudioContext, url : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : SoundLoader {
-			return new SoundLoader( audioContext, url, onLoadCallback, onErrorCallback, onTimedOutCallback )
+		public function createSoundLoader( audioContext : AudioContext, assetManager : Object, libraryId : String, url : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : SoundLoader {
+			var asset : Object = assetManager.get( 'sound:' + libraryId )
+
+			return new SoundLoader( audioContext, asset, url, onLoadCallback, onErrorCallback, onTimedOutCallback )
 		}
 
-		public function createTextLoader( url : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : TextLoader {
+		public function createTextLoader( assetManager : Object, libraryId : String, url : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) : TextLoader {
 			return new TextLoader( url, onLoadCallback, onErrorCallback, onTimedOutCallback )
 		}
 

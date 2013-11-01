@@ -2,18 +2,18 @@ package Spielmeister.Spell.Platform.Private.Loader {
 
 	import Spielmeister.Spell.Platform.Private.Sound.AudioContext
 
-import flash.debugger.enterDebugger;
-
-import flash.media.Sound
+	import flash.media.Sound
 
 
 	public class SoundLoader implements Loader {
+		private var asset : Object
 		private var audioContext : AudioContext
 		private var url : String
 		private var onLoadCallback : Function
 		private var onErrorCallback : Function
 
-		public function SoundLoader( audioContext : AudioContext, url : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) {
+		public function SoundLoader( audioContext : AudioContext, asset : Object, url : String, onLoadCallback : Function, onErrorCallback : Function, onTimedOutCallback : Function ) {
+			this.asset           = asset
 			this.audioContext    = audioContext
 			this.url             = url
 			this.onLoadCallback  = onLoadCallback
@@ -30,7 +30,7 @@ import flash.media.Sound
 				)
 			}
 
-			this.audioContext.loadBuffer( url, onLoad )
+			this.audioContext.loadBuffer( url, this.asset, onLoad )
 		}
 	}
 }

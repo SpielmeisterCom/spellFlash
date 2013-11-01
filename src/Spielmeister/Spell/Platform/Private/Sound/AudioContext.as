@@ -1,6 +1,7 @@
 package Spielmeister.Spell.Platform.Private.Sound {
 
 	import Spielmeister.Spell.Platform.Private.Sound.FixedSoundChannel
+	import Spielmeister.Spell.Platform.Private.Sound.SoundResource
 
 	import flash.media.Sound
 	import flash.media.SoundMixer
@@ -12,54 +13,53 @@ package Spielmeister.Spell.Platform.Private.Sound {
 	public class AudioContext {
 		private var soundChannels : Object = {}
 		private var allMuted : Boolean = false
+		private var nextSoundId : Number = 1
 
 		public function AudioContext() {
 		}
 
-		private function addSoundChannel( id : String, x : FixedSoundChannel ) : void {
+		private function addSoundChannel( id : Number, x : FixedSoundChannel ) : void {
 			soundChannels[ id ] = x
 		}
 
-		private function getSoundChannel( id : String ) : FixedSoundChannel {
+		private function getSoundChannel( id : Number ) : FixedSoundChannel {
 			return soundChannels[ id ]
+		}
+
+		private function createNormalizedVolume( x : Number ) : Number {
+			return Math.max( Math.min( x, 1 ), 0 )
 		}
 
 		public function tick() : void {}
 
-		public function play( audioResource : Object, ... rest ) : void {
-			var numRest : uint  = rest.length,
-				loop : Boolean  = numRest > 2 ? rest[ 2 ] : false,
-				volume : Number = numRest > 1 ? rest[ 1 ] : 1,
-				id : String     = numRest > 0 ? rest[ 0 ] : undefined
+		public function play( soundAsset : Object, volume : Number = 1, loop : Boolean = false ) : Number {
+			var id = this.nextSoundId++
 
-			if( id ) {
-				var soundChannel : FixedSoundChannel = getSoundChannel( id )
+			var soundChannel : FixedSoundChannel = getSoundChannel( id )
 
-				if( !soundChannel )  {
-					addSoundChannel(
-						id,
-						new FixedSoundChannel( audioResource.sound, volume, loop ).play()
-					)
-
-				} else {
-					if( !soundChannel.playing ) {
-						soundChannel.play()
-					}
-				}
+			if( !soundChannel )  {
+				addSoundChannel(
+					id,
+					new FixedSoundChannel( soundAsset.resource.sound, createNormalizedVolume( volume ), loop ).play()
+				)
 
 			} else {
-				audioResource.sound.play()
+				if( !soundChannel.playing ) {
+					soundChannel.play()
+				}
 			}
+
+			return id
 		}
 
-		public function setLoop( id : String, loop : Boolean ) : void {
+		public function setLoop( id : Number, loop : Boolean ) : void {
 			var soundChannel : FixedSoundChannel = getSoundChannel( id )
 			if( !soundChannel ) return
 
 			soundChannel.loop = loop
 		}
 
-		public function setVolume( id : String, volume : Number ) : void {
+		public function setVolume( id : Number, volume : Number ) : void {
 			var soundChannel : FixedSoundChannel = getSoundChannel( id )
 			if( !soundChannel ) return
 
@@ -76,14 +76,14 @@ package Spielmeister.Spell.Platform.Private.Sound {
 			return allMuted
 		}
 
-		public function stop( id : String ) : void {
+		public function stop( id : Number ) : void {
 			var soundChannel : FixedSoundChannel = getSoundChannel( id )
 			if( !soundChannel ) return
 
 			soundChannel.stop()
 		}
 
-		public function mute( id : String ) : void {
+		public function mute( id : Number ) : void {
 			var soundChannel : FixedSoundChannel = getSoundChannel( id )
 			if( !soundChannel ) return
 
@@ -92,7 +92,7 @@ package Spielmeister.Spell.Platform.Private.Sound {
 			soundChannel.setVolume( 0 )
 		}
 
-		public function destroy( id : String ) : void {
+		public function destroy( id : Number ) : void {
 			var soundChannel : FixedSoundChannel = getSoundChannel( id )
 			if( !soundChannel ) return
 
@@ -101,23 +101,11 @@ package Spielmeister.Spell.Platform.Private.Sound {
 			delete soundChannels[ id ]
 		}
 
-		public function createSound( sound : Sound ) : Object {
-			return {
-				/*
-				 * Public
-				 */
-				duration : sound.length,
-
-				/*
-				 * Private
-				 *
-				 * This is an implementation detail of the class. If you write code that depends on this you better know what you are doing.
-				 */
-				sound : sound
-			}
+		public function createSound( sound : Sound ) : SoundResource {
+			return new SoundResource( sound )
 		}
 
-		public function loadBuffer( src : String, onLoadCallback : Function ) : void {
+		public function loadBuffer( src : String, soundAsset : Object, onLoadCallback : Function ) : void {
 			var sound : Sound = new Sound(),
 				url : String  = src.substr( 0, src.lastIndexOf( '.' ) ) + '.mp3'
 
