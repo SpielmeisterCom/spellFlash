@@ -64,6 +64,9 @@ package Spielmeister.Spell.Platform {
 			this.debugConsole = new TextField()
 			this.debugConsole.autoSize = TextFieldAutoSize.LEFT
 			this.stage.addChild( debugConsole )
+
+			Security.allowDomain( '*' )
+			Security.loadPolicyFile( 'xmlsocket://' + host )
 		}
 
 		private function logDebug( message: String ) : void {
@@ -71,9 +74,8 @@ package Spielmeister.Spell.Platform {
 			debugConsole.text = debugConsoleContent
 		}
 
-		public function init() : void {
-			Security.allowDomain( '*' )
-			Security.loadPolicyFile( 'xmlsocket://' + host )
+		public function init( next : Function ) : void {
+			next()
 		}
 
 		public function callNextFrame( callback : Function ) : void {

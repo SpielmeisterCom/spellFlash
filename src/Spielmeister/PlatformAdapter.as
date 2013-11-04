@@ -16,8 +16,6 @@ package Spielmeister {
 				needjs,
 				anonymizeModuleIds
 			)
-
-			this.platformKit.init()
 		}
 
 		private function createPlatformKit() : PlatformKit {
