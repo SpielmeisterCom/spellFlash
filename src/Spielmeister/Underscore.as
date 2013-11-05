@@ -237,6 +237,21 @@ package Spielmeister {
 			}
 		}
 
+		public function once( callback : Function ) : Object {
+			var ran : Boolean = false,
+				memo : *
+
+			return function() : * {
+				if( ran ) {
+					return memo
+				}
+
+				ran = true
+
+				return memo = func.apply( this, arguments )
+			}
+		}
+
 		public function contains( collection : *, target : String ) : Boolean {
 			if( collection === null ) return false
 
