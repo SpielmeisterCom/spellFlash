@@ -248,7 +248,7 @@ package Spielmeister {
 
 				ran = true
 
-				return memo = func.apply( this, arguments )
+				return memo = callback.apply( this, arguments )
 			}
 		}
 
