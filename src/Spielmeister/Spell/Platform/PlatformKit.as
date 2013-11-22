@@ -5,6 +5,7 @@ package Spielmeister.Spell.Platform {
 	import Spielmeister.Spell.Platform.Private.Graphics.*
 	import Spielmeister.Spell.Platform.Private.Graphics.DisplayList.DisplayListContext
 	import Spielmeister.Spell.Platform.Private.Input
+	import Spielmeister.Spell.Platform.Private.Environment
 	import Spielmeister.Spell.Platform.Private.Loader.*
 	import Spielmeister.Spell.Platform.Private.Network.Http.Request
 	import Spielmeister.Spell.Platform.Private.Network.Socket.WebSocketAdapter
@@ -194,6 +195,11 @@ package Spielmeister.Spell.Platform {
 		public function createInput( configurationManager : Object, renderingContext : Object ) : Input {
 			return new Input( stage, configurationManager )
 		}
+
+		public function createEnvironment( configurationManager : Object, eventManager : Object ) : Environment {
+			return new Environment( configurationManager, eventManager )
+		}
+
 
 		public function get platformDetails() : Object {
 			return {
