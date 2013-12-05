@@ -75,7 +75,7 @@ package Spielmeister.Spell.Platform {
 			debugConsole.text = debugConsoleContent
 		}
 
-		public function init( next : Function ) : void {
+		public function init( spell : Object, next : Function ) : void {
 			next()
 		}
 
@@ -268,9 +268,6 @@ package Spielmeister.Spell.Platform {
 			return matches[ 1 ]
 		}
 
-		public function loadInterstitial() : void {}
-		public function showInterstitial() : void {}
-
 		public function get flurry() : Object {
 			return {
 				logEvent : function( eventName : String, timed : Boolean ) : void {},
@@ -311,6 +308,10 @@ package Spielmeister.Spell.Platform {
 			var splashImage : Bitmap = new Splash()
 
 			return splashImage.bitmapData
+		}
+
+		public function getPlugins() : Array {
+			return []
 		}
 	}
 }
