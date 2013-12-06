@@ -72,6 +72,16 @@ package Spielmeister.Spell.Platform.Private {
 				button    : event.buttonDown ? 0 : 1,
 				position  : [ event.stageX, event.stageY ]
 			} )
+
+			if( event.type.toLowerCase() == 'mousedown' ) {
+				//also emit a click event
+				callback( {
+					type      : 'click',
+					pointerId : 0,
+					button    : 0,
+					position  : [ event.stageX, event.stageY ]
+				} )
+			}
 		}
 
 		private function nativeMouseMoveHandler( callback : Function, event : MouseEvent ) : void {
