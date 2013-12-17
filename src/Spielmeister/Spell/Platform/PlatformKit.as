@@ -179,7 +179,7 @@ package Spielmeister.Spell.Platform {
 				audioBackEnd : 'flash-media',
 				renderingBackEnd : 'display-list',
 				screenMode : 'fixed',
-				libraryUrl : '../library'
+				libraryUrl : 'library'
 			}
 
 			return {
@@ -220,6 +220,9 @@ package Spielmeister.Spell.Platform {
 				},
 				getPlatform : function() : String {
 					return Capabilities.version
+				},
+				getTarget : function() : String {
+					return 'web'
 				},
 				getDevice : function() : String {
 					return 'unknown'
