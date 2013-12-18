@@ -17,6 +17,7 @@ package Spielmeister.Spell.Platform {
 
 	import flash.display.*
 	import flash.events.Event
+	import flash.external.ExternalInterface
 	import flash.events.TimerEvent
 	import flash.system.ApplicationDomain;
 	import flash.system.Capabilities
@@ -41,6 +42,7 @@ package Spielmeister.Spell.Platform {
 		private var audioFactory : AudioFactoryImpl
 		private var renderingFactory : RenderingFactoryImpl
 		private var registeredNextFrame : Boolean = false
+		private var resizeScreenSize : Array
 		private var debugConsole : TextField
 		private var debugConsoleContent : String = ""
 
@@ -76,7 +78,16 @@ package Spielmeister.Spell.Platform {
 		}
 
 		public function init( spell : Object, next : Function ) : void {
-			next()
+			var processResize = function( screenSize : Array ) : void {
+				resizeScreenSize = screenSize
+
+				spell.eventManager.publish( spell.eventManager.EVENT.AVAILABLE_SCREEN_SIZE_CHANGED, [ screenSize ] )
+			}
+
+			ExternalInterface.addCallback( 'processResize', processResize )
+			ExternalInterface.addCallback( 'initDone', next )
+
+			ExternalInterface.call( 'signalInitDone' )
 		}
 
 		public function callNextFrame( callback : Function ) : void {
@@ -168,7 +179,7 @@ package Spielmeister.Spell.Platform {
 					configurable : true
 				},
 				screenMode : {
-					configurable : false
+					configurable : true
 				},
 				libraryUrl : {
 					configurable : true
@@ -239,20 +250,10 @@ package Spielmeister.Spell.Platform {
 			}
 		}
 
-		public function registerOnScreenResize( eventManager : Object, id : String, initialScreenSize : Array ) : void {
+		public function registerOnScreenResize( eventManager : Object, id : String ) : void {
 			eventManager.publish(
 				eventManager.EVENT.AVAILABLE_SCREEN_SIZE_CHANGED,
-				[ initialScreenSize ]
-			)
-
-			this.stage.addEventListener(
-				Event.RESIZE,
-				function( event : Event ) : void {
-					eventManager.publish(
-						eventManager.EVENT.AVAILABLE_SCREEN_SIZE_CHANGED,
-						[ [ event.target.stageWidth, event.target.stageHeight ] ]
-					)
-				}
+				[ resizeScreenSize ]
 			)
 		}
 
