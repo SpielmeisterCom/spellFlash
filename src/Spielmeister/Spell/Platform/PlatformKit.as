@@ -42,7 +42,7 @@ package Spielmeister.Spell.Platform {
 		private var audioFactory : AudioFactoryImpl
 		private var renderingFactory : RenderingFactoryImpl
 		private var registeredNextFrame : Boolean = false
-		private var resizeScreenSize : Array
+		private var lastResizeScreenSize : Array
 		private var debugConsole : TextField
 		private var debugConsoleContent : String = ""
 
@@ -79,7 +79,7 @@ package Spielmeister.Spell.Platform {
 
 		public function init( spell : Object, next : Function ) : void {
 			var processResize = function( screenSize : Array ) : void {
-				resizeScreenSize = screenSize
+				lastResizeScreenSize = screenSize
 
 				spell.eventManager.publish( spell.eventManager.EVENT.AVAILABLE_SCREEN_SIZE_CHANGED, [ screenSize ] )
 			}
@@ -250,13 +250,6 @@ package Spielmeister.Spell.Platform {
 			}
 		}
 
-		public function registerOnScreenResize( eventManager : Object, id : String ) : void {
-			eventManager.publish(
-				eventManager.EVENT.AVAILABLE_SCREEN_SIZE_CHANGED,
-				[ resizeScreenSize ]
-			)
-		}
-
 		public function openURL( url : String, message : String ) : void {
 			navigateToURL( new URLRequest( url ) , '_blank' )
 		}
@@ -298,8 +291,7 @@ package Spielmeister.Spell.Platform {
 		}
 
 		public function getAvailableScreenSize( id : String ) : Array {
-			// This is not trivial to implement properly. For compatibility this method returns an array with bogus values.
-			return [ 0, 0 ]
+			return lastResizeScreenSize
 		}
 
 		public function get Application() : Object {
