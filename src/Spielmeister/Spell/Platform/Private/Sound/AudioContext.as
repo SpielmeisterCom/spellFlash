@@ -13,6 +13,7 @@ package Spielmeister.Spell.Platform.Private.Sound {
 	public class AudioContext {
 		private var soundChannels : Object = {}
 		private var allMuted : Boolean = false
+		private var allPaused : Boolean = false
 		private var nextSoundId : Number = 1
 
 		public function AudioContext() {
@@ -66,14 +67,18 @@ package Spielmeister.Spell.Platform.Private.Sound {
 			soundChannel.setVolume( volume )
 		}
 
-		public function setAllMuted( muted : Boolean ) : void {
-			allMuted = muted
+		public function pause( id: Number ) : void {
+			var soundChannel : FixedSoundChannel = getSoundChannel( id )
+			if( !soundChannel ) return
 
-			SoundMixer.soundTransform = new SoundTransform( allMuted ? 0 : 1 )
+			soundChannel.pause()
 		}
 
-		public function isAllMuted() : Boolean {
-			return allMuted
+		public function resume( id: Number ) : void {
+			var soundChannel : FixedSoundChannel = getSoundChannel( id )
+			if( !soundChannel ) return
+
+			soundChannel.resume()
 		}
 
 		public function stop( id : Number ) : void {
@@ -90,6 +95,56 @@ package Spielmeister.Spell.Platform.Private.Sound {
 			// HACK: In order to comply with the reference implementation mute is implemented as an alias to "setVolume(0)".
 //			soundChannel.muted = true
 			soundChannel.setVolume( 0 )
+		}
+
+		public function unmute( id : Number ) : void {
+			var soundChannel : FixedSoundChannel = getSoundChannel( id )
+			if( !soundChannel ) return
+
+			// HACK: In order to comply with the reference implementation mute is implemented as an alias to "setVolume(1)".
+//			soundChannel.muted = true
+			soundChannel.setVolume( 1 )
+		}
+
+		public function muteContext( ) : void {
+			allMuted = true
+			SoundMixer.soundTransform = new SoundTransform( 0 )
+		}
+
+		public function unmuteContext( ) : void {
+			allMuted = false
+			SoundMixer.soundTransform = new SoundTransform( 1 )
+		}
+
+		public function isContextMuted() : Boolean {
+			return allMuted
+		}
+
+		public function pauseContext( ) : void {
+			allPaused = true
+
+			for( var id in soundChannels ) {
+				var soundChannel : FixedSoundChannel = getSoundChannel( id )
+				if( soundChannel ) {
+					soundChannel.pause()
+				}
+			}
+		}
+
+		public function resumeContext( ) : void {
+			allPaused = false
+
+			for( var id in soundChannels ) {
+				var soundChannel : FixedSoundChannel = getSoundChannel( id )
+				if( soundChannel ) {
+					soundChannel.resume()
+				}
+			}
+
+		}
+
+		public function isContextPaused() : Boolean {
+			return allPaused
 		}
 
 		public function destroy( id : Number ) : void {

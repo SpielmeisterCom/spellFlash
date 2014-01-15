@@ -13,6 +13,7 @@ package Spielmeister.Spell.Platform.Private.Sound {
 		private var sound : Sound
 		private var wrappedSoundChannel : SoundChannel
 		private var volume : Number = 1
+		private var pausePosition : int = 0
 
 		public function FixedSoundChannel( sound : Sound, volume : Number, isLooped : Boolean ) {
 			this.sound  = sound
@@ -53,8 +54,6 @@ package Spielmeister.Spell.Platform.Private.Sound {
 				wrappedSoundChannel.addEventListener( Event.SOUND_COMPLETE, onComplete )
 			}
 
-			muted = isMuted
-
 			return this
 		}
 
@@ -64,6 +63,30 @@ package Spielmeister.Spell.Platform.Private.Sound {
 			}
 
 			isPlaying = false
+		}
+
+		public function pause() : void {
+			if( wrappedSoundChannel ) {
+				pausePosition = wrappedSoundChannel.position
+				wrappedSoundChannel.stop()
+			}
+
+			isPlaying = false
+		}
+
+		public function resume() : void {
+			if( isPlaying == true ) {
+				return
+			}
+
+			isPlaying = true
+
+			wrappedSoundChannel = sound.play( pausePosition )
+			pausePosition = 0
+
+			if( wrappedSoundChannel ) {
+				wrappedSoundChannel.addEventListener( Event.SOUND_COMPLETE, onComplete )
+			}
 		}
 
 		public function setVolume( v : Number ) : void {
