@@ -168,6 +168,10 @@ package Spielmeister.Spell.Platform {
 			return createBox2DObject()
 		}
 
+		public function get Physics() : Object {
+			return { }
+		}
+
 		public function get configurationOptions() : Object {
 			var validOptions : Object = {
 				audioBackEnd : {
