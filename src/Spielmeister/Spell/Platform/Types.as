@@ -31,6 +31,21 @@ package Spielmeister.Spell.Platform {
 			}
 		}
 
+	       public function get Uint16Array() : Object {
+                        return {
+                                isSupported : function() : Boolean {
+                                        return false
+                                },
+                                create : function( length : Number ) : Array {
+                                        return new Array( length )
+                                },
+                                fromValues : function( values : Array ) : Array {
+                                        return values.slice( 0 )
+                                }
+                        }
+                }
+
+
 		public function get Int32Array() : Object {
 			return {
 				isSupported : function() : Boolean {
