@@ -1,7 +1,6 @@
 package Spielmeister.Spell.Platform {
 
 	import Spielmeister.Needjs
-	import Spielmeister.Spell.Platform.Private.Box2D.createBox2DObject
 	import Spielmeister.Spell.Platform.Private.Graphics.*
 	import Spielmeister.Spell.Platform.Private.Graphics.DisplayList.DisplayListContext
 	import Spielmeister.Spell.Platform.Private.Input
@@ -162,14 +161,6 @@ package Spielmeister.Spell.Platform {
                     return needjs.createRequire()( name, rest[ 0 ], rest[ 1 ] )
 				}
 			}
-		}
-
-		public function get Box2D() : Object {
-			return createBox2DObject()
-		}
-
-		public function get Physics() : Object {
-			return { }
 		}
 
 		public function get configurationOptions() : Object {
