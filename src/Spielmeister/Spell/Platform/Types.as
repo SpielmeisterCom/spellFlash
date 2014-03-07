@@ -10,7 +10,13 @@ package Spielmeister.Spell.Platform {
 		public function Types() {}
 
 		public function createFloatArray( length : uint ) : Array {
-			return new Array( length )
+			var array = new Array( length )
+
+			for( var i=0; i < length; i++ ) {
+				array[ i ] = 0
+			}
+
+			return array
 		}
 
 		public function hasFloatArraySupport() : Boolean {
